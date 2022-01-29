@@ -1,10 +1,10 @@
 {
-  "title": "Install BCphone",
+  "title": "Install BCPhone",
   "icon": "img/bcphone.icns",
   "background": "dmgBackground.png",
   "icon-size": 70,
   "contents": [
-      { "x": 152, "y": 172, "type": "file", "path": "build/BCphone.app" },
+      { "x": 152, "y": 172, "type": "file", "path": "build/BCPhone.app" },
       { "x": 408, "y": 172, "type": "link", "path": "/Applications" }
   ]
 }

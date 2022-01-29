@@ -67,16 +67,6 @@ Page {
         clip: true
     }
 
-    CheckBox {
-        anchors {
-            top: parent.top
-            left: parent.left
-        }
-        text: qsTr("Auto Answer")
-        checked: softphone.settings.autoAnswer
-        enabled: true //softphone.playbackModel.isValid
-        onCheckedChanged: softphone.settings.autoAnswer = checked
-    }
     RegistrationStatus {
         anchors {
             top: parent.top
