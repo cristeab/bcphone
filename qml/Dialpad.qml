@@ -53,6 +53,7 @@ Page {
     background: Item {}
 
     Label {
+        id: callDurationLabel
         anchors {
             top: parent.top
             topMargin: Theme.windowMargin
@@ -67,6 +68,21 @@ Page {
         clip: true
     }
 
+    LabelToolTip {
+        id: extLabel
+        anchors {
+            top: parent.top
+            topMargin: Theme.windowMargin
+            left: parent.left
+            leftMargin: Theme.windowMargin
+            right: callDurationLabel.left
+        }
+        text: softphone.settings.userName
+        maximumLineCount: 1
+        clip: true
+        elide: Text.ElideRight
+        forceTooltip: true
+    }
     RegistrationStatus {
         anchors {
             top: parent.top

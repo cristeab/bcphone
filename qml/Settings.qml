@@ -197,26 +197,12 @@ Page {
             }
         } // Column
     } // Flickable
-    LabelToolTip {
-        id: extLabel
-        anchors {
-            left: parent.left
-            leftMargin: Theme.windowMargin
-            right: logoutBtn.left
-            rightMargin: Theme.windowMargin / 2
-            bottom: parent.bottom
-            bottomMargin: Theme.windowMargin
-        }
-        text: qsTr("Username: ") + softphone.settings.userName
-        maximumLineCount: 2
-        clip: true
-        elide: Text.ElideRight
-        forceTooltip: true
-    }
+
     CustomButton {
         id: logoutBtn
         anchors {
-            verticalCenter: extLabel.verticalCenter
+            bottom: parent.bottom
+            bottomMargin: Theme.windowMargin
             horizontalCenter: parent.horizontalCenter
         }
         visible: !softphone.loggedOut

@@ -13,7 +13,7 @@ Label {
     }
     ToolTip {
         id: controlToolTip
-        visible: controlLabelMouseArea.containsMouse
+        visible: controlLabelMouseArea.containsMouse && ("" !== controlLabel.text)
         text: controlLabel.text
     }
 }
