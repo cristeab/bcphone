@@ -87,7 +87,7 @@ if (APPLE)
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_LONG_VERSION_STRING ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_BUNDLE_VERSION ${SOFTPHONE_VERSION}
-        MACOSX_BUNDLE_COPYRIGHT "Copyright 2022 Airbytes. All rights reserved")
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2022 Bogdan Cristea. All rights reserved")
     target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg
         ${PJSIP_LIBRARIES} ${CoreFoundation_LIBRARIES}
         ${AudioToolbox_LIBRARIES} ${CoreAudio_LIBRARIES} ${CoreServices_LIBRARIES}
