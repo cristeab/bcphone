@@ -5,8 +5,11 @@ set(SOFTPHONE_VERSION "0.1")
 
 if (APPLE)
     if (NOT PJSIP_ROOT_DIR)
-        set(PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../pjproject-2.11.1")
+        set(PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../build-macos")
     endif()
+    set (PJSIP_INCLUDE_DIRS "${PJSIP_ROOT_DIR}/include")
+    set (PJSIP_LIBRARIES "libg7221codec-x86_64-apple-darwin21.3.0.a;libpjlib-util-x86_64-apple-darwin21.3.0.a;libpjmedia-x86_64-apple-darwin21.3.0.a;libpjsip-x86_64-apple-darwin21.3.0.a;libspeex-x86_64-apple-darwin21.3.0.a;libgsmcodec-x86_64-apple-darwin21.3.0.a;libpjmedia-audiodev-x86_64-apple-darwin21.3.0.a;libpjnath-x86_64-apple-darwin21.3.0.a;libpjsua-x86_64-apple-darwin21.3.0.a;libsrtp-x86_64-apple-darwin21.3.0.a;libilbccodec-x86_64-apple-darwin21.3.0.a;libpjmedia-codec-x86_64-apple-darwin21.3.0.a;libpjsip-simple-x86_64-apple-darwin21.3.0.a;libpjsua2-x86_64-apple-darwin21.3.0.a;libyuv-x86_64-apple-darwin21.3.0.a;libpj-x86_64-apple-darwin21.3.0.a;libpjmedia-videodev-x86_64-apple-darwin21.3.0.a;libpjsip-ua-x86_64-apple-darwin21.3.0.a;libresample-x86_64-apple-darwin21.3.0.a")
+
     set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/ ${CMAKE_MODULE_PATH})
     find_package(CoreFoundation REQUIRED)
     find_package(AudioToolbox REQUIRED)
@@ -64,7 +67,6 @@ find_package (Qt6 6.2 COMPONENTS
                         Gui
                         Multimedia
                         Sql
-                        QuickWidgets
                        REQUIRED)
 
 #set version in config file
@@ -88,6 +90,8 @@ if (APPLE)
         MACOSX_BUNDLE_LONG_VERSION_STRING ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_BUNDLE_VERSION ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2022 Bogdan Cristea. All rights reserved")
+    target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
+    target_link_directories(${PROJECT_NAME} PRIVATE ${PJSIP_ROOT_DIR}/lib)
     target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg
         ${PJSIP_LIBRARIES} ${CoreFoundation_LIBRARIES}
         ${AudioToolbox_LIBRARIES} ${CoreAudio_LIBRARIES} ${CoreServices_LIBRARIES}
@@ -102,7 +106,6 @@ if (APPLE)
 elseif (WIN32)
     set (PLATFORM_SRCS src/platform/win_utils.cpp)
     add_executable(${PROJECT_NAME} WIN32 ${SRCS} ${PLATFORM_SRCS} ${RSCS} "${CMAKE_SOURCE_DIR}/img/app.rc")
-    target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
     target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
     target_link_directories(${PROJECT_NAME} PRIVATE "${PJSIP_ROOT_DIR}/lib;${VPX_ROOT_DIR}/lib;${OPENH264_ROOT_DIR}/lib;${OPENSSL_ROOT_DIR}/lib;${OPUS_ROOT_DIR}/lib;${BCG729_ROOT_DIR}/lib;${SDL2_ROOT_DIR}/lib/x64")
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg Qt6::QuickWidgets ${PJSIP_LIBRARIES} ${OPENH264_LIBRARIES} ${OPENSSL_LIBRARIES} ${OPUS_LIBRARIES} ${BCG729_LIBRARIES} ${SDL2_LIBRARIES})

@@ -65,12 +65,8 @@
 #define BUDDY_LIST "buddyList"
 #define BUDDY_USER_ID "buddyUserId"
 
-#define SETTINGS_FOLDER ".AutoAnswerSoftphone"
-#define REC_FOLDER "AutoAnswerSoftphoneRecordings"
-
-#define AUTO_ANSWER "AUTO ANSWER"
-#define PLAYBACK_COUNT "PLAYBACK COUNT"
-#define LOOP_PLAYBACK "LOOP PLAYBACK"
+#define SETTINGS_FOLDER ".BCphone"
+#define REC_FOLDER "BCphoneRecordings"
 
 //#define STUN_SERVER "STUN SERVER"
 //#define STUN_PORT "STUN PORT"
@@ -79,10 +75,6 @@
 #define PROXY_ENABLED "PROXY ENABLED"
 #define PROXY_SERVER "PROXY SERVER"
 #define PROXY_PORT "PROXY PORT"
-
-#define PLAYBACK_INFO "playbackInfo"
-#define PLAYBACK_FILE_PATH "playbackFilePath"
-#define PLAYBACK_SELECTED "playbackSelected"
 
 Settings::Settings(QObject *parent) : QObject (parent)
 {
@@ -129,10 +121,6 @@ void Settings::clear()
     setDialpadSoundVolume(0.75);
 
     setRecPath("");
-
-    setAutoAnswer(false);
-    setPlaybackCount(1);
-    setLoopPlayback(false);
 
     //setStunServer("stun.zoiper.com");
     //setStunPort(3478);
@@ -188,10 +176,6 @@ void Settings::load()
         QDir().mkpath(_recPath);
     }
 
-    setAutoAnswer(settings.value(AUTO_ANSWER, _autoAnswer).toBool());
-    setPlaybackCount(settings.value(PLAYBACK_COUNT, _playbackCount).toInt());
-    setLoopPlayback(settings.value(LOOP_PLAYBACK, _loopPlayback).toBool());
-
     //setStunServer(settings.value(STUN_SERVER, _stunServer).toString());
     //setStunPort(settings.value(STUN_PORT, _stunPort).toInt());
 
@@ -221,10 +205,6 @@ void Settings::save()
     settings.setValue(SPEAKERS_VOLUME, _speakersVolume);
 
     settings.setValue(REC_PATH, _recPath);
-
-    settings.setValue(AUTO_ANSWER, _autoAnswer);
-    settings.setValue(PLAYBACK_COUNT, _playbackCount);
-    settings.setValue(LOOP_PLAYBACK, _loopPlayback);
 
     //settings.setValue(STUN_SERVER, _stunServer);
     //settings.setValue(STUN_PORT, _stunPort);
@@ -440,34 +420,6 @@ void Settings::saveVideoCodecInfo(const QList<GenericCodecs::CodecInfo> &codecIn
         settings.setArrayIndex(i);
         settings.setValue(VIDEO_CODEC_ID, codecInfo.at(i).codecId);
         settings.setValue(VIDEO_CODEC_PRIORITY, codecInfo.at(i).priority);
-    }
-    settings.endArray();
-}
-
-QList<PlaybackModel::PlaybackInfo> Settings::playbackInfo()
-{
-    QVector<PlaybackModel::PlaybackInfo> playbackInfo;
-    QSettings settings(ORG_NAME, APP_NAME);
-    const auto size = settings.beginReadArray(PLAYBACK_INFO);
-    for (int i = 0; i < size; ++i) {
-        settings.setArrayIndex(i);
-        PlaybackModel::PlaybackInfo item;
-        item.filePath = settings.value(PLAYBACK_FILE_PATH).toUrl();
-        item.selected = settings.value(PLAYBACK_SELECTED).toBool();
-        playbackInfo.append(item);
-    }
-    settings.endArray();
-    return playbackInfo;
-}
-
-void Settings::savePlaybackInfo(const QList<PlaybackModel::PlaybackInfo> &playbackInfo)
-{
-    QSettings settings(ORG_NAME, APP_NAME);
-    settings.beginWriteArray(PLAYBACK_INFO);
-    for (int i = 0; i < playbackInfo.size(); ++i) {
-        settings.setArrayIndex(i);
-        settings.setValue(PLAYBACK_FILE_PATH, playbackInfo.at(i).filePath);
-        settings.setValue(PLAYBACK_SELECTED, playbackInfo.at(i).selected);
     }
     settings.endArray();
 }

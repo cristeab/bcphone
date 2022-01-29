@@ -9,7 +9,8 @@
 #include <QThread>
 #include <QStyle>
 #include <QSslSocket>
-#include <QQuickWidget>
+#include <QWidget>
+#include <QWindow>
 #include <QDialog>
 #include <QVBoxLayout>
 #include <array>
@@ -134,9 +135,6 @@ Softphone::Softphone()
     //ringtones init
     _ringTonesModel->initDefaultRingTones();
 
-    //playback model init
-    connect(_playbackModel, &PlaybackModel::errorDialog, this, &Softphone::errorDialog);
-
     //setup tone generator
     _toneGenTimer.setInterval(TONE_GENERATOR_TIMEOUT_MS);
     _toneGenTimer.setSingleShot(true);
@@ -166,9 +164,6 @@ void Softphone::onConfirmed(int callId)
 {
     setConfirmedCall(true);
     stopPlayingRingTone(callId);
-    if (_settings->autoAnswer()) {
-        startPlayback(callId);
-    }
 
     startCurrentUserTimer();
     _activeCallModel->setCallState(callId, ActiveCallModel::CallState::CONFIRMED);
@@ -200,12 +195,9 @@ void Softphone::onIncoming(int callCount, int callId, const QString &userId,
     _activeCallModel->addCall(callId, userName, userId);
     _callHistoryModel->addContact(callId, userName, userId,
                                   CallHistoryModel::CallStatus::INCOMING);
-    if (_settings->autoAnswer()) {
-        answer(callId);
-    } else {
-        raiseWindow();
-        startPlayingRingTone(callId, true);
-    }
+
+    raiseWindow();
+    startPlayingRingTone(callId, true);
 }
 
 void Softphone::onDisconnected(int callId)
@@ -213,7 +205,6 @@ void Softphone::onDisconnected(int callId)
     setConfirmedCall(false);
     setActiveCall(false);
 
-    stopPlayback(callId);
     stopPlayingRingTone(callId);
     _activeCallModel->removeCall(callId);
     _callHistoryModel->updateCallStatus(callId,
@@ -557,14 +548,6 @@ void Softphone::dumpStreamStats(pjmedia_stream *strm)
 void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
 {
     qDebug() << "PJSUA:" << level << data;
-}
-
-pj_status_t Softphone::onFileEnd(pjmedia_port* media_port, void* args)
-{
-    const auto callId = reinterpret_cast<pjsua_call_id>(args);
-    qInfo() << "Player EOF" << callId;
-    _instance->hangup(callId);
-    return PJ_SUCCESS;
 }
 
 bool Softphone::init()
@@ -1406,163 +1389,6 @@ bool Softphone::releaseRecorder(pjsua_call_id callId)
     return true;
 }
 
-bool Softphone::createPlaybackPlayer(pjsua_call_id callId)
-{
-    if (0 != _playbackPlayerId.count(callId)) {
-        qCritical() << "Call" << callId << "already has a playback player associated with it";
-        return false;
-    }
-
-    const auto playbackList = _playbackModel->selectedPlaybackList();
-    if (playbackList.isEmpty()) {
-        qCritical() << "Playback list is empty";
-        return false;
-    }
-    for (const auto& playbackFile: playbackList) {
-        if (!QFile(playbackFile).exists()) {
-            qWarning() << "Playback file does not exist" << playbackFile;
-            errorDialog(tr("Playback file does not exist ") + playbackFile);
-            return false;
-        }
-    }
-    qInfo() << "Init playback player" << playbackList;
-    const auto itemCount = playbackList.size();
-
-    pjsua_player_id playerId = PJSUA_INVALID_ID;
-    const unsigned options = _settings->loopPlayback() ? 0 : PJMEDIA_FILE_NO_LOOP;
-    const unsigned playCount = _settings->loopPlayback() ? 1 : _settings->playbackCount();
-    const unsigned fileCount = itemCount * playCount;
-
-    //create the playlist: list of playback files repeated playCount times
-    auto* soundFiles = new std::string[fileCount];
-    for (unsigned i = 0; i < itemCount; ++i) {
-        soundFiles[i] = playbackList.at(i).toStdString();
-    }
-    auto* fileNames = new pj_str_t[fileCount];
-    pj_str_t soundFile;
-    for (unsigned i = 0; i < playCount; ++i) {
-        for (unsigned f = 0; f < itemCount; ++f) {
-            pj_cstr(&soundFile, soundFiles[f].c_str());
-            fileNames[f + i * itemCount] = soundFile;
-        }
-    }
-    const auto status = pjsua_playlist_create(fileNames,
-                                              fileCount,
-                                              NULL,
-                                              options,
-                                              &playerId);
-    delete[] soundFiles;
-    delete[] fileNames;
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot create player", status, false);
-        return false;
-    }
-    _playbackPlayerId[callId] = playerId;
-
-    return true;
-}
-
-bool Softphone::startPlayback(pjsua_call_id callId)
-{
-    if (!createPlaybackPlayer(callId)) {
-        return false;
-    }
-
-    //set EOF callback
-    if (!_settings->loopPlayback()) {
-        pjmedia_port* playeMediaPort = nullptr;
-        auto status = pjsua_player_get_port(_playbackPlayerId[callId], &playeMediaPort);
-        if (PJ_SUCCESS != status) {
-            releasePlaybackPlayer(callId);
-            errorHandler("Cannot get player media port", status);
-            return false;
-        }
-        status = pjmedia_wav_player_set_eof_cb(playeMediaPort,
-                                               reinterpret_cast<void*>(callId),
-                                               &Softphone::onFileEnd);
-        if (PJ_SUCCESS != status) {
-            releasePlaybackPlayer(callId);
-            errorHandler("Cannot set EOF player callback", status);
-            return false;
-        }
-    }
-
-    //start playing
-    const auto callConfPort = pjsua_call_get_conf_port(callId);
-    if (PJSUA_INVALID_ID == callConfPort) {
-        releasePlaybackPlayer(callId);
-        qCritical() << "Cannot get call conf port";
-        return false;
-    }
-    const auto playerConfPort = pjsua_player_get_conf_port(_playbackPlayerId[callId]);
-    if (PJSUA_INVALID_ID == playerConfPort) {
-        releasePlaybackPlayer(callId);
-        qCritical() << "Cannot get playback player conf port";
-        return false;
-    }
-    auto status = pjsua_conf_connect(playerConfPort, callConfPort);
-    if (PJ_SUCCESS != status) {
-        releasePlaybackPlayer(callId);
-        errorHandler("Cannot start playback", status);
-        return false;
-    }
-    qInfo() << "Playback started for call ID " << callId;
-    return true;
-}
-
-bool Softphone::stopPlayback(pjsua_call_id callId)
-{
-    if (PJSUA_INVALID_ID == callId) {
-        qCritical() << "Invalid call ID";
-        return false;
-    }
-    if (!_playbackPlayerId.contains(callId) || (PJSUA_INVALID_ID == _playbackPlayerId[callId])) {
-        qWarning() << "Invalid playback player ID";
-        return true;
-    }
-
-    if (PJ_TRUE == pjsua_call_is_active(callId)) {
-        //stop playback
-        const auto callConfPort = pjsua_call_get_conf_port(callId);
-        if (PJSUA_INVALID_ID == callConfPort) {
-            releasePlaybackPlayer(callId);
-            qCritical() << "Cannot get call conf port";
-            return false;
-        }
-        const auto playerConfPort = pjsua_player_get_conf_port(_playbackPlayerId[callId]);
-        if (PJSUA_INVALID_ID == playerConfPort) {
-            releasePlaybackPlayer(callId);
-            qCritical() << "Cannot get recorder conf port";
-            return false;
-        }
-        pj_status_t status = pjsua_conf_disconnect(playerConfPort, callConfPort);
-        if (PJ_SUCCESS != status) {
-            releasePlaybackPlayer(callId);
-            errorHandler("Cannot stop recording", status);
-            return false;
-        }
-    }
-    qInfo() << "Recording stopped for call ID " << callId;
-
-    return releasePlaybackPlayer(callId);
-}
-
-bool Softphone::releasePlaybackPlayer(pjsua_call_id callId)
-{
-    if (!_playbackPlayerId.contains(callId) || (PJSUA_INVALID_ID == _playbackPlayerId[callId])) {
-        qWarning() << "Invalid playback player ID";
-        return true;
-    }
-    const auto status = pjsua_player_destroy(_playbackPlayerId[callId]);
-    _playbackPlayerId.remove(callId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot destroy playback player", status);
-        return false;
-    }
-    qInfo() << "Playback player has been released";
-    return true;
-}
-
 void Softphone::listAudioCodecs()
 {
     std::array<pjsua_codec_info, 32> codecInfo;
@@ -1911,7 +1737,7 @@ void Softphone::initVideoWindow()
                 auto* layout = new QVBoxLayout(_videoWindow.get());
                 layout->setSpacing(0);
                 layout->setContentsMargins(0, 0, 0, 0);
-                auto* remote = QQuickWidget::createWindowContainer(QWindow::fromWinId((WId)wi.hwnd.info.win.hwnd), nullptr, Qt::Widget);
+                auto* remote = QWidget::createWindowContainer(QWindow::fromWinId((WId)wi.hwnd.info.win.hwnd), nullptr, Qt::Widget);
                 layout->addWidget(remote);
                 _videoWindow->setFixedWidth(wi.size.w);
                 _videoWindow->setFixedHeight(wi.size.h);
@@ -1952,7 +1778,7 @@ void Softphone::initPreviewWindow()
             errorHandler(tr("Cannot get window info"), status, true);
             return;
         }
-        auto* preview = QQuickWidget::createWindowContainer(QWindow::fromWinId((WId)wi.hwnd.info.win.hwnd), _videoWindow.get(), Qt::Widget);
+        auto* preview = QWidget::createWindowContainer(QWindow::fromWinId((WId)wi.hwnd.info.win.hwnd), _videoWindow.get(), Qt::Widget);
         if (nullptr != preview) {
             if (nullptr != _videoWindow) {
                 const auto w = _videoWindow->width();

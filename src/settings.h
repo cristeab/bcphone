@@ -8,7 +8,6 @@
 #include "models/contacts_model.h"
 #include "models/generic_codecs.h"
 #include "models/presence_model.h"
-#include "models/playback_model.h"
 #include <QObject>
 #include <QString>
 
@@ -45,11 +44,6 @@ private:
     QML_WRITABLE_PROPERTY_FLOAT(qreal, dialpadSoundVolume, setDialpadSoundVolume, 0.4)
 
     QML_WRITABLE_PROPERTY(QString, recPath, setRecPath, "")
-
-    QML_WRITABLE_PROPERTY(bool, autoAnswer, setAutoAnswer, false)
-    QML_WRITABLE_PROPERTY(QString, autoAnswerSoundFile, setAutoAnswerSoundFile, "")
-    QML_WRITABLE_PROPERTY(int, playbackCount, setPlaybackCount, 1)
-    QML_WRITABLE_PROPERTY(bool, loopPlayback, setLoopPlayback, false)
 
     //QML_WRITABLE_PROPERTY(QString, stunServer, setStunServer, "stun.zoiper.com")
     //QML_WRITABLE_PROPERTY(int, stunPort, setStunPort, 3478)
@@ -92,9 +86,6 @@ public:
 
     static QStringList buddyList();
     static void setBuddyList(const QList<PresenceModel::PresenceInfo> &buddies);
-
-    static QList<PlaybackModel::PlaybackInfo> playbackInfo();
-    static void savePlaybackInfo(const QList<PlaybackModel::PlaybackInfo> &playbackInfo);
 
     Q_INVOKABLE void save();
     void clear();

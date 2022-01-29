@@ -11,7 +11,6 @@
 #include "models/video_codecs.h"
 #include "models/active_call_model.h"
 #include "models/presence_model.h"
-#include "models/playback_model.h"
 #include "pjsua.h"
 #include <QObject>
 #include <QTimer>
@@ -65,7 +64,6 @@ private:
     QML_CONSTANT_PROPERTY_PTR(CallHistoryModel, callHistoryModel)
     QML_CONSTANT_PROPERTY_PTR(ActiveCallModel, activeCallModel)
     QML_CONSTANT_PROPERTY_PTR(PresenceModel, presenceModel)
-    QML_CONSTANT_PROPERTY_PTR(PlaybackModel, playbackModel)
 
     QML_WRITABLE_PROPERTY(quint32, currentUserElapsedSec, setCurrentUserElapsedSec, 0)
 
@@ -142,7 +140,6 @@ private:
                                   unsigned stream_idx);
     static void onBuddyState(pjsua_buddy_id buddy_id);
     static void pjsuaLogCallback(int level, const char *data, int len);
-    static pj_status_t onFileEnd(pjmedia_port* media_port, void* args);
 
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);
@@ -160,11 +157,6 @@ private:
     bool startRecording(pjsua_call_id callId);
     bool stopRecording(pjsua_call_id callId);
     bool releaseRecorder(pjsua_call_id callId);
-
-    bool createPlaybackPlayer(pjsua_call_id callId);
-    bool startPlayback(pjsua_call_id callId);
-    bool stopPlayback(pjsua_call_id callId);
-    bool releasePlaybackPlayer(pjsua_call_id callId);
 
     static void dumpStreamStats(pjmedia_stream *strm);
     bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
