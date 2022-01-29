@@ -95,10 +95,7 @@ ApplicationWindow {
         menu: Menu {
             MenuItem {
                 text: qsTr("Quit")
-                onTriggered: {
-                    softphone.settings.save()
-                    Qt.quit()
-                }
+                onTriggered: Qt.quit()
             }
         }
     }

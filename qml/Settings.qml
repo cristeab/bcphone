@@ -219,6 +219,7 @@ Page {
             verticalCenter: extLabel.verticalCenter
             horizontalCenter: parent.horizontalCenter
         }
+        visible: !softphone.settings.loggedOut
         backgroundColor: Theme.blueButtonColor
         text: qsTr("Logout")
         onClicked: {

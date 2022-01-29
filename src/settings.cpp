@@ -102,13 +102,13 @@ const QString& Settings::writablePath()
 
 void Settings::clear()
 {
-    setSipServer("sip.ringcentral.com");
+    setSipServer("");
     setSipPort(5060);
     setUserName("");
     setPassword("");
     setAccountName("");
-    setSipTransport(SipTransport::Tls);
-    setMediaTransport(MediaTransport::Srtp);
+    setSipTransport(SipTransport::Udp);
+    setMediaTransport(MediaTransport::Rtp);
 
     setInputAudioModelIndex(0);
     setOutputAudioModelIndex(0);
@@ -127,7 +127,7 @@ void Settings::clear()
 
     setAuthUserName("");
     setProxyEnabled(false);
-    setProxyServer("sip60.ringcentral.com");
+    setProxyServer("");
     setProxyPort(5096);
 
     Settings::uninstallClear();
