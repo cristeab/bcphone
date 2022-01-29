@@ -10,10 +10,19 @@ if (APPLE)
     set (PJSIP_INCLUDE_DIRS "${PJSIP_ROOT_DIR}/include")
     set (PJSIP_LIBRARIES "libg7221codec-x86_64-apple-darwin21.3.0.a;libpjlib-util-x86_64-apple-darwin21.3.0.a;libpjmedia-x86_64-apple-darwin21.3.0.a;libpjsip-x86_64-apple-darwin21.3.0.a;libspeex-x86_64-apple-darwin21.3.0.a;libgsmcodec-x86_64-apple-darwin21.3.0.a;libpjmedia-audiodev-x86_64-apple-darwin21.3.0.a;libpjnath-x86_64-apple-darwin21.3.0.a;libpjsua-x86_64-apple-darwin21.3.0.a;libsrtp-x86_64-apple-darwin21.3.0.a;libilbccodec-x86_64-apple-darwin21.3.0.a;libpjmedia-codec-x86_64-apple-darwin21.3.0.a;libpjsip-simple-x86_64-apple-darwin21.3.0.a;libpjsua2-x86_64-apple-darwin21.3.0.a;libyuv-x86_64-apple-darwin21.3.0.a;libpj-x86_64-apple-darwin21.3.0.a;libpjmedia-videodev-x86_64-apple-darwin21.3.0.a;libpjsip-ua-x86_64-apple-darwin21.3.0.a;libresample-x86_64-apple-darwin21.3.0.a")
 
+    set (FFMPEG_ROOT_DIR "/usr/local/Cellar/ffmpeg/4.4.1_3")
+    set (FFMPEG_INCLUDE_DIRS "${FFMPEG_ROOT_DIR}/include")
+    set (FFMPEG_LIBRARIES "libavcodec.a;libavdevice.a;libavfilter.a;libavformat.a;libavresample.a;libavutil.a;libpostproc.a;libswresample.a;libswscale.a")
+
+    set (VPX_ROOT_DIR /usr/local/Cellar/libvpx/1.11.0)
+    set (VPX_LIBRARIES "libvpx.a")
+
     set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/ ${CMAKE_MODULE_PATH})
     find_package(CoreFoundation REQUIRED)
+    find_package(AVFoundation REQUIRED)
     find_package(AudioToolbox REQUIRED)
     find_package(CoreAudio REQUIRED)
+    find_package(CoreVideo REQUIRED)
     find_package(CoreServices REQUIRED)
     find_package(CoreMedia REQUIRED)
     find_package(Foundation REQUIRED)
@@ -90,12 +99,13 @@ if (APPLE)
         MACOSX_BUNDLE_LONG_VERSION_STRING ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_BUNDLE_VERSION ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2022 Bogdan Cristea. All rights reserved")
-    target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
-    target_link_directories(${PROJECT_NAME} PRIVATE ${PJSIP_ROOT_DIR}/lib)
+    target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS})
+    target_link_directories(${PROJECT_NAME} PRIVATE ${PJSIP_ROOT_DIR}/lib ${FFMPEG_ROOT_DIR}/lib ${VPX_ROOT_DIR}/lib)
     target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg
-        ${PJSIP_LIBRARIES} ${CoreFoundation_LIBRARIES}
-        ${AudioToolbox_LIBRARIES} ${CoreAudio_LIBRARIES} ${CoreServices_LIBRARIES}
+        ${PJSIP_LIBRARIES} ${CoreFoundation_LIBRARIES} ${AVFoundation_LIBRARIES}
+        ${AudioToolbox_LIBRARIES} ${CoreAudio_LIBRARIES} ${CoreVideo_LIBRARIES} ${CoreServices_LIBRARIES}
         ${CoreMedia_LIBRARIES} ${Foundation_LIBRARIES} ${SDL2_LIBRARIES} ${SWSCALE_LIBRARIES}
+        ${FFMPEG_LIBRARIES} ${VPX_LIBRARIES}
         /usr/local/lib/libopencore-amrnb.a
         /usr/local/opt/openssl@1.1/lib/libcrypto.a
         /usr/local/opt/openssl@1.1/lib/libssl.a
