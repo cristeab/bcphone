@@ -10,7 +10,7 @@ ApplicationWindow {
     id: appWin
 
     title: softphone.settings.appName + " v" + softphone.settings.appVersion
-    width: 430
+    width: 400
     height: 600
     minimumHeight: height
     minimumWidth: width
