@@ -51,8 +51,5 @@ int main(int argc, char *argv[])
     }
 
     QGuiApplication::setQuitOnLastWindowClosed(false);
-    auto *settings = softphone->settings();
-    QObject::connect(&app, &QGuiApplication::lastWindowClosed, settings, &Settings::save);
-
     return QGuiApplication::exec();
 }

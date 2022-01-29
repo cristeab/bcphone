@@ -7,11 +7,11 @@ Rectangle {
     id: control
 
     function statusColor() {
-        let col = "red"
+        let col = Theme.notRegisteredColor
         if (Softphone.REGISTERED === softphone.registrationStatus) {
-            col = "green"
+            col = Theme.registeredColor
         } else if (Softphone.IN_PROGRESS === softphone.registrationStatus) {
-            col = "yellow"
+            col = Theme.inProgressRegistrationColor
         }
         return col
     }
@@ -26,7 +26,7 @@ Rectangle {
         hoverEnabled: true
     }
     ToolTip {
-        visible: regSymbMouseArea.containsMouse
+        visible: regSymbMouseArea.containsMouse && ("" !== softphone.registrationText)
         text: softphone.registrationText
     }
 }

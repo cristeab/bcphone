@@ -1403,11 +1403,6 @@ void Softphone::listAudioCodecs()
     QHash<QString,int> defaultPrio;
     for (unsigned int n = 0; n < codecCount; ++n) {
         const auto id = toString(codecInfo[n].codec_id);
-        if (id.contains("G729", Qt::CaseInsensitive)) {
-            codecInfo[n].priority = PJMEDIA_CODEC_PRIO_HIGHEST;
-        } else {
-            codecInfo[n].priority = PJMEDIA_CODEC_PRIO_DISABLED;
-        }
         setAudioCodecPriority(id, codecInfo[n].priority);
         defaultPrio[id] = codecInfo[n].priority;
     }
@@ -1426,7 +1421,7 @@ void Softphone::listAudioCodecs()
         const auto id = toString(codecInfo[n].codec_id);
         const auto priority = codecInfo[n].priority;
         const auto defaultPriority = defaultPrio.contains(id) ? defaultPrio[id] : -1;
-        //qInfo() << id << priority;
+        qInfo() << id << priority;
         audioCodecsInfo.append({ id, id, priority, 0 < priority, defaultPriority });
     }
     _audioCodecs->setCodecsInfo(audioCodecsInfo);
@@ -1446,7 +1441,7 @@ void Softphone::listVideoCodecs()
     for (unsigned int n = 0; n < codecCount; ++n) {
         const QString id = QString::fromUtf8(codecInfo[n].codec_id.ptr,
                                              static_cast<int>(codecInfo[n].codec_id.slen));
-        //qInfo() << id << codecInfo[n].priority;
+        qInfo() << id << codecInfo[n].priority;
         defaultPrio[id] = codecInfo[n].priority;
         setVideoCodecBitrate(id, DEFAULT_BITRATE_KBPS * 1000);
     }

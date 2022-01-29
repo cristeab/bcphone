@@ -137,8 +137,6 @@ void Settings::uninstallClear()
 {
     QSettings settings(ORG_NAME, APP_NAME);
     settings.clear();
-    settings.setFallbacksEnabled(false);
-    settings.sync();
     const auto path = writablePath();
     if (!path.isEmpty()) {
         QDir(path).removeRecursively();
@@ -213,9 +211,6 @@ void Settings::save()
     settings.setValue(PROXY_ENABLED, _proxyEnabled);
     settings.setValue(PROXY_SERVER, _proxyServer);
     settings.setValue(PROXY_PORT, _proxyPort);
-
-    settings.setFallbacksEnabled(false);
-    settings.sync();
 }
 
 AudioDevices::DeviceInfo Settings::inputAudioDeviceInfo()

@@ -52,7 +52,7 @@ QtObject {
     readonly property real dialpadButtonFontSize: 24
     readonly property real dialpadSubTextFontSize: 8
     readonly property real buttonFontSize: 12
-    readonly property real tabButtonFontSize: 12
+    readonly property real tabButtonFontSize: 10
     readonly property real textFontSize: 12
     readonly property real labelFontSize: 12
     readonly property real tabFontSize: 14
@@ -83,4 +83,8 @@ QtObject {
 
     readonly property color incomingColor: Material.color(Material.Lime)
     readonly property color outgoingColor: Material.color(Material.Purple)
+
+    readonly property color notRegisteredColor: Material.color(Material.Red)
+    readonly property color registeredColor: Material.color(Material.Green)
+    readonly property color inProgressRegistrationColor: Material.color(Material.Yellow)
 }

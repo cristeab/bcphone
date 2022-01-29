@@ -28,7 +28,7 @@ public:
 
 private:
     QML_READABLE_PROPERTY(RegistrationStatus, registrationStatus, setRegistrationStatus, RegistrationStatus::UNREGISTERED)
-    QML_READABLE_PROPERTY(QString, registrationText, setRegistrationText, "")
+    QML_READABLE_PROPERTY(QString, registrationText, setRegistrationText, "Not Registered")
 
     QML_READABLE_PROPERTY(bool, showBusy, setShowBusy, false)
     QML_READABLE_PROPERTY(bool, loggedOut, setLoggedOut, false)
