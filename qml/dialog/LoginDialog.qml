@@ -25,7 +25,7 @@ Dialog {
             }
         }
         anchors.fill: parent
-        color: "white"
+        color: Theme.backgroundColor
         Rectangle {
             id: dialogInnerFrame
             anchors {
