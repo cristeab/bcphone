@@ -13,7 +13,7 @@
         <file>img/video.svg</file>
         <file>img/video-slash.svg</file>
         <file>img/address-book.svg</file>
-        <file>img/playback.svg</file>
+        <file>img/chat.svg</file>
         <file>img/clock.svg</file>
         <file>img/settings.svg</file>
         <file>img/backspace.svg</file>
@@ -68,7 +68,7 @@
         <file>qml/CallHistory.qml</file>
         <file>qml/Contacts.qml</file>
         <file>qml/Settings.qml</file>
-        <file>qml/Playback.qml</file>
+        <file>qml/Chat.qml</file>
         <file>qml/custom/BackButton.qml</file>
         <file>qml/dialog/EditContactDialog.qml</file>
         <file>qml/custom/LabelComboBox.qml</file>

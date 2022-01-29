@@ -219,9 +219,9 @@ ApplicationWindow {
         id: bar
 
         property int currentButtonIndex: 2
-        readonly property var names: [qsTr("Recents"), qsTr("Contacts"), qsTr("Keypad"), qsTr("Playback"), qsTr("Settings")]
-        readonly property var icons: ["qrc:/img/clock.svg", "qrc:/img/address-book.svg", "qrc:/img/dialpad.svg", "qrc:/img/playback.svg", "qrc:/img/settings.svg"]
-        readonly property var pages: ["qrc:/qml/CallHistory.qml", "qrc:/qml/Contacts.qml", "qrc:/qml/Dialpad.qml", "qrc:/qml/Playback.qml", "qrc:/qml/Settings.qml"]
+        readonly property var names: [qsTr("Recents"), qsTr("Contacts"), qsTr("Keypad"), qsTr("Chat"), qsTr("Settings")]
+        readonly property var icons: ["qrc:/img/clock.svg", "qrc:/img/address-book.svg", "qrc:/img/dialpad.svg", "qrc:/img/chat.svg", "qrc:/img/settings.svg"]
+        readonly property var pages: ["qrc:/qml/CallHistory.qml", "qrc:/qml/Contacts.qml", "qrc:/qml/Dialpad.qml", "qrc:/qml/Chat.qml", "qrc:/qml/Settings.qml"]
 
         anchors {
             bottom: parent.bottom
