@@ -24,13 +24,13 @@ private:
     QML_CONSTANT_PROPERTY(QString, appName, APP_NAME)
     QML_CONSTANT_PROPERTY(QString, appVersion, APP_VERSION)
 
-    QML_WRITABLE_PROPERTY(QString, sipServer, setSipServer, "sip.ringcentral.com")
+    QML_WRITABLE_PROPERTY(QString, sipServer, setSipServer, "")
     QML_WRITABLE_PROPERTY(int, sipPort, setSipPort, 5060)
     QML_WRITABLE_PROPERTY(QString, userName, setUserName, "")
     QML_WRITABLE_PROPERTY(QString, password, setPassword, "")
     QML_WRITABLE_PROPERTY(QString, accountName, setAccountName, "")
-    QML_WRITABLE_PROPERTY(int, sipTransport, setSipTransport, SipTransport::Tls)
-    QML_WRITABLE_PROPERTY(int, mediaTransport, setMediaTransport, MediaTransport::Srtp)
+    QML_WRITABLE_PROPERTY(int, sipTransport, setSipTransport, SipTransport::Udp)
+    QML_WRITABLE_PROPERTY(int, mediaTransport, setMediaTransport, MediaTransport::Rtp)
 
     QML_WRITABLE_PROPERTY(int, inputAudioModelIndex, setInputAudioModelIndex, -1)
     QML_WRITABLE_PROPERTY(int, outputAudioModelIndex, setOutputAudioModelIndex, -1)
@@ -50,7 +50,7 @@ private:
 
     QML_WRITABLE_PROPERTY(QString, authUserName, setAuthUserName, "")
     QML_WRITABLE_PROPERTY(bool, proxyEnabled, setProxyEnabled, false)
-    QML_WRITABLE_PROPERTY(QString, proxyServer, setProxyServer, "sip60.ringcentral.com")
+    QML_WRITABLE_PROPERTY(QString, proxyServer, setProxyServer, "")
     QML_WRITABLE_PROPERTY(int, proxyPort, setProxyPort, 5096)
 
 public:
