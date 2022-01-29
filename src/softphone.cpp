@@ -990,13 +990,24 @@ bool Softphone::mute(bool value, int callId)
     if (PJSUA_INVALID_ID == callId) {
         callId = _activeCallModel->currentCallId();
     }
-    const pjsua_conf_port_id confSlot = pjsua_call_get_conf_port(callId);
-    if (PJSUA_INVALID_ID == confSlot) {
+    const pjsua_conf_port_id callConfPort = pjsua_call_get_conf_port(callId);
+    if (PJSUA_INVALID_ID == callConfPort) {
         qCritical() << "Cannot get conference slot of call ID" << callId;
         return false;
     }
     qDebug() << "mute" << value << callId;
-    return setMicrophoneVolume(confSlot, value);
+    pj_status_t status = PJ_SUCCESS;
+    if (value) {
+        status = pjsua_conf_disconnect(0, callConfPort);
+    } else {
+        status = pjsua_conf_connect(0, callConfPort);
+    }
+    if (PJ_SUCCESS != status) {
+        const QString msg = value ? "Cannot mute call" : "Cannot unmute call";
+        errorHandler(msg, status, true);
+        return false;
+    }
+    return true;
 }
 
 bool Softphone::rec(bool value, int callId)
