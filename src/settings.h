@@ -88,7 +88,7 @@ public:
     static void setBuddyList(const QList<PresenceModel::PresenceInfo> &buddies);
 
     Q_INVOKABLE void save();
-    void clear();
+    Q_INVOKABLE void clear();
     static void uninstallClear();
 
 private:

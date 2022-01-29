@@ -24,7 +24,9 @@ ApplicationWindow {
         appWin.show()
         appWin.raise()
         appWin.requestActivate()
-        tabView.showDialpad()
+        if (!softphone.loggedOut) {
+            tabView.showDialpad()
+        }
     }
     function updateWindowRect() {
         softphone.winPosX = appWin.x
@@ -33,6 +35,7 @@ ApplicationWindow {
     }
     function logout() {
         softphone.loggedOut = true
+        softphone.settings.clear()
     }
 
     onClosing: (close)=> {
@@ -110,7 +113,12 @@ ApplicationWindow {
         property bool addContactFromHistory: false
     }
 
-    Component.onCompleted: appWin.updateWindowRect()
+    Component.onCompleted: {
+        appWin.updateWindowRect()
+        if (softphone.loggedOut) {
+            tabView.showSettings()
+        }
+    }
     onXChanged: appWin.updateWindowRect()
     onYChanged: appWin.updateWindowRect()
     onWidthChanged: appWin.updateWindowRect()
@@ -188,7 +196,6 @@ ApplicationWindow {
             enableVideoTimer.start()
         }
         function onLoggedOutChanged() {
-            console.log("Logged out changed " + softphone.loggedOut)
             if (softphone.loggedOut) {
                 tabView.showSettings()
             }
