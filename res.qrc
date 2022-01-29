@@ -57,7 +57,6 @@
         <file>qml/main.qml</file>
         <file>qml/Theme.qml</file>
         <file>qml/qmldir</file>
-        <file>qml/dialog/LoginDialog.qml</file>
         <file>qml/dialog/MessageDialog.qml</file>
         <file>qml/dialog/IncomingCallDialog.qml</file>
         <file>qml/Dialpad.qml</file>

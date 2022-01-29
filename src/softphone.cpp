@@ -1446,7 +1446,7 @@ void Softphone::listVideoCodecs()
     for (unsigned int n = 0; n < codecCount; ++n) {
         const QString id = QString::fromUtf8(codecInfo[n].codec_id.ptr,
                                              static_cast<int>(codecInfo[n].codec_id.slen));
-        qInfo() << id << codecInfo[n].priority;
+        //qInfo() << id << codecInfo[n].priority;
         defaultPrio[id] = codecInfo[n].priority;
         setVideoCodecBitrate(id, DEFAULT_BITRATE_KBPS * 1000);
     }

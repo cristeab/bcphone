@@ -141,6 +141,12 @@ ApplicationWindow {
                 tabView.replace("qrc:/qml/Dialpad.qml")
             }
         }
+        function showSettings() {
+            if (4 !== bar.currentButtonIndex) {
+                bar.currentButtonIndex = 4
+                tabView.replace("qrc:/qml/Settings.qml")
+            }
+        }
         anchors {
             top: parent.top
             bottom: bar.top
@@ -182,8 +188,9 @@ ApplicationWindow {
             enableVideoTimer.start()
         }
         function onLoggedOutChanged() {
+            console.log("Logged out changed " + softphone.loggedOut)
             if (softphone.loggedOut) {
-                tabView.showDialpad()
+                tabView.showSettings()
             }
         }
     }
@@ -196,10 +203,6 @@ ApplicationWindow {
         onTriggered: softphone.enableVideo = false
     }
 
-    Loader {
-        active: softphone.loggedOut
-        source: "qrc:/qml/dialog/LoginDialog.qml"
-    }
     Loader {
         active: "" !== softphone.dialogMessage
         source: "qrc:/qml/dialog/MessageDialog.qml"
@@ -251,8 +254,10 @@ ApplicationWindow {
                 }
                 font.pointSize: Theme.tabButtonFontSize
                 onClicked: {
-                    bar.currentButtonIndex = index
-                    tabView.replace(bar.pages[index])
+                    if (!softphone.loggedOut) {
+                        bar.currentButtonIndex = index
+                        tabView.replace(bar.pages[index])
+                    }
                 }
             }
         }

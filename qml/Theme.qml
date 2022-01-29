@@ -52,7 +52,7 @@ QtObject {
     readonly property real dialpadButtonFontSize: 24
     readonly property real dialpadSubTextFontSize: 8
     readonly property real buttonFontSize: 12
-    readonly property real tabButtonFontSize: 9
+    readonly property real tabButtonFontSize: 12
     readonly property real textFontSize: 12
     readonly property real labelFontSize: 12
     readonly property real tabFontSize: 14
