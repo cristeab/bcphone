@@ -43,7 +43,9 @@ Features:
 - blind and supervised transfers
 
 
-# Requirements
+# Compilation Instructions
+
+Requirements:
 
 - [Qt v6.2+](https://www.qt.io)
 
@@ -52,7 +54,7 @@ Features:
 - [cmake v3.17+](https://cmake.org/download/)
 
 
-# Compilation Instructions
+Compilation Steps:
 
 - build PJSIP library following the instructions found here: https://github.com/pjsip/pjproject
 
