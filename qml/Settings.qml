@@ -8,7 +8,7 @@ Page {
         anchors {
             top: parent.top
             topMargin: Theme.windowMargin / 2
-            bottom: extLabel.top
+            bottom: logoutBtn.top
             bottomMargin: Theme.windowMargin / 2
             left: parent.left
             leftMargin: Theme.windowMargin
