@@ -258,10 +258,8 @@ ApplicationWindow {
                 }
                 font.pointSize: Theme.tabButtonFontSize
                 onClicked: {
-                    if (!softphone.loggedOut) {
-                        bar.currentButtonIndex = index
-                        tabView.replace(bar.pages[index])
-                    }
+                    bar.currentButtonIndex = index
+                    tabView.replace(bar.pages[index])
                 }
             }
         }
