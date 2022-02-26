@@ -14,17 +14,7 @@ Supported plaforms:
 
 - Android (planned)
 
-
-# Requirements
-
-- [Qt v6.2+](https://www.qt.io)
-
-- [PJSIP library v2.12+](https://github.com/pjsip/pjproject/releases)
-
-- [cmake v3.17+](https://cmake.org/download/)
-
-
-# Features
+Features:
 
 - audio and video calls
 
@@ -53,6 +43,15 @@ Supported plaforms:
 - blind and supervised transfers
 
 
+# Requirements
+
+- [Qt v6.2+](https://www.qt.io)
+
+- [PJSIP library v2.12+](https://github.com/pjsip/pjproject/releases)
+
+- [cmake v3.17+](https://cmake.org/download/)
+
+
 # Compilation Instructions
 
 - build PJSIP library following the instructions found here: https://github.com/pjsip/pjproject
@@ -64,8 +63,8 @@ Supported plaforms:
 
 # Screenshots
 
-![Dialpad] (screenshots/dialpad.png?raw=true "Dialpad")
+![Dialpad](screenshots/dialpad.png?raw=true "Dialpad")
 
-![Settings] (screenshots/settings1.png?raw=true "Settings")
+![Settings](screenshots/settings1.png?raw=true "Settings")
 
-![Codecs] (screenshots/settings2.png?raw=true "Codecs")
+![Codecs](screenshots/settings2.png?raw=true "Codecs")
