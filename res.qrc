@@ -53,6 +53,8 @@
         <file>img/check-circle.svg</file>
         <file>img/paperclip.svg</file>
         <file>img/logo.png</file>
+        <file>img/eye-slash-solid.svg</file>
+        <file>img/eye-solid.svg</file>
         <file>qtquickcontrols2.conf</file>
         <file>qml/main.qml</file>
         <file>qml/Theme.qml</file>
@@ -61,6 +63,7 @@
         <file>qml/dialog/IncomingCallDialog.qml</file>
         <file>qml/Dialpad.qml</file>
         <file>qml/custom/CustomTextField.qml</file>
+        <file>qml/custom/CustomTextFieldPwd.qml</file>
         <file>qml/custom/LabelToolTip.qml</file>
         <file>qml/custom/DialpadButton.qml</file>
         <file>qml/custom/ImageButton.qml</file>
@@ -84,5 +87,6 @@
         <file>qml/custom/LabelTextFieldBrowser.qml</file>
         <file>qml/custom/RegistrationStatus.qml</file>
         <file>qml/custom/CustomToolButton.qml</file>
+        <file>qml/custom/LabelTextFieldPwd.qml</file>
     </qresource>
 </RCC>

@@ -708,6 +708,7 @@ bool Softphone::registerAccount()
     auto authUsername = _settings->authUserName();
     if (authUsername.isEmpty()) {
         authUsername = username;
+        _settings->setAuthUserName(username);
     }
     const auto& password = _settings->password();
     const auto sipTransport = Softphone::sipTransport(_settings->sipTransport());
@@ -715,6 +716,7 @@ bool Softphone::registerAccount()
     if (domain.isEmpty() || username.isEmpty() || password.isEmpty()) {
         errorHandler(tr("Either domain, username or password is empty"),
                      PJ_SUCCESS, true);
+        qDebug() << "Cannot register account:" << domain << username << password;
         return false;
     }
 

@@ -61,10 +61,9 @@ Page {
                 editText: softphone.settings.userName
                 onEditingFinished: softphone.settings.userName = editText
             }
-            LabelTextField {
+            LabelTextFieldPwd {
                 text: qsTr("Password")
                 width: callOutputSrc.width
-                echoMode: TextInput.Password
                 editText: softphone.settings.password
                 onEditingFinished: softphone.settings.password = editText
             }
@@ -225,6 +224,9 @@ Page {
         enabled: true
         backgroundColor: Theme.blueButtonColor
         text: qsTr("Register")
-        onClicked: softphone.registerAccount()
+        onClicked: {
+            registerBtn.focus = true
+            softphone.registerAccount()
+        }
     }
 }
