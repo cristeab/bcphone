@@ -206,8 +206,8 @@ Page {
     Row {
         id: btnRow
 
-        readonly property real largeButtonHeight: 0.9 * dialpadFrame.buttonHeight
-        readonly property real smallButtonHeight: 0.7 * dialpadFrame.buttonHeight
+        readonly property real largeButtonHeight: 0.9 * Theme.dialpadButtonHeight
+        readonly property real smallButtonHeight: 0.7 * Theme.dialpadButtonHeight
 
         spacing: (parent.width - btnRow.largeButtonHeight - 6 * btnRow.smallButtonHeight) / 8
         anchors {
