@@ -5,6 +5,18 @@
         <file>audio/discord-ringtone.wav</file>
         <file>audio/phone-calling.wav</file>
         <file>audio/telephone-ring.wav</file>
+        <file>audio/Dtmf-0.wav</file>
+        <file>audio/Dtmf-1.wav</file>
+        <file>audio/Dtmf-2.wav</file>
+        <file>audio/Dtmf-3.wav</file>
+        <file>audio/Dtmf-4.wav</file>
+        <file>audio/Dtmf-5.wav</file>
+        <file>audio/Dtmf-6.wav</file>
+        <file>audio/Dtmf-7.wav</file>
+        <file>audio/Dtmf-8.wav</file>
+        <file>audio/Dtmf-9.wav</file>
+        <file>audio/Dtmf-pound.wav</file>
+        <file>audio/Dtmf-star.wav</file>
         <file>img/phone.svg</file>
         <file>img/logout.svg</file>
         <file>img/hangup.svg</file>

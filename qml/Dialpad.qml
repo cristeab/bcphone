@@ -12,10 +12,23 @@ Page {
 
     readonly property var keyIndex: { "1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5,
         "7": 6, "8": 7, "9": 8, "*": 9, "0": 10, "#": 11 }
+    readonly property var btnSound: [ "qrc:/audio/Dtmf-1.wav",
+        "qrc:/audio/Dtmf-2.wav", "qrc:/audio/Dtmf-3.wav",
+        "qrc:/audio/Dtmf-4.wav", "qrc:/audio/Dtmf-5.wav",
+        "qrc:/audio/Dtmf-6.wav", "qrc:/audio/Dtmf-7.wav",
+        "qrc:/audio/Dtmf-8.wav", "qrc:/audio/Dtmf-9.wav",
+        "qrc:/audio/Dtmf-star.wav", "qrc:/audio/Dtmf-0.wav",
+        "qrc:/audio/Dtmf-pound.wav" ]
 
     function dialpadButtonAction(key) {
         softphone.dialedText += key
-        softphone.playDigit(key)
+        if (Theme.isWindows) {
+            softphone.playDigit(key)
+        } else {
+            const index = keyIndex[key]
+            playSound.source = btnSound[index]
+            playSound.play()
+        }
         if (softphone.activeCall && !softphone.blindTransfer && !softphone.conference) {
             softphone.sendDtmf(key)
         }
@@ -30,6 +43,11 @@ Page {
         if (0 < softphone.dialedText.length) {
             softphone.dialedText = softphone.dialedText.substring(0, softphone.dialedText.length - 1)
         }
+    }
+
+    SoundEffect {
+        id: playSound
+        volume: softphone.settings.dialpadSoundVolume
     }
 
     focus: dialpadFrame.visible
