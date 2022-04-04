@@ -7,7 +7,6 @@ import "custom"
 Page {
     id: dialpadFrame
 
-    readonly property real buttonHeight: 65
     readonly property real buttonVSpacing: 15
     readonly property real buttonHSpacing: 20
 
@@ -163,106 +162,26 @@ Page {
         rowSpacing: dialpadFrame.buttonVSpacing
         columns: 3
 
-        //row 1
-        DialpadButton {
-            id: button1
-            height: dialpadFrame.buttonHeight
-            width: height
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "1"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button2
-            height: button1.height
-            width: button1.width
-            text: "2"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button3
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "3"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        //row 2
-        DialpadButton {
-            id: button4
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "4"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button5
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "5"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button6
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "6"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        //row 3
-        DialpadButton {
-            id: button7
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "7"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button8
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "8"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button9
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "9"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        //row 4
-        DialpadButton {
-            id: buttonStar
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            verticalOffset: 8
-            text: "*"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: button0
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            text: "0"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
-        }
-        DialpadButton {
-            id: buttonPound
-            height: button1.height
-            width: button1.width
-            implicitHeight: dialpadFrame.buttonHeight
-            verticalOffset: 3
-            text: "#"
-            onClicked: dialpadFrame.dialpadButtonAction(text)
+        Repeater {
+            id: dialpadRepeater
+            function itemVerticalOffset(idx) {
+                let out = 0
+                if (9 === idx) {
+                    out = 8
+                } else if (11 === idx) {
+                    out = 3
+                }
+                return out
+            }
+            property var keysArr: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
+            model: keysArr.length
+            DialpadButton {
+                height: Theme.dialpadButtonHeight
+                width: height
+                text: dialpadRepeater.keysArr[index]
+                verticalOffset: dialpadRepeater.itemVerticalOffset(index)
+                onClicked: dialpadFrame.dialpadButtonAction(text)
+            }
         }
     }//grid
 

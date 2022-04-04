@@ -63,6 +63,7 @@ QtObject {
     readonly property real buttonHeight: 35
     readonly property real toolButtonHeight: 20
     readonly property real spinBoxWidth: 120
+    readonly property real dialpadButtonHeight: 65
 
     readonly property color backgroundColor: Material.background
     readonly property color tabButtonColor: Material.foreground
