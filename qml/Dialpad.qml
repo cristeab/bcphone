@@ -103,7 +103,7 @@ Page {
             source: "qrc:/img/backspace.svg"
             color: backspaceBtn.pressed ? Qt.darker(Theme.tabButtonColor) : Theme.tabButtonColor
         }
-        height: 0.8 * dialNumberTextField.height
+        height: dialNumberTextField.height
         background: Rectangle {
             color: Theme.backgroundColor
         }

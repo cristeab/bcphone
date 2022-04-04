@@ -7,8 +7,6 @@ Button {
     property color backgroundColor: Theme.greenButtonColor
     height: Theme.buttonHeight
 
-    leftPadding: 0
-    rightPadding: 0
     topPadding: 0
     bottomPadding: 0
 
