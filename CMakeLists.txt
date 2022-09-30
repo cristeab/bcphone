@@ -1,5 +1,5 @@
 project("BCPhone" CXX)
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.20)
 
 set(SOFTPHONE_VERSION "0.1")
 
