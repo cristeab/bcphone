@@ -3,11 +3,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
-#include <QQmlEngine>
 
 RingTonesModel::RingTonesModel(QObject *parent) : QAbstractListModel(parent)
 {
-    qmlRegisterInterface<RingTonesModel>("RingTonesModel", 1);
 }
 
 int RingTonesModel::rowCount(const QModelIndex& /*parent*/) const

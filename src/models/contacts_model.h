@@ -2,10 +2,13 @@
 
 #include <QAbstractListModel>
 #include <QVector>
+#include <QQmlEngine>
 
 class ContactsModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ANONYMOUS
+
 public:
     enum { INVALID_CONTACT_ID = -1, INVALID_CONTACT_INDEX = -1 };
     enum ContactRoles {

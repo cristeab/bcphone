@@ -6,7 +6,6 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
-#include <QQmlEngine>
 
 #define SIP_SERVER "SIP SERVER"
 #define SIP_PORT "SIP PORT"
@@ -78,8 +77,6 @@
 
 Settings::Settings(QObject *parent) : QObject (parent)
 {
-    qmlRegisterInterface<Settings>("Settings", 1);
-
     load();
 }
 

@@ -1,10 +1,8 @@
 #include "call_history_model.h"
 #include "settings.h"
-#include <QQmlEngine>
 
 CallHistoryModel::CallHistoryModel(QObject *parent) : QAbstractListModel(parent)
 {
-    qmlRegisterInterface<CallHistoryModel>("CallHistoryModel", 1);
     _history = Settings::callHistoryInfo();
 }
 

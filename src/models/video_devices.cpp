@@ -1,11 +1,9 @@
 #include "video_devices.h"
 #include "softphone.h"
-#include <QQmlEngine>
 #include <QDebug>
 
 VideoDevices::VideoDevices(QObject *parent) : GenericDevices(parent)
 {
-    qmlRegisterInterface<VideoDevices>("VideoDevices", 1);
 }
 
 int VideoDevices::rowCount(const QModelIndex &/*parent*/) const

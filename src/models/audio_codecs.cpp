@@ -1,10 +1,8 @@
 #include "audio_codecs.h"
 #include "settings.h"
-#include <QQmlEngine>
 
 AudioCodecs::AudioCodecs(QObject *parent) : GenericCodecs(parent)
 {
-    qmlRegisterInterface<AudioCodecs>("AudioCodecs", 1);
 }
 
 void AudioCodecs::init()

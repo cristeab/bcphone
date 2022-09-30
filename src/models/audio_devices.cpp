@@ -2,11 +2,9 @@
 #include "softphone.h"
 #include "settings.h"
 #include <QDebug>
-#include <QQmlEngine>
 
 AudioDevices::AudioDevices(QObject *parent) : GenericDevices(parent)
 {
-    qmlRegisterInterface<AudioDevices>("AudioDevices", 1);
 }
 
 int AudioDevices::rowCount(const QModelIndex &/*parent*/) const

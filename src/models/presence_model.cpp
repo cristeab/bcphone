@@ -2,11 +2,9 @@
 #include "call_history_model.h"
 #include "softphone.h"
 #include "settings.h"
-#include <QQmlEngine>
 
 PresenceModel::PresenceModel(QObject *parent) : QAbstractListModel(parent)
 {
-    qmlRegisterInterface<PresenceModel>("PresenceModel", 1);
 }
 
 int PresenceModel::rowCount(const QModelIndex& /*parent*/) const

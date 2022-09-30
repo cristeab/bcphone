@@ -13,6 +13,7 @@
 
 class Settings : public QObject {
     Q_OBJECT
+    QML_ANONYMOUS
 
 public:
     enum SipTransport { Udp, Tcp, Tls };

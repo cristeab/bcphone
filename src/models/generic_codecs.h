@@ -2,10 +2,12 @@
 
 #include <QAbstractListModel>
 #include <QList>
+#include <QQmlEngine>
 
 class GenericCodecs : public QAbstractTableModel
 {
     Q_OBJECT
+    QML_ANONYMOUS
 
 public:
     struct CodecInfo {

@@ -69,7 +69,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package (Qt6 6.2 COMPONENTS
+find_package (Qt6 6.4 COMPONENTS
                         Core
                         Qml
                         Quick

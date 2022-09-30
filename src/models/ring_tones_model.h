@@ -1,11 +1,14 @@
 #pragma once
 
+#include <QQmlEngine>
 #include <QAbstractListModel>
 #include <QVector>
 
 class RingTonesModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ANONYMOUS
+
 public:
     enum RingTonesRoles {
         Name = Qt::UserRole+1

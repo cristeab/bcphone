@@ -1,10 +1,13 @@
 #pragma once
 
 #include "generic_devices.h"
+#include <QQmlEngine>
 #include <pjmedia/videodev.h>
 
 class VideoDevices : public GenericDevices<pjmedia_vid_dev_index, PJMEDIA_VID_INVALID_DEV> {
     Q_OBJECT
+    QML_ANONYMOUS
+
 public:
     explicit VideoDevices(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const;

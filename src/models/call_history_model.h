@@ -12,7 +12,9 @@ class ContactsModel;
 class CallHistoryModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ANONYMOUS
     QML_WRITABLE_PROPERTY(int, currentIndex, setCurrentIndex, -1)
+
 public:
     enum class CallStatus { UNKNOWN, OUTGOING, INCOMING, REJECTED, TRANSFERRED };
     Q_ENUM(CallStatus)

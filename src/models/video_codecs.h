@@ -5,6 +5,7 @@
 class VideoCodecs : public GenericCodecs
 {
     Q_OBJECT
+    QML_ANONYMOUS
 
 public:
     explicit VideoCodecs(QObject *parent = nullptr);

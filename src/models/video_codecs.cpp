@@ -1,10 +1,8 @@
 #include "video_codecs.h"
 #include "settings.h"
-#include <QQmlEngine>
 
 VideoCodecs::VideoCodecs(QObject *parent) : GenericCodecs(parent)
 {
-    qmlRegisterInterface<VideoCodecs>("VideoCodecs", 1);
 }
 
 void VideoCodecs::init()

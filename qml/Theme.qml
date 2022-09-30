@@ -49,21 +49,21 @@ QtObject {
         return num
     }
 
-    readonly property real dialpadButtonFontSize: 24
-    readonly property real dialpadSubTextFontSize: 8
-    readonly property real buttonFontSize: 12
-    readonly property real tabButtonFontSize: 10
-    readonly property real textFontSize: 12
-    readonly property real labelFontSize: 12
-    readonly property real tabFontSize: 14
-    readonly property real titleFontSize: 20
+    readonly property int dialpadButtonFontSize: 24
+    readonly property int dialpadSubTextFontSize: 8
+    readonly property int buttonFontSize: 12
+    readonly property int tabButtonFontSize: 10
+    readonly property int textFontSize: 12
+    readonly property int labelFontSize: 12
+    readonly property int tabFontSize: 14
+    readonly property int titleFontSize: 20
 
-    readonly property real dialogMargin: 80
-    readonly property real windowMargin: 10
-    readonly property real buttonHeight: 35
-    readonly property real toolButtonHeight: 20
-    readonly property real spinBoxWidth: 120
-    readonly property real dialpadButtonHeight: 65
+    readonly property int dialogMargin: 80
+    readonly property int windowMargin: 10
+    readonly property int buttonHeight: 35
+    readonly property int toolButtonHeight: 20
+    readonly property int spinBoxWidth: 120
+    readonly property int dialpadButtonHeight: 65
 
     readonly property color backgroundColor: Material.background
     readonly property color tabButtonColor: Material.foreground

@@ -2,6 +2,7 @@
 
 #include "qmlhelpers.h"
 #include "pjsua.h"
+#include <QQmlEngine>
 #include <QAbstractListModel>
 #include <QList>
 
@@ -10,6 +11,7 @@ class ContactsModel;
 class PresenceModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ANONYMOUS
     QML_WRITABLE_PROPERTY(bool, selectBuddy, setSelectBuddy, false)
 
 public:

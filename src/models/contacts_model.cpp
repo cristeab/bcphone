@@ -1,10 +1,8 @@
 #include "contacts_model.h"
 #include "settings.h"
-#include <QQmlEngine>
 
 ContactsModel::ContactsModel(QObject *parent) : QAbstractListModel(parent)
 {
-    qmlRegisterInterface<ContactsModel>("ContactsModel", 1);
     _contacts = Settings::contactsInfo();
 }
 
