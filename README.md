@@ -47,16 +47,16 @@ Features:
 
 Requirements:
 
-- [Qt v6.2+](https://www.qt.io)
+- [Qt v6.4](https://www.qt.io)
 
-- [PJSIP library v2.12+](https://github.com/pjsip/pjproject/releases)
+- [PJSIP library v2.12.1](https://github.com/pjsip/pjproject/releases)
 
-- [cmake v3.17+](https://cmake.org/download/)
+- [cmake v3.20](https://cmake.org/download/)
 
 
 Compilation Steps:
 
-- build PJSIP library following the instructions found here: https://github.com/pjsip/pjproject
+- build PJSIP library by copying the provided script tools/build-pjsip-macos.sh in the PJSIP sources folder, then run it
 
 - open CMakeLists.txt file and make sure that the libraries paths (e.g. PJSIP_ROOT_DIR) point to the correct locations
 

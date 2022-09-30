@@ -14,7 +14,8 @@ sed -i '' '22i\
 #define PJ_CONFIG_MINIMAL_SIZE\
 #define PJMEDIA_HAS_VIDEO 1\
 #define PJMEDIA_HAS_FFMPEG 0\
-#define PJMEDIA_HAS_OPUS_CODEC 1
+#define PJMEDIA_HAS_OPUS_CODEC 1\
+#define PJ_HAS_LIMITS_H 1
 ' pjlib/include/pj/config_site.h
 
 make dep && make
