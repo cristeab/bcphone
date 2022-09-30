@@ -1,34 +1,22 @@
 project("BCPhone" CXX)
 cmake_minimum_required(VERSION 3.20)
 
-set(SOFTPHONE_VERSION "0.1")
+include(cmake/internal_utils.cmake)
+get_app_version(SOFTPHONE_VERSION "1.0")
+
+option(PRODUCTION_BUILD "Build the application for production" OFF)
+if (PRODUCTION_BUILD)
+    add_definitions(-DQT_NO_DEBUG_OUTPUT -DQT_NO_WARNING_OUTPUT -DQT_NO_INFO_OUTPUT)
+endif()
 
 if (APPLE)
     if (NOT PJSIP_ROOT_DIR)
         set(PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../build-macos")
     endif()
-    set (PJSIP_INCLUDE_DIRS "${PJSIP_ROOT_DIR}/include")
-    set (PJSIP_LIBRARIES "libg7221codec-x86_64-apple-darwin21.3.0.a;libpjlib-util-x86_64-apple-darwin21.3.0.a;libpjmedia-x86_64-apple-darwin21.3.0.a;libpjsip-x86_64-apple-darwin21.3.0.a;libspeex-x86_64-apple-darwin21.3.0.a;libgsmcodec-x86_64-apple-darwin21.3.0.a;libpjmedia-audiodev-x86_64-apple-darwin21.3.0.a;libpjnath-x86_64-apple-darwin21.3.0.a;libpjsua-x86_64-apple-darwin21.3.0.a;libsrtp-x86_64-apple-darwin21.3.0.a;libilbccodec-x86_64-apple-darwin21.3.0.a;libpjmedia-codec-x86_64-apple-darwin21.3.0.a;libpjsip-simple-x86_64-apple-darwin21.3.0.a;libpjsua2-x86_64-apple-darwin21.3.0.a;libyuv-x86_64-apple-darwin21.3.0.a;libpj-x86_64-apple-darwin21.3.0.a;libpjmedia-videodev-x86_64-apple-darwin21.3.0.a;libpjsip-ua-x86_64-apple-darwin21.3.0.a;libresample-x86_64-apple-darwin21.3.0.a")
-
-    set (BCG729_ROOT_DIR "${CMAKE_SOURCE_DIR}/../bcg729-install")
-    set (BCG729_LIBRARIES "libbcg729.a")
-
-    set (OPENH264_ROOT_DIR "/usr/local/Cellar/openh264/2.2.0")
-    set (OPENH264_LIBRARIES "libopenh264.dylib")
-
-    set (VPX_ROOT_DIR /usr/local/Cellar/libvpx/1.11.0)
-    set (VPX_LIBRARIES "libvpx.a")
-
-    set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/ ${CMAKE_MODULE_PATH})
-    find_package(CoreFoundation REQUIRED)
-    find_package(AVFoundation REQUIRED)
-    find_package(AudioToolbox REQUIRED)
-    find_package(CoreAudio REQUIRED)
-    find_package(CoreVideo REQUIRED)
-    find_package(CoreServices REQUIRED)
-    find_package(CoreMedia REQUIRED)
-    find_package(Foundation REQUIRED)
-    find_package(SDL2 REQUIRED)
+    set (ENV{PKG_CONFIG_PATH} ${PJSIP_ROOT_DIR}/lib/pkgconfig)
+    find_package (PkgConfig REQUIRED)
+    pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
+    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl@3")
 elseif (WIN32)
     if (NOT PJSIP_ROOT_DIR)
         set (PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../pjproject-2.11.1")
@@ -54,11 +42,6 @@ elseif (WIN32)
     set (SDL2_LIBRARIES "version.lib;Imm32.lib;Setupapi.lib")
 else ()
     message(FATAL "Unsupported platform")
-endif()
-
-option(PRODUCTION_BUILD "Build the application for production" OFF)
-if (PRODUCTION_BUILD)
-    add_definitions(-DQT_NO_DEBUG_OUTPUT -DQT_NO_WARNING_OUTPUT -DQT_NO_INFO_OUTPUT)
 endif()
 
 #set from the beginning to include into config.h
@@ -102,16 +85,10 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_VERSION ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2022 Bogdan Cristea. All rights reserved")
     target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
-    target_link_directories(${PROJECT_NAME} PRIVATE ${PJSIP_ROOT_DIR}/lib ${BCG729_ROOT_DIR}/lib ${OPENH264_ROOT_DIR}/lib ${VPX_ROOT_DIR}/lib)
+    target_link_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_ROOT_DIR}/lib)
+    string (REPLACE ";" " " PJSIP_STATIC_LDFLAGS_STR "${PJSIP_STATIC_LDFLAGS}")
     target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg
-        ${PJSIP_LIBRARIES} ${CoreFoundation_LIBRARIES} ${AVFoundation_LIBRARIES}
-        ${AudioToolbox_LIBRARIES} ${CoreAudio_LIBRARIES} ${CoreVideo_LIBRARIES} ${CoreServices_LIBRARIES}
-        ${CoreMedia_LIBRARIES} ${Foundation_LIBRARIES} ${SDL2_LIBRARIES} ${SWSCALE_LIBRARIES}
-        ${BCG729_LIBRARIES} ${OPENH264_LIBRARIES} ${VPX_LIBRARIES}
-        /usr/local/lib/libopencore-amrnb.a
-        /usr/local/opt/openssl@1.1/lib/libcrypto.a
-        /usr/local/opt/openssl@1.1/lib/libssl.a
-        /usr/local/Cellar/opus/1.3.1/lib/libopus.0.dylib)
+                                            ${PJSIP_STATIC_LDFLAGS_STR})
 
     #custom plist file
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/platform/macos/Info.plist.in)
