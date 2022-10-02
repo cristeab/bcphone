@@ -10,3 +10,7 @@
 Before using this file install chocolatey from https://chocolatey.org, then run
 
     choco install conan 7zip
+
+You might also need to set the execution policy for PowerShell scripts running as admin
+
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted

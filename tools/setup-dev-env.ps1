@@ -8,8 +8,8 @@ Expand-Archive -Force $PJSIP_ARCHIVE .
 Write-Output 'Clone BCG729...'
 git clone https://github.com/BelledonneCommunications/bcg729.git
 
-Write-Output 'Download libvpx with conan, then copy include and lib folders using the paths found in conanbuildinfo.txt'
-conan install . -if conan-build-info -g txt -g cmake
+Write-Output 'Download external dependences with conan'
+conan install . -if conan-build-info
 
 Write-Output 'Download $OPENH264_ARCHIVE...'
 Invoke-WebRequest -Uri "http://ciscobinary.openh264.org/$OPENH264_ARCHIVE" -OutFile $OPENH264_ARCHIVE

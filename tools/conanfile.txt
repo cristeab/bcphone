@@ -1,4 +1,13 @@
 [requires]
 libvpx/1.11.0
-opus/1.3.1
-sdl/2.24.0
+# opus/1.3.1
+# sdl/2.24.0
+
+[generators]
+txt
+cmake
+
+[imports]
+lib, *.lib -> ./lib
+dll, *.dll -> ./dll
+include, *.h -> ./include
