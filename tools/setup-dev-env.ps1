@@ -9,7 +9,7 @@ Write-Output 'Clone BCG729...'
 git clone https://github.com/BelledonneCommunications/bcg729.git
 
 Write-Output 'Download external dependences with conan'
-conan install . -if conan-build-info
+conan install . -if conan
 
 Write-Output 'Download $OPENH264_ARCHIVE...'
 Invoke-WebRequest -Uri "http://ciscobinary.openh264.org/$OPENH264_ARCHIVE" -OutFile $OPENH264_ARCHIVE
