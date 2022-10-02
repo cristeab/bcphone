@@ -19,9 +19,13 @@ if (APPLE)
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl@3")
 elseif (WIN32)
     if (NOT PJSIP_ROOT_DIR)
-        set (PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../pjproject-2.11.1")
+        set (PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../pjproject-2.12.1")
     endif ()
-    set (PJSIP_INCLUDE_DIRS "${PJSIP_ROOT_DIR}/pjsip/include;${PJSIP_ROOT_DIR}/pjlib/include;${PJSIP_ROOT_DIR}/pjlib-util/include;${PJSIP_ROOT_DIR}/pjmedia/include;${PJSIP_ROOT_DIR}/pjnath/include")
+    set (PJSIP_INCLUDE_DIRS ${PJSIP_ROOT_DIR}/pjsip/include
+                            ${PJSIP_ROOT_DIR}/pjlib/include
+                            ${PJSIP_ROOT_DIR}/pjlib-util/include
+                            ${PJSIP_ROOT_DIR}/pjmedia/include
+                            ${PJSIP_ROOT_DIR}/pjnath/include)
     set (PJSIP_LIBRARIES "libpjproject-x86_64-x64-vc14-Release-Static.lib")
 
     set (VPX_ROOT_DIR "${CMAKE_SOURCE_DIR}/3rdparty/libvpx")
