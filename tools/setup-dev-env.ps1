@@ -6,3 +6,6 @@ Expand-Archive -Force $PJSIP_ARCHIVE .
 
 Write-Output 'Clone BCG729...'
 git clone https://github.com/BelledonneCommunications/bcg729.git
+
+Write-Output 'Download libvpx with conan'
+conan install . -g txt -of libvpx-info
