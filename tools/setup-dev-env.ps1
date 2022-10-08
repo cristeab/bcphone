@@ -25,3 +25,6 @@ Invoke-WebRequest -Uri "http://ciscobinary.openh264.org/$OPENH264_ARCHIVE" -OutF
 7z x -y $OPENH264_ARCHIVE
 New-Item -Path "$INSTALL_DIR" -Name "bin" -ItemType "directory"
 Copy-Item "openh264-$OPENH264_VERSION-win64.dll" -Destination "$INSTALL_DIR/bin/"
+
+Invoke-WebRequest -Uri "https://github.com/cisco/openh264/archive/refs/tags/v$OPENH264_VERSION.zip" -OutFile "v$OPENH264_VERSION.zip"
+Expand-Archive -Force "v$OPENH264_VERSION.zip" .
