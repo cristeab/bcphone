@@ -1,11 +1,12 @@
-$PJSIP_ARCHIVE = '2.12.1.zip'
+$PJSIP_VERSION = '2.12.1'
 $OPENH264_VERSION = '2.3.1'
 $OPENH264_ARCHIVE = "openh264-$OPENH264_VERSION-win64.dll.bz2"
 $INSTALL_DIR = 'deps'
 
-Write-Output "Download $PJSIP_ARCHIVE..."
-Invoke-WebRequest -Uri "https://github.com/pjsip/pjproject/archive/refs/tags/$PJSIP_ARCHIVE" -OutFile $PJSIP_ARCHIVE
-Expand-Archive -Force $PJSIP_ARCHIVE .
+Write-Output "Download $PJSIP_VERSION.zip..."
+Invoke-WebRequest -Uri "https://github.com/pjsip/pjproject/archive/refs/tags/$PJSIP_VERSION.zip" -OutFile "$PJSIP_VERSION.zip"
+Expand-Archive -Force "$PJSIP_VERSION.zip" .
+Copy-Item "config_site_win.h" "pjproject-$PJSIP_VERSION/pjlib/include/pj/config_site.h"
 
 Write-Output "Clone BCG729..."
 git clone https://github.com/BelledonneCommunications/bcg729.git
