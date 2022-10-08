@@ -19,7 +19,7 @@ if (APPLE)
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl@3")
 elseif (WIN32)
     if (NOT PJSIP_ROOT_DIR)
-        set (PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../pjproject-2.12.1")
+        set (PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../3rdparty/pjproject-2.12.1")
     endif ()
     set (PJSIP_INCLUDE_DIRS ${PJSIP_ROOT_DIR}/pjsip/include
                             ${PJSIP_ROOT_DIR}/pjlib/include
