@@ -1,7 +1,7 @@
 $PJSIP_VERSION = '2.12.1'
 $OPENH264_VERSION = '2.3.1'
 $OPENH264_ARCHIVE = "openh264-$OPENH264_VERSION-win64.dll.bz2"
-$INSTALL_DIR = 'deps'
+$INSTALL_DIR = 'precompiled'
 
 Write-Output "Download $PJSIP_VERSION.zip..."
 Invoke-WebRequest -Uri "https://github.com/pjsip/pjproject/archive/refs/tags/$PJSIP_VERSION.zip" -OutFile "$PJSIP_VERSION.zip"
