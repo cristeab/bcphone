@@ -101,7 +101,7 @@ elseif (WIN32)
     add_executable(${PROJECT_NAME} WIN32 ${SRCS} ${PLATFORM_SRCS} ${RSCS} "${CMAKE_SOURCE_DIR}/img/app.rc")
     target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
     target_link_directories(${PROJECT_NAME} PRIVATE "${PJSIP_ROOT_DIR}/lib;${VPX_ROOT_DIR}/lib;${OPENH264_ROOT_DIR}/lib;${OPENSSL_ROOT_DIR}/lib;${OPUS_ROOT_DIR}/lib;${BCG729_ROOT_DIR}/lib;${SDL2_ROOT_DIR}/lib/x64")
-    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg Qt6::QuickWidgets ${PJSIP_LIBRARIES} ${OPENH264_LIBRARIES} ${OPENSSL_LIBRARIES} ${OPUS_LIBRARIES} ${BCG729_LIBRARIES} ${SDL2_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg ${PJSIP_LIBRARIES} ${OPENH264_LIBRARIES} ${OPENSSL_LIBRARIES} ${OPUS_LIBRARIES} ${BCG729_LIBRARIES} ${SDL2_LIBRARIES})
 endif()
 
 #installer setup

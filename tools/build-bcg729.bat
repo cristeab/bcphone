@@ -9,7 +9,7 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-"C:\Program Files\CMake\bin\cmake.exe" .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%1
+"C:\Program Files\CMake\bin\cmake.exe" .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%1
 if %errorlevel% neq 0 (
     popd
     exit /b %errorlevel%
