@@ -92,7 +92,7 @@ elseif (WIN32)
     target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
     target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
     target_link_directories(${PROJECT_NAME} PRIVATE "${PJSIP_ROOT_DIR}/lib;${PRECOMPILED_ROOT_DIR}/lib;${OPENSSL_ROOT_DIR}/lib")
-    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg ${PRECOMPILED_LIBRARIES} ${PJSIP_LIBRARIES} ${OPENSSL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg ${PJSIP_LIBRARIES} ${PRECOMPILED_LIBRARIES} ${OPENSSL_LIBRARIES})
 endif()
 
 #installer setup
