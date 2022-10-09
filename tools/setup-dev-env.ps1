@@ -12,7 +12,7 @@ git clone https://github.com/BelledonneCommunications/bcg729.git
 Write-Output "Compile BCG729..."
 Copy-Item "build-bcg729.bat" -Destination "bcg729"
 Set-Location bcg729
-.\build-bcg729.bat '$PSScriptRoot/$INSTALL_DIR'
+.\build-bcg729.bat "$PSScriptRoot/$INSTALL_DIR"
 Set-Location ..
 
 Write-Output "Download vpx, opus, openh264 and SDL2 libraries with conan"

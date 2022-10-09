@@ -19,9 +19,7 @@ if (APPLE)
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl@3")
 elseif (WIN32)
     set (DEPS_DIR "${CMAKE_SOURCE_DIR}/../3rdparty")
-    if (NOT PJSIP_ROOT_DIR)
-        set (PJSIP_ROOT_DIR "${DEPS_DIR}/pjproject-2.12.1")
-    endif ()
+    set (PJSIP_ROOT_DIR "${DEPS_DIR}/pjproject-2.12.1")
     set (PJSIP_INCLUDE_DIRS ${PJSIP_ROOT_DIR}/pjsip/include
                             ${PJSIP_ROOT_DIR}/pjlib/include
                             ${PJSIP_ROOT_DIR}/pjlib-util/include
@@ -29,22 +27,13 @@ elseif (WIN32)
                             ${PJSIP_ROOT_DIR}/pjnath/include)
     set (PJSIP_LIBRARIES "libpjproject-x86_64-x64-vc14-Release-Static.lib")
 
-    set (VPX_ROOT_DIR "${DEPS_DIR}/precompiled/lib")
+    # set (VPX_ROOT_DIR "${DEPS_DIR}/precompiled/lib")
 
-    set (OPENH264_ROOT_DIR "${DEPS_DIR}")
-    set (OPENH264_LIBRARIES "openh264-2.3.1-win64.dll")
+    set (PRECOMPILED_ROOT_DIR "${DEPS_DIR}/precompiled")
+    set (PRECOMPILED_LIBRARIES "openh264.lib;opus.lib;bcg729.lib;SDL2-static.lib")
 
     set (OPENSSL_ROOT_DIR "${CMAKE_PREFIX_PATH}/../../Tools/OpenSSL/Win_x64")
     set (OPENSSL_LIBRARIES "libcrypto.lib;libssl.lib")
-
-    set (OPUS_ROOT_DIR "${DEPS_DIR}/precompiled/lib")
-    set (OPUS_LIBRARIES "opus.lib")
-
-    set (BCG729_ROOT_DIR "${DEPS_DIR}/precompiled/lib")
-    set (BCG729_LIBRARIES "bcg729.lib")
-
-    set (SDL2_ROOT_DIR "${DEPS_DIR}/precompiled/lib")
-    set (SDL2_LIBRARIES "SDL2-static.lib")
 else ()
     message(FATAL "Unsupported platform")
 endif()
@@ -102,8 +91,8 @@ elseif (WIN32)
     add_executable(${PROJECT_NAME} WIN32 ${SRCS} ${PLATFORM_SRCS} ${RSCS} "${CMAKE_SOURCE_DIR}/img/app.rc")
     target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
     target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-    target_link_directories(${PROJECT_NAME} PRIVATE "${PJSIP_ROOT_DIR}/lib;${VPX_ROOT_DIR}/lib;${OPENH264_ROOT_DIR}/lib;${OPENSSL_ROOT_DIR}/lib;${OPUS_ROOT_DIR}/lib;${BCG729_ROOT_DIR}/lib;${SDL2_ROOT_DIR}/lib/x64")
-    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg ${PJSIP_LIBRARIES} ${OPENH264_LIBRARIES} ${OPENSSL_LIBRARIES} ${OPUS_LIBRARIES} ${BCG729_LIBRARIES} ${SDL2_LIBRARIES})
+    target_link_directories(${PROJECT_NAME} PRIVATE "${PJSIP_ROOT_DIR}/lib;${PRECOMPILED_ROOT_DIR}/lib;${OPENSSL_ROOT_DIR}/lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg ${PRECOMPILED_LIBRARIES} ${PJSIP_LIBRARIES} ${OPENSSL_LIBRARIES})
 endif()
 
 #installer setup

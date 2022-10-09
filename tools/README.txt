@@ -6,6 +6,10 @@
 
 # Windows
 
+In order to compile PJSIP library and the external dependecies use 'setup-dev-env.ps1'.
+Create a folder '3rdparty' on the same folder where the application sources are and copy in it
+'setup-dev-env.ps1', 'build-bcg729.bat', 'conanfile.txt' and 'config_site_win.h'.
+
 - setup-dev-env.ps1: download PSJIP sources and the associated external dependences.
 Before using this file install chocolatey from https://chocolatey.org, then run
 
