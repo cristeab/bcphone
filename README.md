@@ -6,7 +6,7 @@ Supported plaforms:
 
 - macOS
 
-- Windows (planned)
+- Windows
 
 - Ubuntu (planned)
 
