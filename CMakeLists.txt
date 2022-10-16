@@ -27,10 +27,8 @@ elseif (WIN32)
                             ${PJSIP_ROOT_DIR}/pjnath/include)
     set (PJSIP_LIBRARIES "libpjproject-x86_64-x64-vc14-Release-Static.lib")
 
-    # set (VPX_ROOT_DIR "${DEPS_DIR}/precompiled/lib")
-
     set (PRECOMPILED_ROOT_DIR "${DEPS_DIR}/precompiled")
-    set (PRECOMPILED_LIBRARIES "openh264.lib;opus.lib;bcg729.lib;SDL2-static.lib;Setupapi.lib;Version.lib;Imm32.lib")
+    set (PRECOMPILED_LIBRARIES "openh264.lib;opus.lib;bcg729.lib;SDL2-static.lib;Setupapi.lib;Version.lib;Imm32.lib;vpxmd.lib")
 
     set (OPENSSL_ROOT_DIR "${CMAKE_PREFIX_PATH}/../../Tools/OpenSSL/Win_x64")
     set (OPENSSL_LIBRARIES "libcrypto.lib;libssl.lib")
