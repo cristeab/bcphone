@@ -187,22 +187,17 @@ QString CallHistoryModel::formatUserName(const QString &firstName, const QString
     return userName;
 }
 
-static
-uint qHash(const CallHistoryModel::CallStatus &key, uint seed)
-{
-    return qHash(static_cast<int>(key), seed);
-}
 QString CallHistoryModel::callStatusToString(CallStatus callStatus)
 {
-    static const QHash<CallStatus, QString> statusMap {
+    static const std::unordered_map<CallStatus, QString> statusMap {
         { CallStatus::UNKNOWN, "unknown" },
         { CallStatus::OUTGOING, "outgoing" },
         { CallStatus::INCOMING, "incoming" },
         { CallStatus::REJECTED, "rejected" },
         { CallStatus::TRANSFERRED, "transferred" }
     };
-    if (statusMap.contains(callStatus)) {
-        return statusMap.value(callStatus);
+    if (0 != statusMap.count(callStatus)) {
+        return statusMap.at(callStatus);
     }
     return "unknown";
 }

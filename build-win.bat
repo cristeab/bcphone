@@ -1,4 +1,4 @@
-set QT_PATH="C:/Qt/6.2.2/msvc2019_64"
+set QT_PATH="C:/Qt/6.4.0/msvc2019_64"
 set VS_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build"
 set CMAKE_PATH="C:\Program Files\CMake\bin"
 set NINJA_PATH="C:\Qt\Tools\Ninja"

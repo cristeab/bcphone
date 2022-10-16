@@ -102,7 +102,7 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
     set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_SOURCE_DIR}/README.md)
     set(CPACK_PACKAGE_VERSION ${SOFTPHONE_VERSION})
     set(CPACK_RESOURCE_FILE_README ${CMAKE_SOURCE_DIR}/README.md)
-    set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE.txt)
+    set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE)
     set(CPACK_PACKAGE_CONTACT "cristeab@gmail.com")
     set(CPACK_STRIP_FILES ${PROJECT_NAME})
 
@@ -138,8 +138,6 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
         install(FILES ${CMAKE_SOURCE_DIR}/img/logo.ico DESTINATION .)
         install(FILES ${OPENSSL_ROOT_DIR}/bin/libcrypto-1_1-x64.dll DESTINATION .)
         install(FILES ${OPENSSL_ROOT_DIR}/bin/libssl-1_1-x64.dll DESTINATION .)
-        install(FILES ${OPENH264_ROOT_DIR}/lib/openh264.dll DESTINATION .)
-        install(FILES ${SDL2_ROOT_DIR}/lib/x64/SDL2.dll DESTINATION .)
 
         add_custom_target(windeployqt ALL
             DEPENDS ${PROJECT_NAME}.exe
