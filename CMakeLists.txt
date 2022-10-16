@@ -16,6 +16,10 @@ if (APPLE)
     set (ENV{PKG_CONFIG_PATH} ${PJSIP_ROOT_DIR}/lib/pkgconfig)
     find_package (PkgConfig REQUIRED)
     pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
+
+    set (OPENH264_ROOT_DIR "/usr/local/Cellar/openh264/2.3.1")
+    set (OPENH264_LIBRARIES "openh264")
+
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl@1.1")
 elseif (WIN32)
     set (DEPS_DIR "${CMAKE_SOURCE_DIR}/../3rdparty")
@@ -77,10 +81,10 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_VERSION ${SOFTPHONE_VERSION}
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2022 Bogdan Cristea. All rights reserved")
     target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
-    target_link_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_ROOT_DIR}/lib)
+    target_link_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_ROOT_DIR}/lib ${OPENH264_ROOT_DIR}/lib)
     string (REPLACE ";" " " PJSIP_STATIC_LDFLAGS_STR "${PJSIP_STATIC_LDFLAGS}")
     target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg
-                                            ${PJSIP_STATIC_LDFLAGS_STR})
+                                            ${PJSIP_STATIC_LDFLAGS_STR} ${OPENH264_LIBRARIES})
 
     #custom plist file
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/platform/macos/Info.plist.in)

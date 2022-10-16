@@ -4,6 +4,12 @@
 
 - gen-icns.sh: generate icns file
 
+In order to compile PJSIP library you must clone BCG729 repository, then use the 'tools/build-bcg.sh' script
+to compile and install the library.
+Also, you must install openh264 with brew
+
+    brew install openh264
+
 # Windows
 
 In order to compile PJSIP library and the external dependecies use 'setup-dev-env.ps1'.

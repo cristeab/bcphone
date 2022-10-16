@@ -39,6 +39,7 @@ BUILD_DIR=build
 
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 BCG729_DIR=$CUR_DIR/../bcg729-install
+OPENH264_DIR=/usr/local/Cellar/openh264/2.3.1
 
 if [ "$compile_app" = true ] ; then
 
@@ -62,6 +63,7 @@ if [ "$compile_app" = true ] ; then
         cp /usr/local/lib/gcc/10/libgcc_s.1.dylib build/$APP_NAME.app/Contents/Frameworks
     fi
     cp $BCG729_DIR/lib/libbcg729.* build/$APP_NAME.app/Contents/Frameworks
+    cp $OPENH264_DIR/lib/libopenh264.* build/$APP_NAME.app/Contents/Frameworks
 
     # fix libs paths
     #install_name_tool -change /usr/local/Cellar/nettle/3.6/lib/libnettle.8.dylib "@executable_path/../Frameworks/libnettle.8.dylib" build/Airbytes.app/Contents/Frameworks/libhogweed.6.dylib
