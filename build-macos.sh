@@ -34,15 +34,15 @@ APP_IDENTIFIER="com.cristeab.bcphone"
 MAJOR_VERSION=1
 MINOR_VERSION=0
 CMAKE_PATH=/Applications/CMake.app/Contents/bin
+BUILD_DIR=build
 
 if [ "$compile_app" = true ] ; then
 
     echo "QT version $QT_VER"
 
-    rm -rf build
-
-    mkdir build
-    cd build
+    rm -rf $BUILD_DIR
+    mkdir $BUILD_DIR
+    pushd $BUILD_DIR
 
     if [ "$old_mac" = true ] ; then
         $CMAKE_PATH/cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/Qt/$QT_VER/macos -DPRODUCTION_BUILD=off -DOLD_MAC=on
@@ -51,7 +51,7 @@ if [ "$compile_app" = true ] ; then
     fi
     $CMAKE_PATH/cmake --build . -j
     $CMAKE_PATH/cmake --build . --target pack
-    cd ..
+    popd
 
     # copy inside the bundle additional libs
     if [ "$old_mac" = true ] ; then
