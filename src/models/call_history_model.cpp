@@ -1,5 +1,6 @@
 #include "call_history_model.h"
 #include "settings.h"
+#include <unordered_map>
 
 CallHistoryModel::CallHistoryModel(QObject *parent) : QAbstractListModel(parent)
 {

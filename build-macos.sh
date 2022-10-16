@@ -28,11 +28,11 @@ else
     done
 fi
 
-QT_VER=6.2.2
-APP_NAME=FoneApp
+QT_VER=6.4.0
+APP_NAME=BCPhone
 APP_IDENTIFIER="com.cristeab.bcphone"
-MAJOR_VERSION=0
-MINOR_VERSION=1
+MAJOR_VERSION=1
+MINOR_VERSION=0
 CMAKE_PATH=/Applications/CMake.app/Contents/bin
 
 if [ "$compile_app" = true ] ; then
