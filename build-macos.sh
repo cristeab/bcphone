@@ -36,6 +36,9 @@ MINOR_VERSION=0
 CMAKE_PATH=/Applications/CMake.app/Contents/bin
 BUILD_DIR=build
 
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+BCG729_DIR=$CUR_DIR/../bcg729-install
+
 if [ "$compile_app" = true ] ; then
 
     echo "QT version $QT_VER"
@@ -57,6 +60,7 @@ if [ "$compile_app" = true ] ; then
     if [ "$old_mac" = true ] ; then
         cp /usr/local/lib/gcc/10/libgcc_s.1.dylib build/$APP_NAME.app/Contents/Frameworks
     fi
+    cp $BCG729_DIR/lib/libbcg729.* build/$APP_NAME.app/Contents/Frameworks
 
     # fix libs paths
     #install_name_tool -change /usr/local/Cellar/nettle/3.6/lib/libnettle.8.dylib "@executable_path/../Frameworks/libnettle.8.dylib" build/Airbytes.app/Contents/Frameworks/libhogweed.6.dylib
