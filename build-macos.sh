@@ -31,8 +31,9 @@ fi
 QT_VER=6.4.0
 APP_NAME=BCPhone
 APP_IDENTIFIER="com.cristeab.bcphone"
-MAJOR_VERSION=1
-MINOR_VERSION=0
+MAJOR_NUMBER=1
+MINOR_NUMBER=0
+PATCH_NUMBER=$(git rev-list --count HEAD)
 CMAKE_PATH=/Applications/CMake.app/Contents/bin
 BUILD_DIR=build
 
@@ -129,4 +130,4 @@ if [ "$sign_installer" = true ] ; then
 fi # sign installer
 
 # change app name by including the version
-mv build/$APP_NAME.dmg build/$APP_NAME-$MAJOR_VERSION.$MINOR_VERSION.dmg
+mv build/$APP_NAME.dmg build/$APP_NAME-$MAJOR_NUMBER.$MINOR_NUMBER.$PATCH_NUMBER.dmg
