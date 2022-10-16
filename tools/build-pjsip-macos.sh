@@ -8,7 +8,7 @@ BCG729_DIR=$CUR_DIR/../bcg729-install
 APP_DIR=$CUR_DIR/../bcphone
 
 make clean && make distclean
-rm -rf $TARGET_DIR/*
+rm -rf $INSTALL_DIR/*
 
 ./configure --prefix $INSTALL_DIR --disable-ffmpeg --disable-libwebrtc --with-ssl=/usr/local/opt/openssl@3 --with-bcg=$BCG729_DIR
 
