@@ -7,6 +7,7 @@ INSTALL_DIR=$CUR_DIR/../bcg729-install
 CMAKE_DIR=/Applications/CMake.app/Contents/bin
 BUILD_DIR=cmake-build
 
+rm -rf $INSTALL_DIR
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
 pushd $BUILD_DIR

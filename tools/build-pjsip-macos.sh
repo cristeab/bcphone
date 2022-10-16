@@ -12,7 +12,7 @@ rm -rf $INSTALL_DIR/*
 
 cp $APP_DIR/tools/config_site_macos.h pjlib/include/pj/config_site.h
 
-./configure --prefix $INSTALL_DIR --disable-ffmpeg --disable-libwebrtc --with-ssl=/usr/local/opt/openssl@3 --with-bcg729=$BCG729_DIR
+./configure --prefix $INSTALL_DIR --disable-ffmpeg --disable-libwebrtc --with-ssl=/usr/local/opt/openssl@1.1 --with-bcg729=$BCG729_DIR
 
 make dep && make
 make install
