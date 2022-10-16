@@ -11,7 +11,7 @@ endif()
 
 if (APPLE)
     if (NOT PJSIP_ROOT_DIR)
-        set(PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../build-macos")
+        set(PJSIP_ROOT_DIR "${CMAKE_SOURCE_DIR}/../pjproject-macos-install")
     endif()
     set (ENV{PKG_CONFIG_PATH} ${PJSIP_ROOT_DIR}/lib/pkgconfig)
     find_package (PkgConfig REQUIRED)

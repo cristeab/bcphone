@@ -79,7 +79,7 @@ if [ "$sign_installer" = true ] ; then
 
     # create installer
     rm -f build/$APP_NAME.dmg
-    $HOME/node_modules/appdmg/bin/appdmg.js platform/macos/CustomDmg.json build/$APP_NAME.dmg
+    $HOME/node_modules/appdmg/bin/appdmg.js CustomDmg.json build/$APP_NAME.dmg
 
     if [ -z "$APP_PWD" ]; then
         echo Notarization password is not set
