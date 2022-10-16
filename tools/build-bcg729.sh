@@ -2,7 +2,8 @@
 
 set -e
 
-INSTALL_DIR=../bcg729-install
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+INSTALL_DIR=$CUR_DIR/../bcg729-install
 CMAKE_DIR=/Applications/CMake.app/Contents/bin
 BUILD_DIR=cmake-build
 
