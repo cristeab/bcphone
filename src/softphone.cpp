@@ -552,14 +552,15 @@ void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
 
 bool Softphone::init()
 {
-    //destroy previous instance if any
-    if (_pjsuaStarted) {
-        qDebug() << "PJSUA already initialized";
+    //check PJSUA state
+    const auto state = pjsua_get_state();
+    if (PJSUA_STATE_RUNNING == state) {
+        qDebug() << "PJSUA already running";
         return true;
     }
 
     //create PJSUA
-    pj_status_t status = pjsua_create();
+    auto status = pjsua_create();
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot create PJSUA", status, true);
         return false;
