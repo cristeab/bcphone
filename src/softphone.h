@@ -2,7 +2,6 @@
 
 #include "qmlhelpers.h"
 #include "settings.h"
-#include "models/audio_devices.h"
 #include "models/ring_tones_model.h"
 #include "models/video_devices.h"
 #include "models/contacts_model.h"
@@ -122,7 +121,6 @@ private:
     enum { ERROR_COUNT_MAX = 3, DEFAULT_BITRATE_KBPS = 256 };
     enum { TONE_GENERATOR_TIMEOUT_MS = 5000, TONE_GENERATOR_ON_MS = 160, TONE_GENERATOR_OFF_MS = 50 };
 
-    bool init();
     bool unregisterAccount();
     void initAudioDevicesList();
     void listAudioCodecs();
@@ -161,16 +159,13 @@ private:
     static void dumpStreamStats(pjmedia_stream *strm);
     bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
     bool setSpeakersVolume(pjsua_conf_port_id portId, bool mute = false);
-    static bool disableTcpSwitch(bool value = false);
     void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
     void setupConferenceCall(pjsua_call_id callId);
     void startCurrentUserTimer();
     void stopCurrentUserTimer();
     static std::tuple<QString,QString> extractUserNameAndId(const QString &info);
 
-    bool setAudioCodecPriority(const QString &codecId, int priority);
     bool setVideoCodecPriority(const QString &codecId, int priority);
-    bool setVideoCodecBitrate(const QString &codecId, int bitrate);
 
     void onMicrophoneVolumeChanged();
     void onSpeakersVolumeChanged();
@@ -189,9 +184,6 @@ private:
 
     void raiseWindow();
 
-    static QString toString(const pj_str_t &pjStr) {
-        return QString::fromLocal8Bit(pjStr.ptr, static_cast<int>(pjStr.slen));
-    }
     static bool isMediaActive(const pjsua_call_media_info &media) {
         return ((PJMEDIA_TYPE_AUDIO == media.type) ||
                 (PJMEDIA_TYPE_VIDEO == media.type)) &&

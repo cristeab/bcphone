@@ -308,22 +308,6 @@ std::tuple<QString,QString> Softphone::extractUserNameAndId(const QString &info)
     return std::make_tuple(userName, userId);
 }
 
-bool Softphone::setAudioCodecPriority(const QString &codecId, int priority)
-{
-    if ((0 > priority) || (priority > 255)) {
-        qWarning() << "Invalid audio codec priority" << codecId << priority;
-        return false;
-    }
-    const auto stdCodecId = codecId.toStdString();
-    pj_str_t pjCodecId;
-    pj_cstr(&pjCodecId, stdCodecId.c_str());
-    const auto status = pjsua_codec_set_priority(&pjCodecId, priority);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot set audio codec priority", status);
-    }
-    return PJ_SUCCESS == status;
-}
-
 bool Softphone::setVideoCodecPriority(const QString &codecId, int priority)
 {
     if ((0 > priority) || (priority > 255)) {
@@ -338,27 +322,6 @@ bool Softphone::setVideoCodecPriority(const QString &codecId, int priority)
         errorHandler("Cannot set video codec priority", status);
     }
     return PJ_SUCCESS == status;
-}
-
-bool Softphone::setVideoCodecBitrate(const QString &codecId, int bitrate)
-{
-    const auto stdCodecId = codecId.toStdString();
-    pj_str_t pjCodecId;
-    pj_cstr(&pjCodecId, stdCodecId.c_str());
-    pjmedia_vid_codec_param param;
-    auto status = pjsua_vid_codec_get_param(&pjCodecId, &param);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot set video codec priority", status, false);
-        return false;
-    }
-    param.enc_fmt.det.vid.avg_bps = bitrate;
-    param.enc_fmt.det.vid.max_bps = bitrate;
-    status = pjsua_vid_codec_set_param(&pjCodecId, &param);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot set video codec priority", status, false);
-        return false;
-    }
-    return true;
 }
 
 void Softphone::onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id callId,
@@ -548,129 +511,6 @@ void Softphone::dumpStreamStats(pjmedia_stream *strm)
 void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
 {
     qDebug() << "PJSUA:" << level << data;
-}
-
-bool Softphone::init()
-{
-    //check PJSUA state
-    const auto state = pjsua_get_state();
-    if (PJSUA_STATE_RUNNING == state) {
-        qDebug() << "PJSUA already running";
-        return true;
-    }
-
-    //create PJSUA
-    auto status = pjsua_create();
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot create PJSUA", status, true);
-        return false;
-    }
-
-    //init PJSUA
-    {
-        pjsua_config cfg;
-        pjsua_logging_config log_cfg;
-
-        pjsua_config_default(&cfg);
-        cfg.nat_type_in_sdp = 2;
-        cfg.max_calls = PJSUA_MAX_CALLS;
-        cfg.cb.on_reg_state = &onRegState;
-        cfg.cb.on_incoming_call = &onIncomingCall;
-        cfg.cb.on_call_media_state = &onCallMediaState;
-        cfg.cb.on_call_state = &onCallState;
-        cfg.cb.on_stream_created = &onStreamCreated;
-        cfg.cb.on_stream_destroyed = &onStreamDestroyed;
-        cfg.cb.on_buddy_state = &onBuddyState;
-
-        //configure STUN if any
-        /*if (!_settings->stunServer().isEmpty()) {
-            cfg.stun_srv_cnt = 1;
-            if (0 < _settings->stunPort()) {
-                port = ":" + QString::number(_settings->stunPort());
-            }
-            const auto srv = _settings->stunServer() + port;
-            pj_cstr(cfg.stun_srv, srv.toStdString().c_str());
-            cfg.stun_map_use_stun2 = PJ_FALSE;
-            cfg.stun_ignore_failure = PJ_TRUE;
-            cfg.stun_try_ipv6 = PJ_FALSE;
-            qInfo() << "STUN server configured" << srv;
-        }*/
-
-        //user agent contains app version and PJSIP version
-        static const std::string pjsipVer(pj_get_version());
-        static const std::string userAgent = (_settings->appName() + "/" +
-                                 _settings->appVersion()).toStdString() +
-                                 " (PJSIP/" + pjsipVer + ")";
-        pj_cstr(&cfg.user_agent, userAgent.c_str());
-
-        pjsua_logging_config_default(&log_cfg);
-        log_cfg.msg_logging = PJ_TRUE;
-        log_cfg.level = 10;
-        log_cfg.console_level = 10;
-        log_cfg.cb = Softphone::pjsuaLogCallback;
-
-        pjsua_media_config media_cfg;
-        pjsua_media_config_default(&media_cfg);
-        media_cfg.channel_count = 1;
-        media_cfg.ec_options = PJMEDIA_ECHO_DEFAULT |
-                PJMEDIA_ECHO_USE_NOISE_SUPPRESSOR |
-                PJMEDIA_ECHO_AGGRESSIVENESS_DEFAULT;
-        media_cfg.no_vad = PJ_FALSE;
-
-        status = pjsua_init(&cfg, &log_cfg, &media_cfg);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot init PJSUA", status, true);
-            return false;
-        }
-    }
-
-    auto addTransport = [](int type) {
-        pjsua_transport_config cfg;
-        pjsua_transport_config_default(&cfg);
-        cfg.port = 0;//any available source port
-        const auto status = pjsua_transport_create(static_cast<pjsip_transport_type_e>(type), &cfg, nullptr);
-        if (PJ_SUCCESS != status) {
-            Softphone::errorHandler("Error creating transport", status, true);
-            return false;
-        }
-        return true;
-    };
-    //add UDP transport
-    auto rc = addTransport(PJSIP_TRANSPORT_UDP);
-    if (!rc) {
-        return rc;
-    }
-    //add TCP transport
-    rc = addTransport(PJSIP_TRANSPORT_TCP);
-    if (!rc) {
-        return rc;
-    }
-    //add TLS transport
-    rc = addTransport(PJSIP_TRANSPORT_TLS);
-    if (!rc) {
-        return rc;
-    }
-
-    //start PJSUA
-    status = pjsua_start();
-    if (PJ_SUCCESS != status) {
-        errorHandler("Error starting pjsua", status, true);
-        return false;
-    }
-
-    disableAudio(true);
-
-    initAudioDevicesList();
-    initVideoDevicesList();
-
-    listAudioCodecs();
-    listVideoCodecs();
-
-    disableTcpSwitch(false);
-
-    _pjsuaStarted = true;
-    qInfo() << "Init PJSUA library";
-    return true;
 }
 
 void Softphone::release()
@@ -1441,44 +1281,6 @@ void Softphone::listAudioCodecs()
     _audioCodecs->setCodecsInfo(audioCodecsInfo);
 }
 
-void Softphone::listVideoCodecs()
-{
-    std::array<pjsua_codec_info, 32> codecInfo;
-    unsigned int codecCount = static_cast<unsigned int>(codecInfo.size());
-    auto status = pjsua_vid_enum_codecs(codecInfo.data(), &codecCount);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot enum video codecs", status);
-        return;
-    }
-    qInfo() << "Video codecs:" << codecCount;
-    QHash<QString,int> defaultPrio;
-    for (unsigned int n = 0; n < codecCount; ++n) {
-        const QString id = QString::fromUtf8(codecInfo[n].codec_id.ptr,
-                                             static_cast<int>(codecInfo[n].codec_id.slen));
-        qInfo() << id << codecInfo[n].priority;
-        defaultPrio[id] = codecInfo[n].priority;
-        setVideoCodecBitrate(id, DEFAULT_BITRATE_KBPS * 1000);
-    }
-
-    _videoCodecs->init();//init first codecs
-
-    //get again codecs
-    status = pjsua_vid_enum_codecs(codecInfo.data(), &codecCount);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot enum video codecs", status);
-        return;
-    }
-    qInfo() << "Video codecs:" << codecCount;
-    QList<VideoCodecs::CodecInfo> videoCodecsInfo;
-    for (unsigned int n = 0; n < codecCount; ++n) {
-        const auto id = toString(codecInfo[n].codec_id);
-        const auto priority = codecInfo[n].priority;
-        const auto defaultPriority = defaultPrio.contains(id) ? defaultPrio[id] : -1;
-        videoCodecsInfo.append({ id, id, priority, false, defaultPriority });
-    }
-    _videoCodecs->setCodecsInfo(videoCodecsInfo);
-}
-
 bool Softphone::sendDtmf(const QString &dtmf)
 {
     const auto callId = _activeCallModel->currentCallId();
@@ -1554,6 +1356,7 @@ bool Softphone::setSpeakersVolume(pjsua_conf_port_id portId, bool mute)
 
 void Softphone::hangupAll()
 {
+    //pjsua_call_hangup_all
     const auto ids = _activeCallModel->confirmedCallsId(true);
     qDebug() << "hangupAll" << ids.count();
     for (auto id: ids) {
@@ -1562,20 +1365,6 @@ void Softphone::hangupAll()
     if (!ids.isEmpty()) {
         setActiveCall(false);
     }
-}
-
-bool Softphone::disableTcpSwitch(bool value)
-{
-    pjsip_cfg_t *cfg = pjsip_cfg();
-    bool rc = false;
-    if (nullptr != cfg) {
-        cfg->endpt.disable_tcp_switch = value?PJ_TRUE:PJ_FALSE;
-        rc = true;
-        qDebug() << "Disable TCP switch" << value;
-    } else {
-        qWarning() << "Cannot get PJSIP config";
-    }
-    return rc;
 }
 
 bool Softphone::callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer)
