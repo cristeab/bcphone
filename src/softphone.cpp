@@ -135,11 +135,6 @@ Softphone::Softphone()
     //ringtones init
     _ringTonesModel->initDefaultRingTones();
 
-    //setup tone generator
-    _toneGenTimer.setInterval(TONE_GENERATOR_TIMEOUT_MS);
-    _toneGenTimer.setSingleShot(true);
-    connect(&_toneGenTimer, &QTimer::timeout, this, &Softphone::releaseToneGenerator);
-
     qInfo() << "SSL version" << QSslSocket::sslLibraryVersionString();
     qInfo() << "Can register" << _settings->canRegister();
     if (init() && _settings->canRegister()) {
@@ -513,23 +508,6 @@ void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
     qDebug() << "PJSUA:" << level << data;
 }
 
-void Softphone::release()
-{
-    if (_pjsuaStarted) {
-        hangupAll();
-        releaseRingTonePlayers();
-        unregisterAccount();
-        pjsua_stop_worker_threads();
-        pj_status_t status = pjsua_destroy();
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot destroy", status);
-        } else {
-            qDebug() << "PJSUA successfully destroyed";
-        }
-        _pjsuaStarted = false;
-    }
-}
-
 bool Softphone::registerAccount()
 {
     if (!_pjsuaStarted) {
@@ -648,69 +626,18 @@ bool Softphone::unregisterAccount()
 
 bool Softphone::makeCall(const QString &userId)
 {
-    qDebug() << "makeCall" << userId;
-
-    if (userId.isEmpty()) {
+    if (!) {
+        setActiveCall(true);
+    } else {
         setDialedText("");
         setDialogError(true);
         setActiveCall(false);
-        return false;
     }
-
-    std::string uriBuffer;
-    pj_str_t uriStr;
-    if (!callUri(&uriStr, userId, uriBuffer)) {
-        setActiveCall(false);
-        return false;
-    }
-
-    //open audio device only when needed
-    enableAudio();
-
-    pjsua_call_setting callSetting;
-    pjsua_call_setting_default(&callSetting);
-    callSetting.vid_cnt = 1;
-
-    pjsua_call_id callId = PJSUA_INVALID_ID;
-    const pj_status_t status = pjsua_call_make_call(_accId, &uriStr, &callSetting,
-                                                    nullptr, nullptr, &callId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot make call", status, true);
-        setActiveCall(false);
-        return false;
-    }
-
-    if (nullptr != _callHistoryModel) {
-        const auto &userName = _callHistoryModel->userName(userId);
-        _activeCallModel->addCall(callId, userName, userId);
-        _callHistoryModel->addContact(callId, userName, userId,
-                                      CallHistoryModel::CallStatus::OUTGOING);
-    } else {
-        qWarning() << "Call history model is null";
-    }
-    startPlayingRingTone(callId, false);
-    setActiveCall(true);
-    return true;
 }
 
 bool Softphone::answer(int callId)
 {
-    if (PJSUA_INVALID_ID == callId) {
-        qCritical() << "Invalid call ID";
-        return false;
-    }
 
-    pjsua_call_setting callSetting;
-    pjsua_call_setting_default(&callSetting);
-    callSetting.vid_cnt = 1;
-
-    const pj_status_t status = pjsua_call_answer2(callId, &callSetting, 200,
-                                                  nullptr, nullptr);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot answer call", status, true);
-        return false;
-    }
-    return true;
 }
 
 bool Softphone::hangup(int callId)
@@ -732,34 +659,7 @@ bool Softphone::hangup(int callId)
 
 bool Softphone::unsupervisedTransfer(const QString &phoneNumber)
 {
-    if (phoneNumber.isEmpty()) {
-        errorHandler("Cannot make transfer without a destination phone number",
-                     PJ_SUCCESS, true);
-        return false;
-    }
-    const int currentCallId = _activeCallModel->currentCallId();
-    if (PJSUA_INVALID_ID == currentCallId) {
-        errorHandler("Cannot make transfer without an active call", PJ_SUCCESS, true);
-        return false;
-    }
 
-    std::string uriBuffer;
-    pj_str_t uriStr;
-    if (!callUri(&uriStr, phoneNumber, uriBuffer)) {
-        return false;
-    }
-    const pj_status_t status = pjsua_call_xfer(currentCallId, &uriStr, nullptr);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot transfer call", status, true);
-        return false;
-    }
-    if (nullptr != _callHistoryModel) {
-        _callHistoryModel->addContact(currentCallId, _blindTransferUserName, phoneNumber,
-                                      CallHistoryModel::CallStatus::TRANSFERRED);
-        _callHistoryModel->updateCallStatus(currentCallId,
-                                            CallHistoryModel::CallStatus::UNKNOWN, true);
-    }
-    return true;
 }
 
 bool Softphone::holdAndAnswer(int callId)
@@ -773,107 +673,27 @@ bool Softphone::holdAndAnswer(int callId)
 
 bool Softphone::swap(int callId)
 {
-    const auto &confCids = _activeCallModel->confirmedCallsId();
-    if (confCids.isEmpty()) {
-        qCritical() << "No active call(s) to swap";
-        return false;
-    }
-    qDebug() << "swap" << confCids << "with" << callId;
-    for (auto confCid: confCids) {
-        if (!hold(true, confCid)) {
-            return false;
-        }
-    }
-    bool rc = hold(false, callId);
-    if (rc) {
-        _activeCallModel->setCurrentCallId(callId);
-    }
-    return rc;
+
 }
 
 bool Softphone::merge(int callId)
 {
-    qDebug() << "merge" << callId;
-    if (!hold(false, callId)) {
-        return false;
-    }
-    setupConferenceCall(callId);
-    _activeCallModel->update();
-    return true;
+
 }
 
 bool Softphone::hold(bool value, int callId)
 {
-    qDebug() << "hold" << value;
-    if (PJSUA_INVALID_ID == callId) {
-        callId = _activeCallModel->currentCallId();
-    }
 
-    pj_status_t status = PJ_SUCCESS;
-    if (value) {
-        status = pjsua_call_set_hold(callId, nullptr);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot put call on hold", status, true);
-            return false;
-        }
-    } else {
-        status = pjsua_call_reinvite(callId, PJSUA_CALL_UNHOLD, nullptr);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot unhold call", status, true);
-            return false;
-        }
-    }
-    _activeCallModel->setCallState(callId, value ? ActiveCallModel::CallState::ON_HOLD : ActiveCallModel::CallState::CONFIRMED);
-    qDebug() << "Finished to put call on hold" << value;
-    return true;
 }
 
 bool Softphone::mute(bool value, int callId)
 {
-    if (PJSUA_INVALID_ID == callId) {
-        callId = _activeCallModel->currentCallId();
-    }
-    const pjsua_conf_port_id callConfPort = pjsua_call_get_conf_port(callId);
-    if (PJSUA_INVALID_ID == callConfPort) {
-        qCritical() << "Cannot get conference slot of call ID" << callId;
-        return false;
-    }
-    qDebug() << "mute" << value << callId;
-    pj_status_t status = PJ_SUCCESS;
-    if (value) {
-        status = pjsua_conf_disconnect(0, callConfPort);
-    } else {
-        status = pjsua_conf_connect(0, callConfPort);
-    }
-    if (PJ_SUCCESS != status) {
-        const QString msg = value ? "Cannot mute call" : "Cannot unmute call";
-        errorHandler(msg, status, true);
-        return false;
-    }
-    return true;
+
 }
 
 bool Softphone::rec(bool value, int callId)
 {
-    if (value) {
-        if (recordingCall()) {
-            qDebug() << "Recording already started";
-            return true;
-        }
-    } else if (!recordingCall()) {
-        qDebug() << "Recording already stopped";
-        return true;
-    }
-    if (PJSUA_INVALID_ID == callId) {
-        callId = _activeCallModel->currentCallId();
-    }
-    if (PJSUA_INVALID_ID == callId) {
-        errorHandler("Cannot record without an active call", PJ_SUCCESS, true);
-        return false;
-    }
-    qDebug() << "rec" << value << callId;
-    setRecordingCall(value);
-    return true;
+
 }
 
 void Softphone::initAudioDevicesList()
@@ -987,44 +807,6 @@ void Softphone::initVideoDevicesList()
     qInfo() << "Found" << videoDevices.size() << "input video devices";
 }
 
-bool Softphone::enableAudio()
-{
-    if (_audioEnabled) {
-        return true;
-    }
-    if ((nullptr == _inputAudioDevices) || (nullptr == _outputAudioDevices)) {
-        return false;
-    }
-    const auto captureDevInfo = _inputAudioDevices->deviceInfo();
-    if (!captureDevInfo.isValid()) {
-        const QString msg = QString("Invalid input audio device index %1").arg(captureDevInfo.toString());
-        qCritical() << msg;
-        errorHandler(msg, PJ_SUCCESS, true);
-        pjsua_set_null_snd_dev();//for testing purposes only
-        return false;
-    }
-    const auto playbackDevInfo = _outputAudioDevices->deviceInfo();
-    if (!playbackDevInfo.isValid()) {
-        const QString msg = QString("Invalid output audio device index %1").arg(playbackDevInfo.toString());
-        qCritical() << msg;
-        errorHandler(msg, PJ_SUCCESS, true);
-        pjsua_set_null_snd_dev();//for testing purposes only
-        return false;
-    }
-
-    //slow operation: about 1 sec
-    const auto status = pjsua_set_snd_dev(captureDevInfo.index, playbackDevInfo.index);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot set audio devices", status, true);
-        return false;
-    }
-
-    qDebug() << "Finished to set audio devices: captureDev" << captureDevInfo.index <<
-                ", playbackDev" << playbackDevInfo.index;
-    _audioEnabled = true;
-    return true;
-}
-
 bool Softphone::disableAudio(bool force)
 {
     if (!force && !_audioEnabled) {
@@ -1039,291 +821,14 @@ bool Softphone::disableAudio(bool force)
     return true;
 }
 
-bool Softphone::initRingTonePlayer(pjsua_call_id id, bool incoming)
-{
-    if (0 != _playerId.count(id)) {
-        qCritical() << "Call" << id << "already has a player associated with it";
-        return false;
-    }
-
-    int ringToneFileIndex = incoming ? _settings->inboundRingTonesModelIndex() : _settings->outboundRingTonesModelIndex();
-    const QString soundFileStr = _ringTonesModel->filePath(ringToneFileIndex);
-    if (!QFile(soundFileStr).exists()) {
-        qWarning() << "Ring tone file does not exist";
-        return false;
-    }
-    qInfo() << "Init ringtone player" << soundFileStr;
-
-    const std::string tmpSoundFile = soundFileStr.toStdString();
-    pj_str_t soundFile;
-    pj_cstr(&soundFile, tmpSoundFile.c_str());
-
-    pjsua_player_id playerId = PJSUA_INVALID_ID;
-    const pj_status_t status = pjsua_player_create(&soundFile, 0, &playerId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot create player", status, false);
-        return false;
-    }
-    _playerId[id] = playerId;
-    return true;
-}
-
-bool Softphone::startPlayingRingTone(pjsua_call_id id, bool incoming)
-{
-    if (!initRingTonePlayer(id, incoming)) {
-        qDebug() << "Cannot start playing ringtone for call" << id;
-        return false;
-    }
-    if (0 == _playerId.count(id)) {
-        qCritical() << "Cannot find a player ID for call" << id;
-        return false;
-    }
-    pjsua_player_id playerId = _playerId[id];
-    pj_status_t status = pjsua_conf_connect(pjsua_player_get_conf_port(playerId), 0);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot play ring tone to output device", status, false);
-        return false;
-    }
-    qInfo() << "Start playing ringtone";
-    return true;
-}
-
-void Softphone::stopPlayingRingTone(pjsua_call_id id)
-{
-    if (0 == _playerId.count(id)) {
-        //qWarning() << "Cannot find player ID for call" << id;
-        return;
-    }
-    pjsua_player_id playerId = _playerId[id];
-    pj_status_t status = pjsua_conf_disconnect(pjsua_player_get_conf_port(playerId), 0);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot stop playing ring tone to output device", status, false);
-        return;
-    }
-    qInfo() << "Stop playing ringtone";
-    releaseRingTonePlayer(id);
-}
-
-bool Softphone::releaseRingTonePlayer(pjsua_call_id id)
-{
-    if (0 == _playerId.count(id)) {
-        qCritical() << "Cannot find a player ID for call" << id;
-        return false;
-    }
-    pjsua_player_id playerId = _playerId[id];
-    const auto status = pjsua_player_destroy(playerId);
-    _playerId.remove(id);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot destroy ringtone player", status, false);
-        return false;
-    }
-    qInfo() << "Release ringtone player";
-    return true;
-}
-
-void Softphone::releaseRingTonePlayers()
-{
-    const auto &keys = _playerId.keys();
-    for(const auto &id: keys) {
-        releaseRingTonePlayer(id);
-    }
-}
-
-bool Softphone::createRecorder(pjsua_call_id callId)
-{
-    if (PJSUA_INVALID_ID == callId) {
-        qCritical() << "Invalid call ID";
-        return false;
-    }
-    if (_recId.contains(callId) && (PJSUA_INVALID_ID != _recId[callId])) {
-        qWarning() << "Recorded already created for call ID " << callId;
-        return false;
-    }
-
-    //generate recording file name
-    const auto curDateTime = QDateTime::currentDateTime();
-    const QString recFileName = _settings->recPath() + "/" +
-            curDateTime.toString("MMMM_dd_yyyy-hh_mm_ss") + ".wav";
-    pj_str_t recordFile;
-    pj_cstr(&recordFile, recFileName.toUtf8().data());
-
-    //create recorder
-    pjsua_recorder_id recId = PJSUA_INVALID_ID;
-    pj_status_t status = pjsua_recorder_create(&recordFile, 0,
-                                               nullptr, 0, 0, &recId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot create recorder", status);
-        recId = PJSUA_INVALID_ID;
-        return false;
-    }
-    _recId[callId] = recId;
-    qInfo() << "Created recorder " << recFileName;
-    return true;
-}
-
-bool Softphone::startRecording(pjsua_call_id callId)
-{
-    if (!createRecorder(callId)) {
-        return false;
-    }
-
-    //start recording
-    const pjsua_conf_port_id callConfPort = pjsua_call_get_conf_port(callId);
-    if (PJSUA_INVALID_ID == callConfPort) {
-        releaseRecorder(callId);
-        qCritical() << "Cannot get call conf port";
-        return false;
-    }
-    const pjsua_conf_port_id recConfPort = pjsua_recorder_get_conf_port(_recId[callId]);
-    if (PJSUA_INVALID_ID == recConfPort) {
-        releaseRecorder(callId);
-        qCritical() << "Cannot get recorder conf port";
-        return false;
-    }
-    pj_status_t status = pjsua_conf_connect(callConfPort, recConfPort);
-    if (PJ_SUCCESS != status) {
-        releaseRecorder(callId);
-        errorHandler("Cannot start recording", status);
-        return false;
-    }
-    qInfo() << "Recording started for call ID " << callId;
-    return true;
-}
-
-bool Softphone::stopRecording(pjsua_call_id callId)
-{
-    if (PJSUA_INVALID_ID == callId) {
-        qCritical() << "Invalid call ID";
-        return false;
-    }
-    if (!_recId.contains(callId) || (PJSUA_INVALID_ID == _recId[callId])) {
-        qWarning() << "Invalid recorder ID";
-        return true;
-    }
-
-    if (PJ_TRUE == pjsua_call_is_active(callId)) {
-        //stop recording
-        const pjsua_conf_port_id callConfPort = pjsua_call_get_conf_port(callId);
-        if (PJSUA_INVALID_ID == callConfPort) {
-            releaseRecorder(callId);
-            qCritical() << "Cannot get call conf port";
-            return false;
-        }
-        const pjsua_conf_port_id recConfPort = pjsua_recorder_get_conf_port(_recId[callId]);
-        if (PJSUA_INVALID_ID == recConfPort) {
-            releaseRecorder(callId);
-            qCritical() << "Cannot get recorder conf port";
-            return false;
-        }
-        pj_status_t status = pjsua_conf_disconnect(callConfPort, recConfPort);
-        if (PJ_SUCCESS != status) {
-            releaseRecorder(callId);
-            errorHandler("Cannot stop recording", status);
-            return false;
-        }
-    }
-    qInfo() << "Recording stopped for call ID " << callId;
-
-    return releaseRecorder(callId);
-}
-
-bool Softphone::releaseRecorder(pjsua_call_id callId)
-{
-    if (!_recId.contains(callId) || (PJSUA_INVALID_ID == _recId[callId])) {
-        qWarning() << "Invalid recorder ID";
-        return true;
-    }
-    const auto status = pjsua_recorder_destroy(_recId[callId]);
-    _recId.remove(callId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot destroy recorder", status);
-        return false;
-    }
-    qInfo() << "Recorder has been released";
-    return true;
-}
-
-void Softphone::listAudioCodecs()
-{
-    std::array<pjsua_codec_info, 32> codecInfo;
-    unsigned int codecCount = static_cast<unsigned int>(codecInfo.size());
-
-    //read first default priorities
-    pj_status_t status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot enum audio codecs", status);
-        return;
-    }
-    QHash<QString,int> defaultPrio;
-    for (unsigned int n = 0; n < codecCount; ++n) {
-        const auto id = toString(codecInfo[n].codec_id);
-        setAudioCodecPriority(id, codecInfo[n].priority);
-        defaultPrio[id] = codecInfo[n].priority;
-    }
-
-    _audioCodecs->init();//init first codecs
-
-    //get again codecs
-    status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot enum audio codecs", status);
-        return;
-    }
-    qInfo() << "Audio codecs:" << codecCount;
-    QList<AudioCodecs::CodecInfo> audioCodecsInfo;
-    for (unsigned int n = 0; n < codecCount; ++n) {
-        const auto id = toString(codecInfo[n].codec_id);
-        const auto priority = codecInfo[n].priority;
-        const auto defaultPriority = defaultPrio.contains(id) ? defaultPrio[id] : -1;
-        qInfo() << id << priority;
-        audioCodecsInfo.append({ id, id, priority, 0 < priority, defaultPriority });
-    }
-    _audioCodecs->setCodecsInfo(audioCodecsInfo);
-}
-
 bool Softphone::sendDtmf(const QString &dtmf)
 {
-    const auto callId = _activeCallModel->currentCallId();
-    if (PJSUA_INVALID_ID == callId) {
-        qWarning() << "Cannot send DTMF without an active call";
-        return false;
-    }
-    qDebug() << "send DTMF" << dtmf << "to" << callId;
-    std::string tmpDtmf = dtmf.toStdString();
-    pj_str_t dtmfStr;
-    pj_cstr(&dtmfStr, tmpDtmf.c_str());
-    pj_status_t status = pjsua_call_dial_dtmf(callId, &dtmfStr);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot send DTMF", status, true);
-        return false;
-    }
-    return true;
+
 }
 
 void Softphone::manuallyRegister()
 {
-    qDebug() << "Manual registration";
-    if (PJSUA_INVALID_ID != _accId) {
-        const pj_status_t status = pjsua_acc_set_registration(_accId, PJ_TRUE);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot force registration", status, true);
-        }
-    } else {
-        qWarning() << "Invalid acc ID";
-    }
-}
 
-void Softphone::errorHandler(const QString &title, pj_status_t status, bool emitSignal)
-{
-    QString fullError = title;
-    if (PJ_SUCCESS != status) {
-        std::array<char, 1024> message;
-        pj_strerror(status, message.data(), message.size());
-        fullError.append(":").append(message.data());
-    }
-    if (emitSignal && (nullptr != _instance)) {
-        _instance->errorDialog(fullError);
-    }
 }
 
 bool Softphone::setMicrophoneVolume(pjsua_conf_port_id portId, bool mute)
@@ -1356,49 +861,6 @@ bool Softphone::setSpeakersVolume(pjsua_conf_port_id portId, bool mute)
 
 void Softphone::hangupAll()
 {
-    //TODO: pjsua_call_hangup_all
-    const auto ids = _activeCallModel->confirmedCallsId(true);
-    qDebug() << "hangupAll" << ids.count();
-    for (auto id: ids) {
-        hangup(id);
-    }
-    if (!ids.isEmpty()) {
-        setActiveCall(false);
-    }
-}
-
-bool Softphone::callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer)
-{
-    auto* set = _instance->_settings;
-    if (nullptr == set) {
-        qWarning() << "Cannot generate URI";
-        return false;
-    }
-    const auto& domain = set->sipServer();
-    if (domain.isEmpty()) {
-        qWarning() << "No SIP server";
-        return false;
-    }
-    const auto destPort = QString::number(set->sipPort());
-    if (destPort.isEmpty()) {
-        qWarning() << "No SIP port";
-        return false;
-    }
-    const auto sipTransport = Softphone::sipTransport(set->sipTransport());
-
-    const QString sipUri = "sip:" + userId + "@" + domain + ":" + destPort + sipTransport;
-    uriBuffer = sipUri.toStdString();
-    const char *uriPtr = uriBuffer.c_str();
-    const pj_status_t status = verifySipUri(uriPtr);
-    if (PJ_SUCCESS != status) {
-        errorHandler("URI verification failed", status, true);
-        qCritical() << "URI verification failed" << sipUri;
-        return false;
-    }
-    if (nullptr != uri) {
-        pj_cstr(uri, uriPtr);
-    }
-    return true;
 }
 
 void Softphone::connectCallToSoundDevices(pjsua_conf_port_id confPortId)
@@ -1424,35 +886,7 @@ void Softphone::connectCallToSoundDevices(pjsua_conf_port_id confPortId)
 
 void Softphone::setupConferenceCall(pjsua_call_id callId)
 {
-    const auto callCount = pjsua_call_get_count();
-    qDebug() << "setupConferenceCall" << callCount;
-    if (1 < callCount) {
-        pjsua_conf_port_id confPortId = pjsua_call_get_conf_port(callId);
-        if (PJSUA_INVALID_ID == confPortId) {
-            qCritical() << "Cannot get current call conf port";
-            return;
-        }
-        const QVector<int> confCalls = _activeCallModel->confirmedCallsId();
-        qDebug() << "Conference call detected, confirmed calls" << confCalls.size();
-        for (auto otherCallId: confCalls) {
-            if (callId == otherCallId) {
-                continue;
-            }
-            const pjsua_conf_port_id otherCallConfPort = pjsua_call_get_conf_port(otherCallId);
-            if (PJSUA_INVALID_ID == otherCallConfPort) {
-                qWarning() << "Cannot get conference slot of call ID" << otherCallId;
-                continue;
-            }
-            pj_status_t status = pjsua_conf_connect(confPortId, otherCallConfPort);
-            if (PJ_SUCCESS != status) {
-                errorHandler("Cannot connect current conf slot to other", status, false);
-            }
-            status = pjsua_conf_connect(otherCallConfPort, confPortId);
-            if (PJ_SUCCESS != status) {
-                errorHandler("Cannot connect other conf slot to current", status, false);
-            }
-        }
-    }
+
 }
 
 void Softphone::startCurrentUserTimer()
@@ -1660,113 +1094,7 @@ void Softphone::onSpeakersVolumeChanged()
     }
 }
 
-QString Softphone::sipTransport(int type)
-{
-    QString out;
-    switch (type) {
-    case Settings::SipTransport::Udp:
-        break;
-    case Settings::SipTransport::Tcp:
-        out = ";transport=tcp";
-        break;
-    case Settings::SipTransport::Tls:
-        out = ";transport=tls";
-        break;
-    default:
-        ;
-    }
-    return out;
-}
-
-bool Softphone::initToneGenerator()
-{
-    if (nullptr != _toneGenPool) {
-        return true;//nothing to do
-    }
-    qInfo() << "Init tone generator";
-    _toneGenPool = pjsua_pool_create("toneGen", 512, 512);
-    if (nullptr == _toneGenPool) {
-        qCritical() << "Cannot allocate pool for tone generator";
-        return false;
-    }
-    enableAudio();
-    auto status = pjmedia_tonegen_create(_toneGenPool, 8000, 1, 64, 16, 0, &_toneGenMediaPort);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Tone generator create"), status, false);
-        return false;
-    }
-    status = pjsua_conf_add_port(_toneGenPool, _toneGenMediaPort, &_toneGenConfPort);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Tone generator add port"), status, false);
-        return false;
-    }
-    status = pjsua_conf_adjust_rx_level(_toneGenConfPort, _settings->dialpadSoundVolume());
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Tone generator adjust rx level"), status, false);
-        return false;
-    }
-    status = pjsua_conf_connect(_toneGenConfPort, 0);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Tone generator conf connect"), status, false);
-        return false;
-    }
-    return true;
-}
-
-void Softphone::releaseToneGenerator()
-{
-    if ((nullptr != _toneGenMediaPort) && pjmedia_tonegen_is_busy(_toneGenMediaPort)) {
-        qDebug() << "Tone gen is busy";
-        return;
-    }
-    qInfo() << "Release tone generator";
-    if (PJSUA_INVALID_ID != _toneGenConfPort) {
-        disableAudio();
-        const auto status = pjsua_conf_remove_port(_toneGenConfPort);
-        if (PJ_SUCCESS != status) {
-            errorHandler(tr("Tone generator conf remove"), status, false);
-        }
-        _toneGenConfPort = PJSUA_INVALID_ID;
-    }
-    if (nullptr != _toneGenMediaPort) {
-        const auto status = pjmedia_port_destroy(_toneGenMediaPort);
-        if (PJ_SUCCESS != status) {
-            errorHandler(tr("Tone generator port destroy"), status, false);
-        }
-        _toneGenMediaPort = nullptr;
-    }
-    if (nullptr != _toneGenPool) {
-        pj_pool_release(_toneGenPool);
-        _toneGenPool = nullptr;
-    }
-}
-
 bool Softphone::playDigit(const QString& digit)
 {
-    if (digit.isEmpty()) {
-        return false;
-    }
-    if (!_pjsuaStarted) {
-        return false;
-    }
 
-    initToneGenerator();
-
-    if (nullptr == _toneGenPool) {
-        qCritical() << "Generator pool is NULL";
-        return false;
-    }
-
-    pjmedia_tone_digit toneDigit;
-    toneDigit.digit = digit.toStdString().c_str()[0];
-    toneDigit.on_msec = TONE_GENERATOR_ON_MS;
-    toneDigit.off_msec = TONE_GENERATOR_OFF_MS;
-    toneDigit.volume = 0;
-    const auto status = pjmedia_tonegen_play_digits(_toneGenMediaPort, 1, &toneDigit, 0);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Play digit"), status, false);
-        return false;
-    }
-    _toneGenTimer.start();
-    return true;
 }

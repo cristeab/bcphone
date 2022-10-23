@@ -65,9 +65,14 @@ void Settings::clear()
     //setStunPort(3478);
 
     setAuthUserName("");
-    setProxyEnabled(false);
+    setProxyEnabled(PROXY_ENABLED);
     setProxyServer("");
     setProxyPort(PROXY_PORT);
+
+    setEnableSipLog(ENABLE_SIP_LOG);
+    setEnableVad(ENABLE_VAD);
+    setTransportSourcePort(TRANSPORT_DEFAULT_PORT);
+    setDisableTcpSwitch(DISABLE_TCP_SWITCH);
 
     Settings::uninstallClear();
 }
@@ -118,6 +123,11 @@ void Settings::load()
     setProxyEnabled(GET_SETTING(proxyEnabled).toBool());
     setProxyServer(GET_SETTING(proxyServer).toString());
     setProxyPort(GET_SETTING(proxyPort).toInt());
+
+    setEnableSipLog(GET_SETTING(enableSipLog).toBool());
+    setEnableVad(GET_SETTING(enableVad).toBool());
+    setTransportSourcePort(GET_SETTING(transportSourcePort).toInt());
+    setDisableTcpSwitch(GET_SETTING(disableTcpSwitch).toBool());
 }
 
 void Settings::save()
@@ -148,6 +158,11 @@ void Settings::save()
     SET_SETTING(proxyEnabled);
     SET_SETTING(proxyServer);
     SET_SETTING(proxyPort);
+
+    SET_SETTING(enableSipLog);
+    SET_SETTING(enableVad);
+    SET_SETTING(transportSourcePort);
+    SET_SETTING(disableTcpSwitch);
 }
 
 AudioDevices::DeviceInfo Settings::inputAudioDeviceInfo()

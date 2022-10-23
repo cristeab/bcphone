@@ -97,9 +97,7 @@ public:
     bool rec(bool value, int callId);
     QString convertNumber(const QString &num);
     bool registered() const { return RegistrationStatus::REGISTERED == _registrationStatus; }
-    void release();
 
-    static bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
     static void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS,
                              bool emitSignal = false);
 
@@ -115,11 +113,8 @@ signals:
 private:
     Q_DISABLE_COPY_MOVE(Softphone)
 
-    enum PhoneState { UNKNOWN = 0x00, PARKING_CALL = 0x01, RECORDING_CALL = 0x02,
-                            MERGE_CALLS = 0x04 };
     enum SipErrorCodes { BadRequest = 400, RequestTimeout = 408, RequestTerminated = 487 };
     enum { ERROR_COUNT_MAX = 3, DEFAULT_BITRATE_KBPS = 256 };
-    enum { TONE_GENERATOR_TIMEOUT_MS = 5000, TONE_GENERATOR_ON_MS = 160, TONE_GENERATOR_OFF_MS = 50 };
 
     bool unregisterAccount();
     void initAudioDevicesList();
@@ -145,17 +140,6 @@ private:
                     const QString &userName);
     void onDisconnected(int callId);
 
-    bool initRingTonePlayer(pjsua_call_id id, bool incoming);
-    bool startPlayingRingTone(pjsua_call_id id, bool incoming);
-    void stopPlayingRingTone(pjsua_call_id id);
-    bool releaseRingTonePlayer(pjsua_call_id id);
-    void releaseRingTonePlayers();
-
-    bool createRecorder(pjsua_call_id callId);
-    bool startRecording(pjsua_call_id callId);
-    bool stopRecording(pjsua_call_id callId);
-    bool releaseRecorder(pjsua_call_id callId);
-
     static void dumpStreamStats(pjmedia_stream *strm);
     bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
     bool setSpeakersVolume(pjsua_conf_port_id portId, bool mute = false);
@@ -169,18 +153,6 @@ private:
 
     void onMicrophoneVolumeChanged();
     void onSpeakersVolumeChanged();
-
-    bool recordingCall() const {
-        return PhoneState::RECORDING_CALL == (_phoneState & PhoneState::RECORDING_CALL);
-    }
-    void setRecordingCall(bool on) {
-        if (on) {
-            _phoneState |= PhoneState::RECORDING_CALL;
-        } else {
-            _phoneState &= !PhoneState::RECORDING_CALL;
-        }
-        emit phoneStateChanged();
-    }
 
     void raiseWindow();
 
@@ -199,17 +171,7 @@ private:
     void releasePreviewWindow();
     void setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int width, int height);
 
-    static pj_status_t verifySipUri(const char *url) {
-        return (strlen(url) > 900) ? PJSIP_EURITOOLONG : pjsua_verify_sip_url(url);
-    }
-
-    bool enableAudio();
     bool disableAudio(bool force = false);
-
-    bool initToneGenerator();
-    void releaseToneGenerator();
-
-    static QString sipTransport(int type);
 
     void errorDialog(const QString& msg) {
         setDialogError(true);
@@ -219,18 +181,12 @@ private:
     QObject *_mainForm = nullptr;
     QTimer _currentUserTimer;
     static const QString _notAvailable;
-    bool _pjsuaStarted = false;
-    pjsua_acc_id _accId = PJSUA_INVALID_ID;
     QHash<pjsua_call_id, pjsua_player_id> _playerId;
     QHash<pjsua_call_id, pjsua_recorder_id> _recId;
     QHash<pjsua_call_id, pjsua_player_id> _playbackPlayerId;
     uint8_t _phoneState = PhoneState::UNKNOWN;
     bool _manualHangup = false;
     bool _audioEnabled = false;
-    pj_pool_t* _toneGenPool = nullptr;
-    pjmedia_port* _toneGenMediaPort = nullptr;
-    pjsua_conf_port_id _toneGenConfPort = PJSUA_INVALID_ID;
-    QTimer _toneGenTimer;
     std::unique_ptr<QWidget> _previewWindow;
     std::unique_ptr<QWidget> _videoWindow;
 };
