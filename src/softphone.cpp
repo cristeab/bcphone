@@ -1356,7 +1356,7 @@ bool Softphone::setSpeakersVolume(pjsua_conf_port_id portId, bool mute)
 
 void Softphone::hangupAll()
 {
-    //pjsua_call_hangup_all
+    //TODO: pjsua_call_hangup_all
     const auto ids = _activeCallModel->confirmedCallsId(true);
     qDebug() << "hangupAll" << ids.count();
     for (auto id: ids) {

@@ -58,7 +58,8 @@ signals:
     void errorMessage(const QString& msg);
 
 private:
-    enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256 };
+    enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
+           DEFAULT_LOG_LEVEL = 10, DEFAULT_CONSOLE_LOG_LEVEL = 10 };
 
     static void onRegState(pjsua_acc_id acc_id);
     static void onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,

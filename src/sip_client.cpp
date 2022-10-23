@@ -70,9 +70,9 @@ bool SipClient::init()
         pj_cstr(&cfg.user_agent, userAgent.c_str());
 
         pjsua_logging_config_default(&log_cfg);
-        log_cfg.msg_logging = PJ_TRUE;
-        log_cfg.level = 10;
-        log_cfg.console_level = 10;
+        log_cfg.msg_logging = PJ_TRUE;//TODO: enable in settings
+        log_cfg.level = DEFAULT_LOG_LEVEL;
+        log_cfg.console_level = DEFAULT_CONSOLE_LOG_LEVEL;
         log_cfg.cb = &pjsuaLogCallback;
 
         pjsua_media_config media_cfg;
@@ -81,7 +81,7 @@ bool SipClient::init()
         media_cfg.ec_options = PJMEDIA_ECHO_DEFAULT |
                 PJMEDIA_ECHO_USE_NOISE_SUPPRESSOR |
                 PJMEDIA_ECHO_AGGRESSIVENESS_DEFAULT;
-        media_cfg.no_vad = PJ_FALSE;
+        media_cfg.no_vad = PJ_FALSE;//TODO: settings
 
         status = pjsua_init(&cfg, &log_cfg, &media_cfg);
         if (PJ_SUCCESS != status) {
@@ -93,7 +93,7 @@ bool SipClient::init()
     auto addTransport = [this](pjsip_transport_type_e type) {
         pjsua_transport_config cfg;
         pjsua_transport_config_default(&cfg);
-        cfg.port = 0;//any available source port
+        cfg.port = 0;//TODO: any available source port
         const auto status = pjsua_transport_create(type, &cfg, nullptr);
         if (PJ_SUCCESS != status) {
             errorHandler(tr("Error creating transport"), status);
@@ -123,7 +123,7 @@ bool SipClient::init()
     listAudioCodecs();
     listVideoCodecs();
 
-    disableTcpSwitch(false);
+    disableTcpSwitch(false);//TODO: settings
 
     qInfo() << "Init PJSUA library";
     return true;
