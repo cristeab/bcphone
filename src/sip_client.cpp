@@ -31,6 +31,49 @@ SipClient::SipClient(Settings *settings,
     connect(&_toneGenTimer, &QTimer::timeout, this, &SipClient::releaseToneGenerator);
 }
 
+void SipClient::onRegState(pjsua_acc_id acc_id)
+{
+
+}
+
+void SipClient::onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,
+                           pjsip_rx_data *rdata)
+{
+
+}
+
+void SipClient::onCallState(pjsua_call_id call_id, pjsip_event *e)
+{
+
+}
+
+void SipClient::onCallMediaState(pjsua_call_id call_id)
+{
+
+}
+
+void SipClient::onStreamCreated(pjsua_call_id call_id, pjmedia_stream *strm,
+                            unsigned stream_idx, pjmedia_port **p_port)
+{
+
+}
+
+void SipClient::onStreamDestroyed(pjsua_call_id call_id, pjmedia_stream *strm,
+                              unsigned stream_idx)
+{
+
+}
+
+void SipClient::onBuddyState(pjsua_buddy_id buddy_id)
+{
+
+}
+
+void SipClient::pjsuaLogCallback(int level, const char *data, int len)
+{
+
+}
+
 bool SipClient::init()
 {
     //check PJSUA state
