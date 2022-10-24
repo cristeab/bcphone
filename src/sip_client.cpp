@@ -8,6 +8,7 @@
 #include "models/active_call_model.h"
 #include <QDebug>
 #include <QFile>
+#include <QRegularExpression>
 
 static SipClient* _instance = nullptr;
 
@@ -35,24 +36,36 @@ SipClient::SipClient(Settings *settings,
     connect(&_toneGenTimer, &QTimer::timeout, this, &SipClient::releaseToneGenerator);
 }
 
-void SipClient::onRegState(pjsua_acc_id acc_id)
+void SipClient::onRegState(pjsua_acc_id accId)
 {
     if (nullptr == _instance) {
         return;
     }
     pjsua_acc_info info{};
-    const auto status = pjsua_acc_get_info(acc_id, &info);
+    const auto status = pjsua_acc_get_info(accId, &info);
     if (PJ_SUCCESS != status) {
         _instance->errorHandler("Cannot get account information", status);
         return;
     }
-    _instance->setRegistrationStatus(info);
+    _instance->processRegistrationStatus(info);
 }
 
-void SipClient::onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,
-                           pjsip_rx_data *rdata)
+void SipClient::onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_rx_data *rdata)
 {
+    PJ_UNUSED_ARG(accId);
+    PJ_UNUSED_ARG(rdata);
 
+    if (nullptr == _instance) {
+        return;
+    }
+
+    pjsua_call_info ci{};
+    const auto status = pjsua_call_get_info(callId, &ci);
+    if (PJ_SUCCESS != status) {
+        _instance->errorHandler("Cannot get call info", status);
+        return;
+    }
+    _instance->processIncomingCall(ci);
 }
 
 void SipClient::onCallState(pjsua_call_id call_id, pjsip_event *e)
@@ -1221,7 +1234,7 @@ bool SipClient::releaseRecorder(pjsua_call_id callId)
     return true;
 }
 
-void SipClient::setRegistrationStatus(const pjsua_acc_info& info)
+void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
 {
     switch (info.status) {
     case PJSIP_SC_OK:
@@ -1244,4 +1257,43 @@ void SipClient::setRegistrationStatus(const pjsua_acc_info& info)
     _registrationStatusText = SipClient::toString(info.status_text);
     qDebug() << "Registration status" << _registrationStatusText;
     emit registrationStatusChanged();
+}
+
+void SipClient::processIncomingCall(const pjsua_call_info &info)
+{
+    QString remoteInfo = toString(info.remote_info);
+    qDebug() << "Incoming call from" << remoteInfo;
+
+    QString userName;
+    QString userId;
+    extractUserNameAndId(userName, userId, remoteInfo);
+    emit incomingCall(userName, userId);
+}
+
+void SipClient::extractUserNameAndId(QString& userName, QString& userId, const QString &info)
+{
+    const static QRegularExpression re("\"([\\w|\\s]*)\"\\s*<sip:([\\w|\\s]*)@.*");
+    qDebug() << "Matching" << info;
+    QRegularExpressionMatch match = re.match(info);
+    userName.clear();
+    userId.clear();
+    if (match.hasMatch()) {
+        userName = match.captured(1);
+        userId = match.captured(2);
+    } else {
+        const static QRegularExpression re1("sip:([\\w|\\s]*)@.*");
+        match = re1.match(info);
+        if (match.hasMatch()) {
+            userId = userName = match.captured(1);
+        } else {
+            qWarning() << "No match found" << info;
+            //use brute force parser
+            auto tok = info.split('@');
+            tok = tok.front().split("<sip:");
+            if (1 < tok.size()) {
+                userName = tok.front();
+            }
+            userId = tok.last();
+        }
+    }
 }

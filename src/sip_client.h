@@ -78,6 +78,7 @@ public:
 signals:
     void errorMessage(const QString& msg);
     void registrationStatusChanged();
+    void incomingCall(const QString& userName, const QString& userId);
 
 private:
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
@@ -88,9 +89,8 @@ private:
            TONE_GEN_BITS_PER_SAMPLE = 16,
            TONE_GEN_ON_MS = 160, TONE_GEN_OFF_MS = 50, TONE_GEN_TIMEOUT_MS = 5000 };
 
-    static void onRegState(pjsua_acc_id acc_id);
-    static void onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,
-                               pjsip_rx_data *rdata);
+    static void onRegState(pjsua_acc_id accId);
+    static void onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_rx_data *rdata);
     static void onCallState(pjsua_call_id call_id, pjsip_event *e);
     static void onCallMediaState(pjsua_call_id call_id);
     static void onStreamCreated(pjsua_call_id call_id, pjmedia_stream *strm,
@@ -118,6 +118,8 @@ private:
     static pj_status_t verifySipUri(const char *url) {
         return (strlen(url) > SIP_URI_SIZE) ? PJSIP_EURITOOLONG : pjsua_verify_sip_url(url);
     }
+    static void extractUserNameAndId(QString& userName, QString& userId, const QString &info);
+
     bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
     bool enableAudio();
 
@@ -135,7 +137,8 @@ private:
     bool stopRecording(pjsua_call_id callId);
     bool releaseRecorder(pjsua_call_id callId);
 
-    void setRegistrationStatus(const pjsua_acc_info &info);
+    void processRegistrationStatus(const pjsua_acc_info &info);
+    void processIncomingCall(const pjsua_call_info &info);
 
     Settings* _settings = nullptr;
     AudioDevices* _inputAudioDevices = nullptr;

@@ -274,35 +274,6 @@ void Softphone::onRegState(pjsua_acc_id acc_id)
     }
 }
 
-std::tuple<QString,QString> Softphone::extractUserNameAndId(const QString &info)
-{
-    const static QRegularExpression re("\"([\\w|\\s]*)\"\\s*<sip:([\\w|\\s]*)@.*");
-    qDebug() << "Matching" << info;
-    QRegularExpressionMatch match = re.match(info);
-    QString userName;
-    QString userId;
-    if (match.hasMatch()) {
-        userName = match.captured(1);
-        userId = match.captured(2);
-    } else {
-        const static QRegularExpression re1("sip:([\\w|\\s]*)@.*");
-        match = re1.match(info);
-        if (match.hasMatch()) {
-            userId = userName = match.captured(1);
-        } else {
-            qWarning() << "No match found" << info;
-            //use brute force parser
-            auto tok = info.split('@');
-            tok = tok.front().split("<sip:");
-            if (1 < tok.size()) {
-                userName = tok.front();
-            }
-            userId = tok.last();
-        }
-    }
-    return std::make_tuple(userName, userId);
-}
-
 bool Softphone::setVideoCodecPriority(const QString &codecId, int priority)
 {
     if ((0 > priority) || (priority > 255)) {
@@ -317,27 +288,6 @@ bool Softphone::setVideoCodecPriority(const QString &codecId, int priority)
         errorHandler("Cannot set video codec priority", status);
     }
     return PJ_SUCCESS == status;
-}
-
-void Softphone::onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id callId,
-                               pjsip_rx_data *rdata)
-{
-    PJ_UNUSED_ARG(acc_id);
-    PJ_UNUSED_ARG(rdata);
-    if (nullptr == _instance) {
-        return;
-    }
-
-    pjsua_call_info ci;
-    pjsua_call_get_info(callId, &ci);
-
-    QString info = toString(ci.remote_info);
-    qDebug() << "Incoming call from" << info;
-
-    const auto userNameAndId = extractUserNameAndId(info);
-    const auto isConf = _instance->_activeCallModel->isConference();
-    emit _instance->incoming(pjsua_call_get_count(), callId, std::get<1>(userNameAndId),
-                             std::get<0>(userNameAndId), isConf);
 }
 
 void Softphone::onCallState(pjsua_call_id callId, pjsip_event *e)

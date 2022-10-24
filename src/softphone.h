@@ -145,7 +145,6 @@ private:
     void setupConferenceCall(pjsua_call_id callId);
     void startCurrentUserTimer();
     void stopCurrentUserTimer();
-    static std::tuple<QString,QString> extractUserNameAndId(const QString &info);
 
     bool setVideoCodecPriority(const QString &codecId, int priority);
 
