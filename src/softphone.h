@@ -22,8 +22,6 @@ class Softphone : public QObject {
 public:
     enum CallState { NONE, OUTGOING, INCOMING, ACTIVE };
     Q_ENUM(CallState)
-    enum RegistrationStatus { UNREGISTERED, IN_PROGRESS, REGISTERED };
-    Q_ENUM(RegistrationStatus)
 
 private:
     QML_READABLE_PROPERTY(RegistrationStatus, registrationStatus, setRegistrationStatus, RegistrationStatus::UNREGISTERED)

@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QFile>
 
+static SipClient* _instance = nullptr;
+
 SipClient::SipClient(Settings *settings,
                      const RingTonesModel* ringTonesModel,
                      CallHistoryModel* callHistoryModel,
@@ -25,6 +27,8 @@ SipClient::SipClient(Settings *settings,
     _activeCallModel(activeCallModel),
     QObject{parent}
 {
+    _instance = this;
+
     //setup tone generator
     _toneGenTimer.setInterval(TONE_GEN_TIMEOUT_MS);
     _toneGenTimer.setSingleShot(true);
@@ -33,7 +37,16 @@ SipClient::SipClient(Settings *settings,
 
 void SipClient::onRegState(pjsua_acc_id acc_id)
 {
-
+    if (nullptr == _instance) {
+        return;
+    }
+    pjsua_acc_info info{};
+    const auto status = pjsua_acc_get_info(acc_id, &info);
+    if (PJ_SUCCESS != status) {
+        _instance->errorHandler("Cannot get account information", status);
+        return;
+    }
+    _instance->setRegistrationStatus(info);
 }
 
 void SipClient::onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,
@@ -1206,4 +1219,29 @@ bool SipClient::releaseRecorder(pjsua_call_id callId)
     _recorderId.erase(callId);
     qDebug() << "Recorder has been released";
     return true;
+}
+
+void SipClient::setRegistrationStatus(const pjsua_acc_info& info)
+{
+    switch (info.status) {
+    case PJSIP_SC_OK:
+        _registrationStatus = RegistrationStatus::Registered;
+        break;
+    case PJSIP_SC_TRYING:
+        _registrationStatus = RegistrationStatus::Trying;
+        break;
+    case PJSIP_SC_PROGRESS:
+        _registrationStatus = RegistrationStatus::InProgress;
+        break;
+    case PJSIP_SC_SERVICE_UNAVAILABLE:
+        _registrationStatus = RegistrationStatus::ServiceUnavailable;
+        break;
+    case PJSIP_SC_TEMPORARILY_UNAVAILABLE:
+        _registrationStatus = RegistrationStatus::TemporarilyUnavailable;
+        break;
+    default:;
+    }
+    _registrationStatusText = SipClient::toString(info.status_text);
+    qDebug() << "Registration status" << _registrationStatusText;
+    emit registrationStatusChanged();
 }

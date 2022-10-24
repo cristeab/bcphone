@@ -18,6 +18,9 @@ class SipClient : public QObject
 {
     Q_OBJECT
 public:
+    enum class RegistrationStatus { Unregistered, Trying, InProgress, Registered,
+                                    ServiceUnavailable, TemporarilyUnavailable };
+
     SipClient(Settings *settings,
               const RingTonesModel* ringTonesModel,
               CallHistoryModel* callHistoryModel,
@@ -74,6 +77,7 @@ public:
 
 signals:
     void errorMessage(const QString& msg);
+    void registrationStatusChanged();
 
 private:
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
@@ -131,6 +135,8 @@ private:
     bool stopRecording(pjsua_call_id callId);
     bool releaseRecorder(pjsua_call_id callId);
 
+    void setRegistrationStatus(const pjsua_acc_info &info);
+
     Settings* _settings = nullptr;
     AudioDevices* _inputAudioDevices = nullptr;
     AudioDevices* _outputAudioDevices = nullptr;
@@ -149,4 +155,7 @@ private:
     pjmedia_port* _toneGenMediaPort = nullptr;
     pjsua_conf_port_id _toneGenConfPort = PJSUA_INVALID_ID;
     QTimer _toneGenTimer;
+
+    RegistrationStatus _registrationStatus = RegistrationStatus::Unregistered;
+    QString _registrationStatusText;
 };
