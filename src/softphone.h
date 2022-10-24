@@ -141,7 +141,6 @@ private:
     static void dumpStreamStats(pjmedia_stream *strm);
     bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
     bool setSpeakersVolume(pjsua_conf_port_id portId, bool mute = false);
-    void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
     void setupConferenceCall(pjsua_call_id callId);
     void startCurrentUserTimer();
     void stopCurrentUserTimer();

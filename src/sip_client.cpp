@@ -68,9 +68,20 @@ void SipClient::onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_r
     _instance->processIncomingCall(ci);
 }
 
-void SipClient::onCallState(pjsua_call_id call_id, pjsip_event *e)
+void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
 {
+    PJ_UNUSED_ARG(e);
+    if (nullptr == _instance) {
+        return;
+    }
 
+    pjsua_call_info ci{};
+    const auto status = pjsua_call_get_info(callId, &ci);
+    if (PJ_SUCCESS != status) {
+        _instance->errorHandler("Cannot get call info", status);
+        return;
+    }
+    _instance->processCallState(ci);
 }
 
 void SipClient::onCallMediaState(pjsua_call_id call_id)
@@ -1259,7 +1270,7 @@ void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
     emit registrationStatusChanged();
 }
 
-void SipClient::processIncomingCall(const pjsua_call_info &info)
+void SipClient::processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info)
 {
     QString remoteInfo = toString(info.remote_info);
     qDebug() << "Incoming call from" << remoteInfo;
@@ -1267,7 +1278,50 @@ void SipClient::processIncomingCall(const pjsua_call_info &info)
     QString userName;
     QString userId;
     extractUserNameAndId(userName, userId, remoteInfo);
-    emit incomingCall(userName, userId);
+    emit incomingCall(callId, userName, userId);
+}
+
+void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &info)
+{
+    const QString stateText = toString(info.state_text);
+    const QString lastStatusText = toString(info.last_status_text);
+    qDebug() << "Call" << callId << ", state =" << stateText << "(" << info.last_status << ")"
+             << lastStatusText;
+
+    if ((PJSIP_SC_BAD_REQUEST <= info.last_status) &&
+            (PJSIP_SC_REQUEST_TERMINATED != info.last_status) &&
+            (PJSIP_SC_REQUEST_TIMEOUT != info.last_status)) {
+        //show all SIP errors above Client Failure Responses
+        emit errorMessage(stateText + " (" + QString::number(info.last_status) + ")");
+    }
+
+    switch (info.state) {
+    case PJSIP_INV_STATE_NULL:
+        break;
+    case PJSIP_INV_STATE_CALLING: {
+        const QString remoteInfo = toString(info.remote_info);
+        QString userName;
+        QString userId;
+        SipClient::extractUserNameAndId(userName, userId, remoteInfo);
+        emit calling(callId, userId, userName);
+    }
+        break;
+    case PJSIP_INV_STATE_INCOMING:
+        break;
+    case PJSIP_INV_STATE_EARLY:
+        break;
+    case PJSIP_INV_STATE_CONNECTING:
+        break;
+    case PJSIP_INV_STATE_CONFIRMED:
+        connectCallToSoundDevices(info.conf_slot);
+        emit confirmed(callId);
+        break;
+    case PJSIP_INV_STATE_DISCONNECTED:
+        emit disconnected(callId);
+        break;
+    default:
+        qCritical() << "unhandled call state" << info.state;
+    }
 }
 
 void SipClient::extractUserNameAndId(QString& userName, QString& userId, const QString &info)
@@ -1296,4 +1350,49 @@ void SipClient::extractUserNameAndId(QString& userName, QString& userId, const Q
             userId = tok.last();
         }
     }
+}
+
+void SipClient::connectCallToSoundDevices(pjsua_conf_port_id confPortId)
+{
+    qDebug() << "Connect call conf port" << confPortId << "to sound devices";
+
+    //ajust volume level
+    setMicrophoneVolume(confPortId);
+    setSpeakersVolume(confPortId);
+
+    pj_status_t status = pjsua_conf_connect(confPortId, 0);//TODO: why 0 ?
+    if (PJ_SUCCESS != status) {
+        errorHandler("Cannot connect conf slot to playback slot", status);
+    }
+
+    status = pjsua_conf_connect(0, confPortId);
+    if (PJ_SUCCESS != status) {
+        errorHandler("Cannot connect capture slot to conf slot", status);
+    }
+}
+
+bool SipClient::setMicrophoneVolume(pjsua_conf_port_id portId, bool mute)
+{
+    //microphone volume
+    const float microphoneLevel = mute ? 0 : _settings->microphoneVolume();
+    qInfo() << "Mic level" << microphoneLevel;
+    const auto status = pjsua_conf_adjust_tx_level(portId, microphoneLevel);
+    if (PJ_SUCCESS != status) {
+        errorHandler("Cannot adjust tx level", status);
+        return false;
+    }
+    return true;
+}
+
+bool SipClient::setSpeakersVolume(pjsua_conf_port_id portId, bool mute)
+{
+    //speakers volume
+    const float speakersLevel = mute ? 0 : _settings->speakersVolume();
+    qInfo() << "Speakers level" << speakersLevel;
+    const pj_status_t status = pjsua_conf_adjust_rx_level(portId, speakersLevel);
+    if (PJ_SUCCESS != status) {
+        errorHandler("Cannot adjust rx level", status);
+        return false;
+    }
+    return true;
 }

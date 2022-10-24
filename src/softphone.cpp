@@ -813,26 +813,6 @@ void Softphone::hangupAll()
 {
 }
 
-void Softphone::connectCallToSoundDevices(pjsua_conf_port_id confPortId)
-{
-    qDebug() << "Connect call conf port" << confPortId << "to sound devices";
-
-    //ajust volume level
-    setMicrophoneVolume(confPortId);
-    setSpeakersVolume(confPortId);
-
-    pj_status_t status = pjsua_conf_connect(confPortId, 0);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot connect conf slot to playback slot", status,
-                     false);
-    }
-
-    status = pjsua_conf_connect(0, confPortId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot connect capture slot to conf slot", status,
-                     false);
-    }
-}
 
 void Softphone::setupConferenceCall(pjsua_call_id callId)
 {

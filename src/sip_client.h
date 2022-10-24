@@ -78,7 +78,10 @@ public:
 signals:
     void errorMessage(const QString& msg);
     void registrationStatusChanged();
-    void incomingCall(const QString& userName, const QString& userId);
+    void incomingCall(int callId, const QString& userName, const QString& userId);
+    void calling(int callId, const QString& userName, const QString& userId);
+    void confirmed(int callId);
+    void disconnected(int callId);
 
 private:
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
@@ -91,20 +94,16 @@ private:
 
     static void onRegState(pjsua_acc_id accId);
     static void onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_rx_data *rdata);
-    static void onCallState(pjsua_call_id call_id, pjsip_event *e);
-    static void onCallMediaState(pjsua_call_id call_id);
-    static void onStreamCreated(pjsua_call_id call_id, pjmedia_stream *strm,
-                                unsigned stream_idx, pjmedia_port **p_port);
-    static void onStreamDestroyed(pjsua_call_id call_id, pjmedia_stream *strm,
-                                  unsigned stream_idx);
-    static void onBuddyState(pjsua_buddy_id buddy_id);
+    static void onCallState(pjsua_call_id callId, pjsip_event *e);
+    static void onCallMediaState(pjsua_call_id callId);
+    static void onStreamCreated(pjsua_call_id callId, pjmedia_stream *strm,
+                                unsigned streamIdx, pjmedia_port **pPort);
+    static void onStreamDestroyed(pjsua_call_id callId, pjmedia_stream *strm,
+                                  unsigned streamIdx);
+    static void onBuddyState(pjsua_buddy_id buddyId);
     static void pjsuaLogCallback(int level, const char *data, int len);
 
     void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS);
-    static QString toString(const pj_str_t& pjStr) {
-        return QString::fromLocal8Bit(pjStr.ptr, static_cast<int>(pjStr.slen));
-    }
-
     bool disableAudio();
     void initAudioDevicesList();
     void initVideoDevicesList();
@@ -117,6 +116,9 @@ private:
     static QString sipTransport(int type);
     static pj_status_t verifySipUri(const char *url) {
         return (strlen(url) > SIP_URI_SIZE) ? PJSIP_EURITOOLONG : pjsua_verify_sip_url(url);
+    }
+    static QString toString(const pj_str_t& pjStr) {
+        return QString::fromLocal8Bit(pjStr.ptr, static_cast<int>(pjStr.slen));
     }
     static void extractUserNameAndId(QString& userName, QString& userId, const QString &info);
 
@@ -138,7 +140,12 @@ private:
     bool releaseRecorder(pjsua_call_id callId);
 
     void processRegistrationStatus(const pjsua_acc_info &info);
-    void processIncomingCall(const pjsua_call_info &info);
+    void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
+    void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
+
+    void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
+    bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
+    bool setSpeakersVolume(pjsua_conf_port_id portId, bool mute = false);
 
     Settings* _settings = nullptr;
     AudioDevices* _inputAudioDevices = nullptr;
