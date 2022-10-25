@@ -415,42 +415,7 @@ void Softphone::onStreamDestroyed(pjsua_call_id call_id, pjmedia_stream *strm,
 
 void Softphone::onBuddyState(pjsua_buddy_id buddy_id)
 {
-    if (PJ_FALSE == pjsua_buddy_is_valid(buddy_id)) {
-        qWarning() << "Invalid buddy ID" << buddy_id;
-        return;
-    }
-    pjsua_buddy_info info;
-    const pj_status_t status = pjsua_buddy_get_info(buddy_id, &info);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot get buddy info", status, true);
-        return;
-    }
-    if ((nullptr != _instance) && (nullptr != _instance->_presenceModel)) {
-        _instance->_presenceModel->updateStatus(buddy_id, toString(info.rpid.note));
-    }
-}
 
-void Softphone::dumpStreamStats(pjmedia_stream *strm)
-{
-    pjmedia_rtcp_stat stat;
-    const pj_status_t status = pjmedia_stream_get_stat(strm, &stat);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot get stream stats", status, false);
-        return;
-    }
-
-    auto showStreamStat = [](const char *prefix, const pjmedia_rtcp_stream_stat &s) {
-        qInfo() << prefix << "packets =" << s.pkt << "packets, payload ="
-                << s.bytes << "bytes, loss =" << s.loss << "packets, percent loss ="
-                << s.loss * 100.0 / (s.loss + s.pkt) << "%, dup =" << s.dup
-                << "packets, reorder =" << s.reorder << "packets, discard ="
-                << s.discard << "packets, jitter (min, mean, max) ="
-                << s.jitter.min << s.jitter.mean << s.jitter.max << "ms";
-    };
-    showStreamStat("RX stat:", stat.rx);
-    showStreamStat("TX stat:", stat.tx);
-    qInfo() << "RTT (min, mean, max) =" << stat.rtt.min << stat.rtt.mean
-            << stat.rtt.max << "ms";
 }
 
 void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
@@ -460,101 +425,6 @@ void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
 
 bool Softphone::registerAccount()
 {
-    if (!_pjsuaStarted) {
-        qCritical() << "PJSUA library not started";
-        errorDialog(tr("PJSUA library not started"));
-        return false;
-    }
-    if (nullptr == _settings) {
-        qCritical() << "Cannot register acccount";
-        return false;
-    }
-
-    const auto& callerId = _settings->accountName();
-    const auto& domain = _settings->sipServer();
-    const auto destPort = QString::number(_settings->sipPort());
-    const auto& username = _settings->userName();
-    auto authUsername = _settings->authUserName();
-    if (authUsername.isEmpty()) {
-        authUsername = username;
-        _settings->setAuthUserName(username);
-    }
-    const auto& password = _settings->password();
-    const auto sipTransport = Softphone::sipTransport(_settings->sipTransport());
-
-    if (domain.isEmpty() || username.isEmpty() || password.isEmpty()) {
-        errorHandler(tr("Either domain, username or password is empty"),
-                     PJ_SUCCESS, true);
-        qDebug() << "Cannot register account:" << domain << username << password;
-        return false;
-    }
-
-    //unregister previous account if needed
-    unregisterAccount();
-
-    pjsua_acc_config cfg;
-    pjsua_acc_config_default(&cfg);
-    QString id;
-    if (!callerId.isEmpty()) {
-        id = "\"" + callerId + "\" <";
-    }
-    id += "sip:" + username + "@" + domain + ":" +
-            destPort + sipTransport;
-    if (!callerId.isEmpty()) {
-        id += ">";
-    }
-    qInfo() << "ID URI" << id;
-    std::string tmpId = id.toStdString();
-    pj_cstr(&cfg.id, tmpId.c_str());
-    QString regUri = "sip:" + domain + ":" + destPort + sipTransport;
-    qInfo() << "Reg URI" << regUri;
-    std::string tmpRegUri = regUri.toStdString();
-    pj_cstr(&cfg.reg_uri, tmpRegUri.c_str());
-    cfg.cred_count = 1;
-    pj_cstr(&cfg.cred_info[0].realm, "*");
-    pj_cstr(&cfg.cred_info[0].scheme, "digest");
-    auto tmpUsername = authUsername.toStdString();
-    pj_cstr(&cfg.cred_info[0].username, tmpUsername.c_str());
-    cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
-    auto tmpPassword = password.toStdString();
-    pj_cstr(&cfg.cred_info[0].data, tmpPassword.c_str());
-
-    const bool srtpEnabled = Settings::MediaTransport::Srtp == _settings->mediaTransport();
-    cfg.use_srtp = srtpEnabled ? PJMEDIA_SRTP_MANDATORY : PJMEDIA_SRTP_DISABLED;
-    pjsua_srtp_opt_default(&cfg.srtp_opt);
-    cfg.srtp_opt.keying[0] = PJMEDIA_SRTP_KEYING_SDES;//TODO: check box
-    const bool tlsEnabled = Settings::SipTransport::Tls == _settings->sipTransport();
-    cfg.srtp_secure_signaling = tlsEnabled ? 1 : 0;
-
-    if (_settings->proxyEnabled()) {
-        qInfo() << "Outbound proxy is enabled";
-        auto proxyServer = "sip:" + _settings->proxyServer();
-        if (0 < _settings->proxyPort()) {
-            proxyServer += ":" + QString::number(_settings->proxyPort());
-        }
-        proxyServer += sipTransport;
-        cfg.proxy_cnt = 1;
-        qInfo() << "Proxy URI" << proxyServer;
-        const auto proxyUri = proxyServer.toStdString();
-        pj_cstr(&cfg.proxy[0], proxyUri.c_str());
-        cfg.reg_use_proxy = PJSUA_REG_USE_OUTBOUND_PROXY | PJSUA_REG_USE_ACC_PROXY;
-    }
-
-    cfg.vid_cap_dev = PJMEDIA_VID_DEFAULT_CAPTURE_DEV;
-    cfg.vid_rend_dev = PJMEDIA_VID_DEFAULT_RENDER_DEV;
-    cfg.vid_in_auto_show = PJ_FALSE;
-    cfg.vid_out_auto_transmit = PJ_FALSE;
-
-    cfg.allow_sdp_nat_rewrite = PJ_TRUE;
-
-    pj_status_t status = pjsua_acc_add(&cfg, PJ_TRUE, &_accId);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Error adding account", status, true);
-        return false;
-    }
-    qDebug() << "successfully registered account";
-    onRegState(_accId);
-    return true;
 }
 
 bool Softphone::unregisterAccount()

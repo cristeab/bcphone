@@ -82,7 +82,8 @@ signals:
     void calling(int callId, const QString& userName, const QString& userId);
     void confirmed(int callId);
     void disconnected(int callId);
-    void hasVideoChanged(bool hasVideo);
+    void videoAvailabilityChanged(bool hasVideo);
+    void buddyStatusChanged(int buddyId, const QString& status);
 
 private:
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
@@ -150,6 +151,8 @@ private:
     void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
     void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
     void processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info);
+    void dumpStreamStats(pjmedia_stream *strm);
+    void processBuddyState(pjsua_buddy_id buddyId);
 
     void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
     bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);

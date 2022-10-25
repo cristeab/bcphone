@@ -101,23 +101,37 @@ void SipClient::onCallMediaState(pjsua_call_id callId)
 void SipClient::onStreamCreated(pjsua_call_id callId, pjmedia_stream *strm,
                             unsigned stream_idx, pjmedia_port **p_port)
 {
-
+    Q_UNUSED(strm)
+    Q_UNUSED(p_port)
+    qDebug() << "onStreamCreated" << callId << stream_idx;
+    //dumpStreamStats(strm);
 }
 
 void SipClient::onStreamDestroyed(pjsua_call_id callId, pjmedia_stream *strm,
                               unsigned stream_idx)
 {
-
+    qDebug() << "onStreamDestroyed" << callId << stream_idx;
+    if (nullptr == _instance) {
+        return;
+    }
+    _instance->dumpStreamStats(strm);
 }
 
 void SipClient::onBuddyState(pjsua_buddy_id buddyId)
 {
-
+    if (PJ_FALSE == pjsua_buddy_is_valid(buddyId)) {
+        qWarning() << "Invalid buddy ID" << buddyId;
+        return;
+    }
+    if (nullptr == _instance) {
+        return;
+    }
+    _instance->processBuddyState(buddyId);
 }
 
 void SipClient::pjsuaLogCallback(int level, const char *data, int len)
 {
-
+    qDebug() << QString("PJSUA [%1]").arg(level) << QString::fromStdString(std::string(data, len));
 }
 
 bool SipClient::init()
@@ -1363,13 +1377,48 @@ void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_inf
                 }
             }
         }
-        emit hasVideoChanged(hasVideo);
+        emit videoAvailabilityChanged(hasVideo);
     } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != info.media_status) &&
                (PJSUA_CALL_MEDIA_REMOTE_HOLD != info.media_status)) {
         qWarning() << "Connection lost";
         emit registrationStatusChanged(RegistrationStatus::Unregistered, tr("Connection lost"));
         emit errorMessage(tr("You need an active Internet connection to make calls."));
     }
+}
+
+void SipClient::dumpStreamStats(pjmedia_stream *strm)
+{
+    pjmedia_rtcp_stat stat{};
+    const auto status = pjmedia_stream_get_stat(strm, &stat);
+    if (PJ_SUCCESS != status) {
+        errorHandler(tr("Cannot get stream stats"), status);
+        return;
+    }
+
+    //TODO: show stats in the UI
+    auto showStreamStat = [](const char *prefix, const pjmedia_rtcp_stream_stat &s) {
+        qInfo() << prefix << "packets =" << s.pkt << "packets, payload ="
+                << s.bytes << "bytes, loss =" << s.loss << "packets, percent loss ="
+                << s.loss * 100.0 / (s.loss + s.pkt) << "%, dup =" << s.dup
+                << "packets, reorder =" << s.reorder << "packets, discard ="
+                << s.discard << "packets, jitter (min, mean, max) ="
+                << s.jitter.min << s.jitter.mean << s.jitter.max << "ms";
+    };
+    showStreamStat("RX stat:", stat.rx);
+    showStreamStat("TX stat:", stat.tx);
+    qInfo() << "RTT (min, mean, max) =" << stat.rtt.min << stat.rtt.mean
+            << stat.rtt.max << "ms";
+}
+
+void SipClient::processBuddyState(pjsua_buddy_id buddyId)
+{
+    pjsua_buddy_info info{};
+    const auto status = pjsua_buddy_get_info(buddyId, &info);
+    if (PJ_SUCCESS != status) {
+        errorHandler(tr("Cannot get buddy info"), status);
+        return;
+    }
+    emit buddyStatusChanged(buddyId, SipClient::toString(info.rpid.note));
 }
 
 void SipClient::extractUserNameAndId(QString& userName, QString& userId, const QString &info)
