@@ -65,7 +65,7 @@ void SipClient::onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_r
         _instance->errorHandler("Cannot get call info", status);
         return;
     }
-    _instance->processIncomingCall(ci);
+    _instance->processIncomingCall(callId, ci);
 }
 
 void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
@@ -81,27 +81,36 @@ void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
         _instance->errorHandler("Cannot get call info", status);
         return;
     }
-    _instance->processCallState(ci);
+    _instance->processCallState(callId, ci);
 }
 
-void SipClient::onCallMediaState(pjsua_call_id call_id)
+void SipClient::onCallMediaState(pjsua_call_id callId)
 {
-
+    if (nullptr == _instance) {
+        return;
+    }
+    pjsua_call_info ci{};
+    auto status = pjsua_call_get_info(callId, &ci);
+    if (PJ_SUCCESS != status) {
+        _instance->errorHandler("Cannot get media status", status);
+        return;
+    }
+    _instance->processCallMediaState(callId, ci);
 }
 
-void SipClient::onStreamCreated(pjsua_call_id call_id, pjmedia_stream *strm,
+void SipClient::onStreamCreated(pjsua_call_id callId, pjmedia_stream *strm,
                             unsigned stream_idx, pjmedia_port **p_port)
 {
 
 }
 
-void SipClient::onStreamDestroyed(pjsua_call_id call_id, pjmedia_stream *strm,
+void SipClient::onStreamDestroyed(pjsua_call_id callId, pjmedia_stream *strm,
                               unsigned stream_idx)
 {
 
 }
 
-void SipClient::onBuddyState(pjsua_buddy_id buddy_id)
+void SipClient::onBuddyState(pjsua_buddy_id buddyId)
 {
 
 }
@@ -1247,27 +1256,27 @@ bool SipClient::releaseRecorder(pjsua_call_id callId)
 
 void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
 {
+    RegistrationStatus registrationStatus = RegistrationStatus::Unregistered;
     switch (info.status) {
     case PJSIP_SC_OK:
-        _registrationStatus = RegistrationStatus::Registered;
+        registrationStatus = RegistrationStatus::Registered;
         break;
     case PJSIP_SC_TRYING:
-        _registrationStatus = RegistrationStatus::Trying;
+        registrationStatus = RegistrationStatus::Trying;
         break;
     case PJSIP_SC_PROGRESS:
-        _registrationStatus = RegistrationStatus::InProgress;
+        registrationStatus = RegistrationStatus::InProgress;
         break;
     case PJSIP_SC_SERVICE_UNAVAILABLE:
-        _registrationStatus = RegistrationStatus::ServiceUnavailable;
+        registrationStatus = RegistrationStatus::ServiceUnavailable;
         break;
     case PJSIP_SC_TEMPORARILY_UNAVAILABLE:
-        _registrationStatus = RegistrationStatus::TemporarilyUnavailable;
+        registrationStatus = RegistrationStatus::TemporarilyUnavailable;
         break;
-    default:;
+    default:
+        qWarning() << "Unknown reg status" << info.status;
     }
-    _registrationStatusText = SipClient::toString(info.status_text);
-    qDebug() << "Registration status" << _registrationStatusText;
-    emit registrationStatusChanged();
+    emit registrationStatusChanged(registrationStatus, SipClient::toString(info.status_text));
 }
 
 void SipClient::processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info)
@@ -1321,6 +1330,45 @@ void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &in
         break;
     default:
         qCritical() << "unhandled call state" << info.state;
+    }
+}
+
+void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info)
+{
+    qDebug() << "Media state changed for call" << callId << ":" << SipClient::toString(info.last_status_text)
+             << info.last_status;
+    if (PJSUA_CALL_MEDIA_ACTIVE == info.media_status) {
+        qInfo() << "Media active" << info.media_cnt;
+        bool hasVideo{};
+        for (unsigned medIdx = 0; medIdx < info.media_cnt; ++medIdx) {
+            if (isMediaActive(info.media[medIdx])) {
+                pjsua_stream_info streamInfo{};
+                auto status = pjsua_call_get_stream_info(callId, medIdx, &streamInfo);
+                if (PJ_SUCCESS == status) {
+                    if (PJMEDIA_TYPE_AUDIO == streamInfo.type) {
+                        _instance->connectCallToSoundDevices(info.conf_slot);
+                        const auto &fmt = streamInfo.info.aud.fmt;
+                        qInfo() << "Audio codec info: encoding" << toString(fmt.encoding_name)
+                                << ", clock rate" << fmt.clock_rate << "Hz, channel count"
+                                << fmt.channel_cnt;
+                    } else if (PJMEDIA_TYPE_VIDEO == streamInfo.type) {
+                        const auto &fmt = streamInfo.info.vid.codec_info;
+                        qInfo() << "Video codec info: encoding" << toString(fmt.encoding_name)
+                                << ", encoding desc." << toString(fmt.encoding_desc)
+                                << ", clock rate:" << fmt.clock_rate << "Hz";
+                        hasVideo = true;
+                    }
+                } else {
+                    errorHandler("Cannot get stream info", status);
+                }
+            }
+        }
+        emit hasVideoChanged(hasVideo);
+    } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != info.media_status) &&
+               (PJSUA_CALL_MEDIA_REMOTE_HOLD != info.media_status)) {
+        qWarning() << "Connection lost";
+        emit registrationStatusChanged(RegistrationStatus::Unregistered, tr("Connection lost"));
+        emit errorMessage(tr("You need an active Internet connection to make calls."));
     }
 }
 

@@ -77,11 +77,12 @@ public:
 
 signals:
     void errorMessage(const QString& msg);
-    void registrationStatusChanged();
+    void registrationStatusChanged(RegistrationStatus registrationStatus, const QString& registrationStatusText);
     void incomingCall(int callId, const QString& userName, const QString& userId);
     void calling(int callId, const QString& userName, const QString& userId);
     void confirmed(int callId);
     void disconnected(int callId);
+    void hasVideoChanged(bool hasVideo);
 
 private:
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
@@ -121,6 +122,12 @@ private:
         return QString::fromLocal8Bit(pjStr.ptr, static_cast<int>(pjStr.slen));
     }
     static void extractUserNameAndId(QString& userName, QString& userId, const QString &info);
+    static bool isMediaActive(const pjsua_call_media_info &media) {
+        return ((PJMEDIA_TYPE_AUDIO == media.type) ||
+                (PJMEDIA_TYPE_VIDEO == media.type)) &&
+                (PJSUA_CALL_MEDIA_NONE != media.status) &&
+                (PJSUA_CALL_MEDIA_ERROR != media.status);
+    }
 
     bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
     bool enableAudio();
@@ -142,6 +149,7 @@ private:
     void processRegistrationStatus(const pjsua_acc_info &info);
     void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
     void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
+    void processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info);
 
     void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
     bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
@@ -165,7 +173,4 @@ private:
     pjmedia_port* _toneGenMediaPort = nullptr;
     pjsua_conf_port_id _toneGenConfPort = PJSUA_INVALID_ID;
     QTimer _toneGenTimer;
-
-    RegistrationStatus _registrationStatus = RegistrationStatus::Unregistered;
-    QString _registrationStatusText;
 };

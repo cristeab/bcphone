@@ -152,13 +152,6 @@ private:
 
     void raiseWindow();
 
-    static bool isMediaActive(const pjsua_call_media_info &media) {
-        return ((PJMEDIA_TYPE_AUDIO == media.type) ||
-                (PJMEDIA_TYPE_VIDEO == media.type)) &&
-                (PJSUA_CALL_MEDIA_NONE != media.status) &&
-                (PJSUA_CALL_MEDIA_ERROR != media.status);
-    }
-
     void onEnableVideo();
 
     void initVideoWindow();
