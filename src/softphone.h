@@ -19,11 +19,6 @@
 class Softphone : public QObject {
 	Q_OBJECT
 
-public:
-    enum CallState { NONE, OUTGOING, INCOMING, ACTIVE };
-    Q_ENUM(CallState)
-
-private:
     QML_READABLE_PROPERTY(RegistrationStatus, registrationStatus, setRegistrationStatus, RegistrationStatus::UNREGISTERED)
     QML_READABLE_PROPERTY(QString, registrationText, setRegistrationText, "Not Registered")
 
@@ -119,18 +114,6 @@ private:
     void listAudioCodecs();
     void initVideoDevicesList();
     void listVideoCodecs();
-
-    static void onRegState(pjsua_acc_id acc_id);
-    static void onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,
-                               pjsip_rx_data *rdata);
-    static void onCallState(pjsua_call_id call_id, pjsip_event *e);
-    static void onCallMediaState(pjsua_call_id call_id);
-    static void onStreamCreated(pjsua_call_id call_id, pjmedia_stream *strm,
-                                unsigned stream_idx, pjmedia_port **p_port);
-    static void onStreamDestroyed(pjsua_call_id call_id, pjmedia_stream *strm,
-                                  unsigned stream_idx);
-    static void onBuddyState(pjsua_buddy_id buddy_id);
-    static void pjsuaLogCallback(int level, const char *data, int len);
 
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);

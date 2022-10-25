@@ -1322,7 +1322,7 @@ void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &in
     case PJSIP_INV_STATE_NULL:
         break;
     case PJSIP_INV_STATE_CALLING: {
-        const QString remoteInfo = toString(info.remote_info);
+        const QString remoteInfo = SipClient::toString(info.remote_info);
         QString userName;
         QString userId;
         SipClient::extractUserNameAndId(userName, userId, remoteInfo);
