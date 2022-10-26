@@ -87,18 +87,20 @@ public:
     void stopPlayingRingTone(pjsua_call_id id);
 
     bool setVideoCodecPriority(const QString &codecId, int priority);
+    void releaseVideoWindow();
 
 signals:
     void errorMessage(const QString& msg);
     void registrationStatusChanged(RegistrationStatus registrationStatus, const QString& registrationStatusText);
-    void incomingCall(int callId, const QString& userName, const QString& userId);
+    void incoming(int callId, const QString& userName, const QString& userId);
     void calling(int callId, const QString& userName, const QString& userId);
     void confirmed(int callId);
     void disconnected(int callId);
-    void videoAvailabilityChanged(bool hasVideo);
     void buddyStatusChanged(int buddyId, const QString& status);
 
 private:
+    Q_DISABLE_COPY_MOVE(SipClient)
+
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,
            DEFAULT_LOG_LEVEL = 10, DEFAULT_CONSOLE_LOG_LEVEL = 10,
            MAX_ERROR_MSG_SIZE = 1024, SIP_URI_SIZE = 900,
@@ -164,6 +166,12 @@ private:
 
     void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
 
+    void manageVideo(bool enable);
+    void initVideoWindow();
+    void initPreviewWindow();
+    void releasePreviewWindow();
+    void setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int width, int height);
+
     Settings* _settings = nullptr;
     AudioDevices* _inputAudioDevices = nullptr;
     AudioDevices* _outputAudioDevices = nullptr;
@@ -182,4 +190,7 @@ private:
     pjmedia_port* _toneGenMediaPort = nullptr;
     pjsua_conf_port_id _toneGenConfPort = PJSUA_INVALID_ID;
     QTimer _toneGenTimer;
+
+    std::unique_ptr<QWidget> _previewWindow;
+    std::unique_ptr<QWidget> _videoWindow;
 };

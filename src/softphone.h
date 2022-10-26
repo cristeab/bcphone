@@ -93,19 +93,13 @@ public:
                              bool emitSignal = false);
 
 signals:
-    void disconnected(int callId);
-    void confirmed(int callId);
-    void calling(int callId, const QString &userId, const QString &userName);
-    void incoming(int callCount, int callId, const QString &userId,
-                  const QString &userName, bool isConf);
     void phoneStateChanged();
     void audioDevicesChanged();
 
 private:
     Q_DISABLE_COPY_MOVE(Softphone)
 
-    enum SipErrorCodes { BadRequest = 400, RequestTimeout = 408, RequestTerminated = 487 };
-    enum { ERROR_COUNT_MAX = 3, DEFAULT_BITRATE_KBPS = 256 };
+    enum { USER_TIMER_PERIOD_MS = 1000 };
 
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);
@@ -120,14 +114,6 @@ private:
     void onSpeakersVolumeChanged();
 
     void raiseWindow();
-
-    void onEnableVideo();
-
-    void initVideoWindow();
-    void releaseVideoWindow();
-    void initPreviewWindow();
-    void releasePreviewWindow();
-    void setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int width, int height);
 
     bool disableAudio(bool force = false);
 
@@ -145,6 +131,4 @@ private:
     QHash<pjsua_call_id, pjsua_player_id> _playbackPlayerId;
     bool _manualHangup = false;
     bool _audioEnabled = false;
-    std::unique_ptr<QWidget> _previewWindow;
-    std::unique_ptr<QWidget> _videoWindow;
 };

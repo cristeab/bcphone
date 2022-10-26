@@ -28,7 +28,7 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     qmlRegisterType<Softphone>("Softphone", 1, 0, "Softphone");
 
     //setup call duration timer
-    _currentUserTimer.setInterval(1000);
+    _currentUserTimer.setInterval(USER_TIMER_PERIOD_MS);
     _currentUserTimer.setSingleShot(false);
     _currentUserTimer.setTimerType(Qt::PreciseTimer);
     _currentUserTimer.stop();
@@ -37,11 +37,11 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
         emit currentUserElapsedSecChanged();
     });
 
-    //init internal connections
-    connect(this, &Softphone::confirmed, this, &Softphone::onConfirmed);
-    connect(this, &Softphone::calling, this, &Softphone::onCalling);
-    connect(this, &Softphone::incoming, this, &Softphone::onIncoming);
-    connect(this, &Softphone::disconnected, this, &Softphone::onDisconnected);
+    //init SIP client connections
+    connect(_sipClient, &SipClient::confirmed, this, &Softphone::onConfirmed);
+    connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
+    connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
+    connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
 
     //init connections with active calls model
     connect(_activeCallModel, &ActiveCallModel::activeCallChanged, this, [this](bool value) {
@@ -51,9 +51,7 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
             setDialedText(_activeCallModel->currentPhoneNumber());
         }
     });
-    connect(_activeCallModel, &ActiveCallModel::unholdCall, this, [this](int callId) {
-        hold(false, callId);
-    });
+    connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
 
     //init connection with settings
     _inputAudioDevices->setSettings(_settings);
@@ -71,9 +69,6 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
         const auto &devInfo = _videoDevices->deviceInfoFromIndex(_settings->videoModelIndex());
         Settings::saveVideoDeviceInfo(devInfo);
     });
-
-    //connection with enable video
-    connect(this, &Softphone::enableVideoChanged, this, &Softphone::onEnableVideo);
 
     //connection with mute microphone
     connect(this, &Softphone::muteMicrophoneChanged, _activeCallModel, [this]() {
@@ -213,7 +208,7 @@ void Softphone::onDisconnected(int callId)
     setRecord(false);//TODO
     disableAudio();
 
-    releaseVideoWindow();
+    _sipClient->releaseVideoWindow();
 }
 
 bool Softphone::makeCall(const QString &userId)
@@ -326,147 +321,6 @@ void Softphone::raiseWindow()
         }
     } else {
         qCritical() << "mainForm object is NULL";
-    }
-}
-
-void Softphone::onEnableVideo()
-{
-    const auto currentCallId = _activeCallModel->currentCallId();
-    if (PJSUA_INVALID_ID != currentCallId) {
-        const pjsua_call_vid_strm_op op = _enableVideo ? PJSUA_CALL_VID_STRM_START_TRANSMIT : PJSUA_CALL_VID_STRM_STOP_TRANSMIT;
-        const auto status = pjsua_call_set_vid_strm(currentCallId, op, nullptr);
-        if (status == PJ_SUCCESS) {
-            qInfo() << "Start transmitting" << _enableVideo;
-        } else {
-            const auto msg = _enableVideo ? tr("Cannot start transmitting video stream") : tr("Cannot stop transmitting video stream");
-            errorHandler(msg, status, true);
-        }
-        if (_enableVideo) {
-            initVideoWindow();
-        } else {
-            releaseVideoWindow();
-        }
-    }
-}
-
-void Softphone::initVideoWindow()
-{
-    const auto currentCallId = _activeCallModel->currentCallId();
-    if (PJSUA_INVALID_ID == currentCallId) {
-        return;
-    }
-
-    pjsua_call_info ci;
-    auto status = pjsua_call_get_info(currentCallId, &ci);
-    if (status != PJ_SUCCESS) {
-        errorHandler(tr("Error get call info"), status, true);
-        return;
-    }
-    for (unsigned i = 0; i < ci.media_cnt; ++i) {
-        if ((ci.media[i].type == PJMEDIA_TYPE_VIDEO) &&
-                (ci.media[i].dir & PJMEDIA_DIR_DECODING))
-        {
-            pjsua_vid_win_info wi;
-            status = pjsua_vid_win_get_info(ci.media[i].stream.vid.win_in, &wi);
-            if (status != PJ_SUCCESS) {
-                errorHandler(tr("Error get vid win info"), status, true);
-                return;
-            }
-            _videoWindow.reset(new QDialog());
-            if (nullptr != _videoWindow) {
-                _videoWindow->setContentsMargins(0, 0, 0, 0);
-                qDebug() << "Show remote window";
-                auto* layout = new QVBoxLayout(_videoWindow.get());
-                layout->setSpacing(0);
-                layout->setContentsMargins(0, 0, 0, 0);
-                auto* remote = QWidget::createWindowContainer(QWindow::fromWinId((WId)wi.hwnd.info.win.hwnd), nullptr, Qt::Widget);
-                layout->addWidget(remote);
-                _videoWindow->setFixedWidth(wi.size.w);
-                _videoWindow->setFixedHeight(wi.size.h);
-                _videoWindow->setWindowTitle(_settings->appName());
-                initPreviewWindow();
-                _videoWindow->show();
-            } else {
-                qWarning() << "Cannot create widget from remote window";
-            }
-            break;
-        }
-    }
-}
-
-void Softphone::releaseVideoWindow()
-{
-    _videoWindow.reset(nullptr);
-    releasePreviewWindow();
-}
-
-void Softphone::initPreviewWindow()
-{
-    const auto &devInfo = _videoDevices->deviceInfo();
-    pjsua_vid_preview_param pre_param;
-    pjsua_vid_preview_param_default(&pre_param);
-    pre_param.rend_id = PJMEDIA_VID_DEFAULT_RENDER_DEV;
-    pre_param.show = PJ_TRUE;
-    pj_status_t status = pjsua_vid_preview_start(devInfo.index, &pre_param);
-    if (status != PJ_SUCCESS) {
-        errorHandler(tr("Error creating preview"), status, true);
-        return;
-    }
-    auto wid = pjsua_vid_preview_get_win(devInfo.index);
-    if (PJSUA_INVALID_ID != wid) {
-        pjsua_vid_win_info wi;
-        status = pjsua_vid_win_get_info(wid, &wi);
-        if (status != PJ_SUCCESS) {
-            errorHandler(tr("Cannot get window info"), status, true);
-            return;
-        }
-        auto* preview = QWidget::createWindowContainer(QWindow::fromWinId((WId)wi.hwnd.info.win.hwnd), _videoWindow.get(), Qt::Widget);
-        if (nullptr != preview) {
-            if (nullptr != _videoWindow) {
-                const auto w = _videoWindow->width();
-                const auto h = _videoWindow->height();
-                const auto prevW = w / 3;
-                const auto prevH = h / 3;
-                setVideoWindowSize(wi.is_native, wid, prevW, prevH);
-                preview->setGeometry((w - prevW) / 2, h - prevH, prevW, prevH);
-            } else {
-                preview->setWindowTitle(_settings->appName() + tr(" - Preview Window"));
-                _previewWindow.reset(preview);
-            }
-            preview->show();
-            preview->raise();
-        } else {
-            qWarning() << "Cannot create preview widget";
-        }
-    }
-}
-
-void Softphone::releasePreviewWindow()
-{
-    _previewWindow.reset(nullptr);
-    const auto &devInfo = _videoDevices->deviceInfo();
-    const pjsua_vid_win_id wid = pjsua_vid_preview_get_win(devInfo.index);
-    if (wid != PJSUA_INVALID_ID) {
-        pjsua_vid_win_set_show(wid, PJ_FALSE);
-        pj_status_t status = pjsua_vid_preview_stop(devInfo.index);
-        if (status != PJ_SUCCESS) {
-            errorHandler(tr("Error releasing preview"), status, true);
-        }
-    }
-}
-
-void Softphone::setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int width, int height)
-{
-    if (PJ_TRUE != isNative) {
-        pjmedia_rect_size size;
-        size.w = width;
-        size.h = height;
-        const auto status = pjsua_vid_win_set_size(wid, &size);
-        if (status != PJ_SUCCESS) {
-            errorHandler(tr("Cannot set window size"), status, false);
-        }
-    } else {
-        qWarning() << "Window is native";
     }
 }
 
