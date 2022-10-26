@@ -1,16 +1,6 @@
 #include "audio_devices.h"
-#include "softphone.h"
 #include "settings.h"
 #include <QDebug>
-
-AudioDevices::AudioDevices(QObject *parent) : GenericDevices(parent)
-{
-}
-
-int AudioDevices::rowCount(const QModelIndex &/*parent*/) const
-{
-    return _devs.size();
-}
 
 QVariant AudioDevices::data(const QModelIndex &index, int role) const
 {

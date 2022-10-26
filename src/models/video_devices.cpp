@@ -1,15 +1,6 @@
 #include "video_devices.h"
-#include "softphone.h"
+#include "settings.h"
 #include <QDebug>
-
-VideoDevices::VideoDevices(QObject *parent) : GenericDevices(parent)
-{
-}
-
-int VideoDevices::rowCount(const QModelIndex &/*parent*/) const
-{
-    return _devs.size();
-}
 
 QVariant VideoDevices::data(const QModelIndex &index, int role) const
 {

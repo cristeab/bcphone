@@ -64,7 +64,18 @@
     public: \
         type* name() { return _##name; } \
     private: \
-        type* _##name = new type(this);
+        type *const _##name = new type(this);
+
+#define QML_CONSTANT_PROPERTY_SET_PTR(type, name, setter) \
+    protected: \
+        Q_PROPERTY(type* name MEMBER _##name CONSTANT) \
+    public: \
+        const type* name() const { return _##name; } \
+    private: \
+        void setter(const type *value) { \
+            _##name = value; \
+        } \
+        const type* _##name = nullptr;
 
 // NOTE : to avoid "no suitable class found" MOC note
 class QmlProperty : public QObject { Q_OBJECT };

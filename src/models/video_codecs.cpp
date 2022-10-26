@@ -1,10 +1,6 @@
 #include "video_codecs.h"
 #include "settings.h"
 
-VideoCodecs::VideoCodecs(QObject *parent) : GenericCodecs(parent)
-{
-}
-
 void VideoCodecs::init()
 {
     //load existing codec priorities
@@ -26,9 +22,4 @@ void VideoCodecs::setCodecsInfo(const QList<CodecInfo> &info)
         }
     }
     sort(PRIORITY, Qt::DescendingOrder);
-}
-
-void VideoCodecs::saveCodecsInfo()
-{
-    Settings::saveVideoCodecInfo(_codecInfo);
 }

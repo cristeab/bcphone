@@ -45,9 +45,6 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
 
     //init connection with settings
-    _inputAudioDevices->setSettings(_settings);
-    _outputAudioDevices->setSettings(_settings);
-    _videoDevices->setSettings(_settings);
     connect(_settings, &Settings::inputAudioModelIndexChanged, this, [&]() {
         const auto &devInfo = _inputAudioDevices->deviceInfoFromIndex(_settings->inputAudioModelIndex());
         Settings::saveInputAudioDeviceInfo(devInfo);
@@ -95,10 +92,10 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
             _audioCodecs, [this](const QString &codecId, int newPriority, int oldPriority) {
         qDebug() << codecId << newPriority << oldPriority;
         if (_sipClient->setAudioCodecPriority(codecId, newPriority)) {
-            _audioCodecs->saveCodecsInfo();
+            Settings::saveAudioCodecInfo(_audioCodecs->codecInfo());
         } else if (oldPriority != newPriority) {
             qDebug() << "Set old priority" << oldPriority;
-            _audioCodecs->setCodecPriority(codecId, oldPriority);
+            const_cast<AudioCodecs*>(_audioCodecs)->setCodecPriority(codecId, oldPriority);
             qInfo() << "Restored audio codec priority" << codecId << oldPriority;
         }
     });
@@ -107,9 +104,9 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     connect(_videoCodecs, &VideoCodecs::codecPriorityChanged,
             _videoCodecs, [this](const QString &codecId, int newPriority, int oldPriority) {
         if (_sipClient->setVideoCodecPriority(codecId, newPriority)) {
-            _videoCodecs->saveCodecsInfo();
+            Settings::saveVideoCodecInfo(_videoCodecs->codecInfo());
         } else if (oldPriority != newPriority) {
-            _videoCodecs->setCodecPriority(codecId, oldPriority);
+            const_cast<VideoCodecs*>(_videoCodecs)->setCodecPriority(codecId, oldPriority);
             qInfo() << "Restored video codec priority" << codecId << oldPriority;
         }
     });
@@ -132,6 +129,13 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     } else {
         setLoggedOut(true);
     }
+
+    //must be after init
+    setInputAudioDevices(_sipClient->inputAudioDevices());
+    setOutputAudioDevices(_sipClient->outputAudioDevices());
+    setVideoDevices(_sipClient->videoDevices());
+    setAudioCodecs(_sipClient->audioCodecs());
+    setVideoCodecs(_sipClient->videoCodecs());
 
     connect(this, &Softphone::audioDevicesChanged, _sipClient, &SipClient::initAudioDevicesList);
 }
