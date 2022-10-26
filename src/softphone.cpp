@@ -32,6 +32,7 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
     connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
     connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
+    connect(_sipClient, &SipClient::errorMessage, this, &Softphone::errorDialog);
 
     //init connections with active calls model
     connect(_activeCallModel, &ActiveCallModel::activeCallChanged, this, [this](bool value) {
@@ -115,6 +116,7 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
 
     //setup presence model
     _presenceModel->setContactsModel(_contactsModel);
+    connect(_presenceModel, &PresenceModel::errorMessage, this, &Softphone::errorDialog);
 
     //ringtones init
     _ringTonesModel->initDefaultRingTones();
@@ -162,10 +164,8 @@ void Softphone::onCalling(int callId, const QString &userId, const QString &user
     _callHistoryModel->updateContact(callId, userName, userId);
 }
 
-void Softphone::onIncoming(int callCount, int callId, const QString &userId,
-                           const QString &userName)
+void Softphone::onIncoming(int callId, const QString &userId, const QString &userName)
 {
-    Q_UNUSED(callCount)
     setActiveCall(true);
     //open audio device only when needed (automatically closed when the call ends)
     _sipClient->enableAudio();

@@ -1,6 +1,6 @@
 #include "presence_model.h"
 #include "call_history_model.h"
-#include "softphone.h"
+#include "sip_client.h"
 #include "settings.h"
 
 PresenceModel::PresenceModel(QObject *parent) : QAbstractListModel(parent)
@@ -47,22 +47,22 @@ QHash<int,QByteArray> PresenceModel::roleNames() const
 void PresenceModel::addBuddy(const QString &userId)
 {
     if (PJSUA_MAX_BUDDIES <= _presenceInfo.size()) {
-        Softphone::errorHandler("Maximum number of buddies exceeded", PJ_SUCCESS, true);
+        emit errorMessage(tr("Maximum number of buddies exceeded"));
         return;
     }
     pjsua_buddy_config buddyCfg;
     pjsua_buddy_config_default(&buddyCfg);
     std::string uriBuffer;
-    const bool rc = Softphone::callUri(&buddyCfg.uri, userId, uriBuffer);
+    const bool rc = SipClient::callUri(&buddyCfg.uri, userId, uriBuffer);
     if (!rc) {
         return;
     }
-    pjsua_buddy_id buddyId;
+    pjsua_buddy_id buddyId{};
     buddyCfg.subscribe = PJ_TRUE;
     buddyCfg.user_data = nullptr;
     const pj_status_t status = pjsua_buddy_add(&buddyCfg, &buddyId);
     if (PJ_SUCCESS != status) {
-        Softphone::errorHandler("Cannot add buddy", status, true);
+        emit errorMessage(tr("Cannot add buddy"));
         return;
     }
     qDebug() << "Added buddy" << userId << buddyId;
@@ -91,7 +91,7 @@ void PresenceModel::removeBuddy(int index)
     }
     const pj_status_t status = pjsua_buddy_del(_presenceInfo.at(index).id);
     if (PJ_SUCCESS != status) {
-        Softphone::errorHandler("Cannot del buddy", status, true);
+        emit errorMessage(tr("Cannot del buddy"));
         return;
     }
     emit layoutAboutToBeChanged();
@@ -104,7 +104,7 @@ void PresenceModel::updateStatus(pjsua_buddy_id id, const QString &status)
 {
     const auto rc = pjsua_buddy_is_valid(id);
     if (PJ_TRUE != rc) {
-        Softphone::errorHandler("Invalid buddy ID", PJ_SUCCESS, true);
+        emit errorMessage(tr("Invalid buddy ID"));
         return;
     }
     for (auto &info: _presenceInfo) {
@@ -131,16 +131,16 @@ void PresenceModel::load()
         pjsua_buddy_config buddyCfg;
         pjsua_buddy_config_default(&buddyCfg);
         std::string uriBuffer;
-        const bool rc = Softphone::callUri(&buddyCfg.uri, userId, uriBuffer);
+        const bool rc = SipClient::callUri(&buddyCfg.uri, userId, uriBuffer);
         if (!rc) {
             return;
         }
-        pjsua_buddy_id buddyId;
+        pjsua_buddy_id buddyId{};
         buddyCfg.subscribe = PJ_TRUE;
         buddyCfg.user_data = nullptr;
         const pj_status_t status = pjsua_buddy_add(&buddyCfg, &buddyId);
         if (PJ_SUCCESS != status) {
-            Softphone::errorHandler("Cannot add buddy", status, false);
+            emit errorMessage(tr("Cannot add buddy"));
             return;
         }
         qDebug() << "Added buddy" << userId << buddyId;

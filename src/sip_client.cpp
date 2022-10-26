@@ -944,24 +944,24 @@ QString SipClient::sipTransport(int type)
 
 bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer)
 {
-    const auto& domain = _settings->sipServer();
+    const auto& domain = _instance->_settings->sipServer();
     if (domain.isEmpty()) {
         qWarning() << "No SIP server";
         return false;
     }
-    const auto destPort = QString::number(_settings->sipPort());
+    const auto destPort = QString::number(_instance->_settings->sipPort());
     if (destPort.isEmpty()) {
         qWarning() << "No SIP port";
         return false;
     }
-    const auto sipTransport = SipClient::sipTransport(_settings->sipTransport());
+    const auto sipTransport = SipClient::sipTransport(_instance->_settings->sipTransport());
 
     const QString sipUri = "sip:" + userId + "@" + domain + ":" + destPort + sipTransport;
     uriBuffer = sipUri.toStdString();
     const char *uriPtr = uriBuffer.c_str();
     const auto status = verifySipUri(uriPtr);
     if (PJ_SUCCESS != status) {
-        errorHandler("URI verification failed", status);
+        _instance->errorHandler("URI verification failed", status);
         return false;
     }
     if (nullptr != uri) {
@@ -1594,7 +1594,7 @@ void SipClient::initVideoWindow()
                 errorHandler(tr("Error get vid win info"), status);
                 return;
             }
-            _videoWindow.reset(new QDialog());
+            _videoWindow = QPointer(new QDialog());
             if (nullptr != _videoWindow) {
                 _videoWindow->setContentsMargins(0, 0, 0, 0);
                 qDebug() << "Show remote window";
@@ -1618,7 +1618,7 @@ void SipClient::initVideoWindow()
 
 void SipClient::releaseVideoWindow()
 {
-    _videoWindow.reset(nullptr);
+    _videoWindow.clear();
     releasePreviewWindow();
 }
 
@@ -1653,7 +1653,7 @@ void SipClient::initPreviewWindow()
                 preview->setGeometry((w - prevW) / 2, h - prevH, prevW, prevH);
             } else {
                 preview->setWindowTitle(_settings->appName() + tr(" - Preview Window"));
-                _previewWindow.reset(preview);
+                _previewWindow = QPointer(preview);
             }
             preview->show();
             preview->raise();
@@ -1665,7 +1665,7 @@ void SipClient::initPreviewWindow()
 
 void SipClient::releasePreviewWindow()
 {
-    _previewWindow.reset(nullptr);
+    _previewWindow.clear();
     const auto &devInfo = _videoDevices->deviceInfo();
     const pjsua_vid_win_id wid = pjsua_vid_preview_get_win(devInfo.index);
     if (wid != PJSUA_INVALID_ID) {

@@ -41,6 +41,7 @@ public:
 
 signals:
     void updateModel();
+    void errorMessage(const QString& msg);
 
 private:
     bool isValidIndex(int index) const {

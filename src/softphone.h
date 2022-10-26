@@ -99,8 +99,7 @@ private:
 
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);
-    void onIncoming(int callCount, int callId, const QString &userId,
-                    const QString &userName);
+    void onIncoming(int callId, const QString &userId, const QString &userName);
     void onDisconnected(int callId);
 
     void onMicrophoneVolumeChanged();

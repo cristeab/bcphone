@@ -1,8 +1,8 @@
 #pragma once
 
 #include "pjsua.h"
-#include <QObject>
 #include <QTimer>
+#include <QPointer>
 #include <unordered_map>
 
 class Settings;
@@ -89,6 +89,8 @@ public:
     bool setVideoCodecPriority(const QString &codecId, int priority);
     void releaseVideoWindow();
 
+    static bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
+
 signals:
     void errorMessage(const QString& msg);
     void registrationStatusChanged(RegistrationStatus registrationStatus, const QString& registrationStatusText);
@@ -149,7 +151,6 @@ private:
                 (PJSUA_CALL_MEDIA_ERROR != media.status);
     }
 
-    bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
     static pjsua_conf_port_id callConfPort(pjsua_call_id callId);
 
     bool initRingTonePlayer(pjsua_call_id id, bool incoming);
@@ -191,6 +192,6 @@ private:
     pjsua_conf_port_id _toneGenConfPort = PJSUA_INVALID_ID;
     QTimer _toneGenTimer;
 
-    std::unique_ptr<QWidget> _previewWindow;
-    std::unique_ptr<QWidget> _videoWindow;
+    QPointer<QWidget> _previewWindow;
+    QPointer<QWidget> _videoWindow;
 };
