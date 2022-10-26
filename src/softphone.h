@@ -10,16 +10,16 @@
 #include "models/video_codecs.h"
 #include "models/active_call_model.h"
 #include "models/presence_model.h"
-#include "pjsua.h"
 #include <QObject>
 #include <QTimer>
 #include <QString>
 #include <QMap>
 
+class SipClient;
+
 class Softphone : public QObject {
 	Q_OBJECT
 
-    QML_READABLE_PROPERTY(RegistrationStatus, registrationStatus, setRegistrationStatus, RegistrationStatus::UNREGISTERED)
     QML_READABLE_PROPERTY(QString, registrationText, setRegistrationText, "Not Registered")
 
     QML_READABLE_PROPERTY(bool, showBusy, setShowBusy, false)
@@ -72,7 +72,6 @@ public:
 
     void setMainForm(QObject *mainForm) { _mainForm = mainForm; }
 
-    Q_INVOKABLE bool registerAccount();
     Q_INVOKABLE bool makeCall(const QString &userId);
     Q_INVOKABLE bool answer(int callId);
     Q_INVOKABLE bool hangup(int callId);
@@ -89,7 +88,6 @@ public:
     bool mute(bool value, int callId);
     bool rec(bool value, int callId);
     QString convertNumber(const QString &num);
-    bool registered() const { return RegistrationStatus::REGISTERED == _registrationStatus; }
 
     static void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS,
                              bool emitSignal = false);
@@ -109,26 +107,14 @@ private:
     enum SipErrorCodes { BadRequest = 400, RequestTimeout = 408, RequestTerminated = 487 };
     enum { ERROR_COUNT_MAX = 3, DEFAULT_BITRATE_KBPS = 256 };
 
-    bool unregisterAccount();
-    void initAudioDevicesList();
-    void listAudioCodecs();
-    void initVideoDevicesList();
-    void listVideoCodecs();
-
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);
     void onIncoming(int callCount, int callId, const QString &userId,
                     const QString &userName);
     void onDisconnected(int callId);
 
-    static void dumpStreamStats(pjmedia_stream *strm);
-    bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
-    bool setSpeakersVolume(pjsua_conf_port_id portId, bool mute = false);
-    void setupConferenceCall(pjsua_call_id callId);
     void startCurrentUserTimer();
     void stopCurrentUserTimer();
-
-    bool setVideoCodecPriority(const QString &codecId, int priority);
 
     void onMicrophoneVolumeChanged();
     void onSpeakersVolumeChanged();
@@ -150,13 +136,13 @@ private:
         setDialogMessage(msg);
     }
 
+    SipClient *_sipClient = nullptr;
     QObject *_mainForm = nullptr;
     QTimer _currentUserTimer;
     static const QString _notAvailable;
     QHash<pjsua_call_id, pjsua_player_id> _playerId;
     QHash<pjsua_call_id, pjsua_recorder_id> _recId;
     QHash<pjsua_call_id, pjsua_player_id> _playbackPlayerId;
-    uint8_t _phoneState = PhoneState::UNKNOWN;
     bool _manualHangup = false;
     bool _audioEnabled = false;
     std::unique_ptr<QWidget> _previewWindow;

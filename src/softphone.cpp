@@ -1,4 +1,5 @@
 #include "softphone.h"
+#include "sip_client.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
@@ -15,14 +16,16 @@
 #include <QVBoxLayout>
 #include <array>
 
-static Softphone *_instance = nullptr;
 const QString Softphone::_notAvailable = tr("N/A");
 
-Softphone::Softphone()
+Softphone::Softphone() : _sipClient(new SipClient(_settings,
+                                                  _ringTonesModel,
+                                                  _callHistoryModel,
+                                                  _activeCallModel,
+                                                  this))
 {
     setObjectName("softphone");
     qmlRegisterType<Softphone>("Softphone", 1, 0, "Softphone");
-    _instance = this;
 
     //setup call duration timer
     _currentUserTimer.setInterval(1000);
@@ -83,11 +86,7 @@ Softphone::Softphone()
     //connection with record
     connect(this, &Softphone::recordChanged, _activeCallModel, [this]() {
         const auto cid = _activeCallModel->currentCallId();
-        if (_record) {
-            startRecording(cid);
-        } else {
-            stopRecording(cid);
-        }
+        _sipClient->record(_record, cid);
     });
 
     //connection with hold
@@ -109,7 +108,7 @@ Softphone::Softphone()
     connect(_audioCodecs, &AudioCodecs::codecPriorityChanged,
             _audioCodecs, [this](const QString &codecId, int newPriority, int oldPriority) {
         qDebug() << codecId << newPriority << oldPriority;
-        if (setAudioCodecPriority(codecId, newPriority)) {
+        if (_sipClient->setAudioCodecPriority(codecId, newPriority)) {
             _audioCodecs->saveCodecsInfo();
         } else if (oldPriority != newPriority) {
             qDebug() << "Set old priority" << oldPriority;
@@ -121,7 +120,7 @@ Softphone::Softphone()
     //connection with video codecs
     connect(_videoCodecs, &VideoCodecs::codecPriorityChanged,
             _videoCodecs, [this](const QString &codecId, int newPriority, int oldPriority) {
-        if (setVideoCodecPriority(codecId, newPriority)) {
+        if (_sipClient->setVideoCodecPriority(codecId, newPriority)) {
             _videoCodecs->saveCodecsInfo();
         } else if (oldPriority != newPriority) {
             _videoCodecs->setCodecPriority(codecId, oldPriority);
@@ -137,9 +136,9 @@ Softphone::Softphone()
 
     qInfo() << "SSL version" << QSslSocket::sslLibraryVersionString();
     qInfo() << "Can register" << _settings->canRegister();
-    if (init() && _settings->canRegister()) {
+    if (_sipClient->init() && _settings->canRegister()) {
         qInfo() << "Autologin";
-        const auto rc = registerAccount();
+        const auto rc = _sipClient->registerAccount();
         if (!rc) {
             setLoggedOut(true);
         }
@@ -147,18 +146,18 @@ Softphone::Softphone()
         setLoggedOut(true);
     }
 
-    connect(this, &Softphone::audioDevicesChanged, this, &Softphone::initAudioDevicesList);
+    connect(this, &Softphone::audioDevicesChanged, _sipClient, &SipClient::initAudioDevicesList);
 }
 
 Softphone::~Softphone()
 {
-    release();
+    _sipClient->release();
 }
 
 void Softphone::onConfirmed(int callId)
 {
     setConfirmedCall(true);
-    stopPlayingRingTone(callId);
+    _sipClient->stopPlayingRingTone(callId);
 
     startCurrentUserTimer();
     _activeCallModel->setCallState(callId, ActiveCallModel::CallState::CONFIRMED);
@@ -168,7 +167,7 @@ void Softphone::onConfirmed(int callId)
     _activeCallModel->setCurrentCallId(callId);
     if (_conference) {
         setConference(false);
-        setupConferenceCall(callId);
+        _sipClient->setupConferenceCall(callId);
         _activeCallModel->update();
     }
 }
@@ -185,14 +184,14 @@ void Softphone::onIncoming(int callCount, int callId, const QString &userId,
     Q_UNUSED(callCount)
     setActiveCall(true);
     //open audio device only when needed (automatically closed when the call ends)
-    enableAudio();
+    _sipClient->enableAudio();
 
     _activeCallModel->addCall(callId, userName, userId);
     _callHistoryModel->addContact(callId, userName, userId,
                                   CallHistoryModel::CallStatus::INCOMING);
 
     raiseWindow();
-    startPlayingRingTone(callId, true);
+    _sipClient->startPlayingRingTone(callId, true);
 }
 
 void Softphone::onDisconnected(int callId)
@@ -200,7 +199,7 @@ void Softphone::onDisconnected(int callId)
     setConfirmedCall(false);
     setActiveCall(false);
 
-    stopPlayingRingTone(callId);
+    _sipClient->stopPlayingRingTone(callId);
     _activeCallModel->removeCall(callId);
     _callHistoryModel->updateCallStatus(callId,
                                         CallHistoryModel::CallStatus::REJECTED,
@@ -217,269 +216,32 @@ void Softphone::onDisconnected(int callId)
     releaseVideoWindow();
 }
 
-void Softphone::onRegState(pjsua_acc_id acc_id)
-{
-    if (nullptr == _instance) {
-        return;
-    }
-    pjsua_acc_info info;
-    pj_status_t status = pjsua_acc_get_info(acc_id, &info);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot get account information", status, true);
-    } else {
-        bool registered = false;
-        auto regStatus = RegistrationStatus::UNREGISTERED;
-        switch (info.status) {
-        case PJSIP_SC_OK:
-            regStatus = RegistrationStatus::REGISTERED;
-            registered = true;
-            break;
-        case PJSIP_SC_TRYING:
-            //falls through
-        case PJSIP_SC_PROGRESS:
-            regStatus = RegistrationStatus::IN_PROGRESS;
-            break;
-        default:
-            ;
-        }
-        _instance->setRegistrationStatus(regStatus);
-        const pj_str_t statusText = info.status_text;
-        const QString msg = QString::fromUtf8(pj_strbuf(&statusText),
-                                        static_cast<int>(pj_strlen(&statusText)));
-        _instance->setRegistrationText(msg);
-        qDebug() << "Registration status" << info.status << msg;
-        static uint8_t errCount = 0;
-        if (!registered && (PJSIP_SC_TRYING != info.status)) {
-            if (ERROR_COUNT_MAX < errCount) {
-                errorHandler("Registration status "+msg, PJ_SUCCESS, true);
-                _instance->setDialogRetry((PJSIP_SC_SERVICE_UNAVAILABLE == info.status) ||
-                                          (PJSIP_SC_TEMPORARILY_UNAVAILABLE == info.status));
-                errCount = 0;
-            } else {
-                qDebug() << "Ignoring current error";
-                ++errCount;
-            }
-        }
-        if (registered) {
-            if (0 < errCount) {
-                errCount = 0;
-                _instance->setDialogMessage("");
-            }
-            if (_instance->loggedOut() || _instance->showBusy()) {
-                _instance->setLoggedOut(false);
-                _instance->setShowBusy(false);
-                _instance->_settings->save();
-            }
-        }
-    }
-}
-
-bool Softphone::setVideoCodecPriority(const QString &codecId, int priority)
-{
-    if ((0 > priority) || (priority > 255)) {
-        qWarning() << "Invalid video codec priority" << codecId << priority;
-        return false;
-    }
-    const auto stdCodecId = codecId.toStdString();
-    pj_str_t pjCodecId;
-    pj_cstr(&pjCodecId, stdCodecId.c_str());
-    const auto status = pjsua_vid_codec_set_priority(&pjCodecId, priority);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot set video codec priority", status);
-    }
-    return PJ_SUCCESS == status;
-}
-
-void Softphone::onCallState(pjsua_call_id callId, pjsip_event *e)
-{
-    PJ_UNUSED_ARG(e);
-    if (nullptr == _instance) {
-        return;
-    }
-
-    pjsua_call_info ci;
-    pjsua_call_get_info(callId, &ci);
-    const QString info = toString(ci.state_text);
-    const QString status = toString(ci.last_status_text);
-    qDebug() << "Call" << callId << ", state =" << info << "(" << ci.last_status << ")" << status;
-
-    const auto lastStatus = static_cast<SipErrorCodes>(ci.last_status);
-    if ((SipErrorCodes::BadRequest <= lastStatus) &&
-            (SipErrorCodes::RequestTerminated != lastStatus) &&
-            (SipErrorCodes::RequestTimeout != lastStatus) &&
-            !_instance->_manualHangup) {
-        //show all SIP errors above Client Failure Responses
-        _instance->setDialogError(true);
-        _instance->setDialogMessage(status + " (" + QString::number(ci.last_status) + ")");
-    }
-    _instance->_manualHangup = false;
-
-    switch (ci.state) {
-    case PJSIP_INV_STATE_NULL:
-        break;
-    case PJSIP_INV_STATE_CALLING: {
-        const QString remoteInfo = toString(ci.remote_info);
-        const auto userNameAndId = extractUserNameAndId(remoteInfo);
-        const QString &userName = std::get<0>(userNameAndId);
-        const QString &userId = std::get<1>(userNameAndId);
-        emit _instance->calling(callId, userId, userName);
-    }
-        break;
-    case PJSIP_INV_STATE_INCOMING:
-        break;
-    case PJSIP_INV_STATE_EARLY:
-        break;
-    case PJSIP_INV_STATE_CONNECTING:
-        break;
-    case PJSIP_INV_STATE_CONFIRMED:
-        _instance->connectCallToSoundDevices(ci.conf_slot);
-        emit _instance->confirmed(callId);//must be last
-        break;
-    case PJSIP_INV_STATE_DISCONNECTED:
-        emit _instance->disconnected(callId);
-        break;
-    default:
-        qCritical() << "unhandled call state" << ci.state;
-    }
-}
-
-void Softphone::onCallMediaState(pjsua_call_id callId)
-{
-    if (nullptr == _instance) {
-        return;
-    }
-    pjsua_call_info ci;
-    pj_status_t status = pjsua_call_get_info(callId, &ci);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot get media status", status, false);
-        return;
-    }
-    pj_str_t statusTxt = ci.last_status_text;
-    qDebug() << "Media state changed for call" << callId << ":" << toString(statusTxt)
-             << ci.last_status;
-    if (PJSUA_CALL_MEDIA_ACTIVE == ci.media_status) {
-        qInfo() << "Media active" << ci.media_cnt;
-        bool hasVideo = false;
-        for (unsigned medIdx = 0; medIdx < ci.media_cnt; ++medIdx) {
-            if (isMediaActive(ci.media[medIdx])) {
-                pjsua_stream_info streamInfo;
-                status = pjsua_call_get_stream_info(callId, medIdx, &streamInfo);
-                if (PJ_SUCCESS == status) {
-                    if (PJMEDIA_TYPE_AUDIO == streamInfo.type) {
-                        _instance->connectCallToSoundDevices(ci.conf_slot);
-                        const auto &fmt = streamInfo.info.aud.fmt;
-                        qInfo() << "Audio codec info: encoding" << toString(fmt.encoding_name)
-                                << ", clock rate" << fmt.clock_rate << "Hz, channel count"
-                                << fmt.channel_cnt;
-
-                    } else if (PJMEDIA_TYPE_VIDEO == streamInfo.type) {
-                        const auto &fmt = streamInfo.info.vid.codec_info;
-                        qInfo() << "Video codec info: encoding" << toString(fmt.encoding_name)
-                                << ", encoding desc." << toString(fmt.encoding_desc)
-                                << ", clock rate:" << fmt.clock_rate << "Hz";
-                        hasVideo = true;
-                    }
-                } else {
-                    errorHandler("Cannot get stream info", status, false);
-                }
-            }
-        }
-        _instance->setHasVideo(hasVideo);
-    } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != ci.media_status) &&
-               (PJSUA_CALL_MEDIA_REMOTE_HOLD != ci.media_status)) {
-        qWarning() << "Connection lost";
-        if (_instance->dialogMessage().isEmpty()) {
-            _instance->setDialogRetry(true);
-            _instance->errorDialog(tr("You need an active Internet connection to make calls."));
-            _instance->setRegistrationStatus(Softphone::UNREGISTERED);
-            _instance->setRegistrationText(tr("Connection lost"));
-        }
-    }
-}
-
-void Softphone::onStreamCreated(pjsua_call_id call_id, pjmedia_stream *strm,
-                                unsigned stream_idx, pjmedia_port **p_port)
-{
-    Q_UNUSED(strm)
-    Q_UNUSED(p_port)
-    qInfo() << "onStreamCreated" << call_id << stream_idx;
-    //dumpStreamStats(strm);
-}
-
-void Softphone::onStreamDestroyed(pjsua_call_id call_id, pjmedia_stream *strm,
-                                  unsigned stream_idx)
-{
-    qInfo() << "onStreamDestroyed" << call_id << stream_idx;
-    dumpStreamStats(strm);
-}
-
-void Softphone::onBuddyState(pjsua_buddy_id buddy_id)
-{
-
-}
-
-void Softphone::pjsuaLogCallback(int level, const char *data, int /*len*/)
-{
-    qDebug() << "PJSUA:" << level << data;
-}
-
-bool Softphone::registerAccount()
-{
-}
-
-bool Softphone::unregisterAccount()
-{
-    if (PJSUA_INVALID_ID != _accId) {
-        pj_status_t status = pjsua_acc_del(_accId);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Error removing account", status);
-            return false;
-        }
-        _accId = PJSUA_INVALID_ID;
-        setRegistrationStatus(RegistrationStatus::UNREGISTERED);
-        qDebug() << "account unregistered";
-    } else {
-        qDebug() << "no account to unregister";
-    }
-    return true;
-}
-
 bool Softphone::makeCall(const QString &userId)
 {
-    if (!) {
+    const auto rc = _sipClient->makeCall(userId);
+    if (rc) {
         setActiveCall(true);
     } else {
         setDialedText("");
         setDialogError(true);
         setActiveCall(false);
     }
+    return rc;
 }
 
 bool Softphone::answer(int callId)
 {
-
+    return _sipClient->answer(callId);
 }
 
 bool Softphone::hangup(int callId)
 {
-    if (PJSUA_INVALID_ID == callId) {
-        qCritical() << "Invalid call ID";
-        return false;
-    }
-
-    releaseVideoWindow();
-    _manualHangup = true;
-    const pj_status_t status = pjsua_call_hangup(callId, 0, nullptr, nullptr);
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot hangup call", status, true);
-        return false;
-    }
-    return true;
+    return _sipClient->hangup(callId);
 }
 
 bool Softphone::unsupervisedTransfer(const QString &phoneNumber)
 {
-
+    return _sipClient->unsupervisedTransfer(phoneNumber,  "");
 }
 
 bool Softphone::holdAndAnswer(int callId)
@@ -493,200 +255,48 @@ bool Softphone::holdAndAnswer(int callId)
 
 bool Softphone::swap(int callId)
 {
-
+    return _sipClient->swap(callId);
 }
 
 bool Softphone::merge(int callId)
 {
-
+    return _sipClient->merge(callId);
 }
 
 bool Softphone::hold(bool value, int callId)
 {
-
+    return value ? _sipClient->hold(callId) : _sipClient->unhold(callId);
 }
 
 bool Softphone::mute(bool value, int callId)
 {
-
+    return _sipClient->mute(value, callId);
 }
 
 bool Softphone::rec(bool value, int callId)
 {
-
-}
-
-void Softphone::initAudioDevicesList()
-{
-    //refresh device list (needed when device changed notification is received)
-    auto status = pjmedia_aud_dev_refresh();
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot refresh audio devices list", status, false);
-    }
-
-    const auto dev_count = static_cast<pjmedia_aud_dev_index>(pjmedia_aud_dev_count());
-    qInfo() << "Found" << dev_count << "audio devices";
-    QVector<AudioDevices::DeviceInfo> inputDevices;
-    QVector<AudioDevices::DeviceInfo> outputDevices;
-    for (pjmedia_aud_dev_index dev_idx = 0; dev_idx < dev_count; ++dev_idx) {
-        pjmedia_aud_dev_info info;
-        const auto status = pjmedia_aud_dev_get_info(dev_idx, &info);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot get audio device info.", status, true);
-            break;
-        }
-        if (0 < info.input_count) {
-            const AudioDevices::DeviceInfo audioInfo{info.name, dev_idx};
-            inputDevices.push_back(audioInfo);
-            //qDebug() << "Audio input" << audioInfo.name << audioInfo.index;
-        }
-        if (0 < info.output_count) {
-            const AudioDevices::DeviceInfo audioInfo{info.name, dev_idx};
-            outputDevices.push_back(audioInfo);
-            //qDebug() << "Audio output" << audioInfo.name << audioInfo.index;
-        }
-    }
-    if (inputDevices.isEmpty()) {
-        errorDialog(tr("No input audio devices"));
-    }
-
-    _inputAudioDevices->init(inputDevices);
-    const auto inDevInfo = Settings::inputAudioDeviceInfo();
-    auto inDevModelIndex = _inputAudioDevices->deviceIndex(inDevInfo);
-    if (AudioDevices::INVALID_MODEL_INDEX == inDevModelIndex) {
-        qDebug() << "Invalid input device, using default device";
-        inDevModelIndex = 0;
-    }
-
-    if (outputDevices.isEmpty()) {
-        errorDialog(tr("No output audio devices"));
-    }
-    _outputAudioDevices->init(outputDevices);
-    const auto outDevInfo = Settings::outputAudioDeviceInfo();
-    auto outDevModelIndex = _outputAudioDevices->deviceIndex(outDevInfo);
-    if (AudioDevices::INVALID_MODEL_INDEX == outDevModelIndex) {
-        qDebug() << "Invalid output device, using default device";
-        outDevModelIndex = 0;
-    }
-
-    //set last in settings the audio devices
-    _settings->setInputAudioModelIndex(inDevModelIndex);
-    _settings->setOutputAudioModelIndex(outDevModelIndex);
-
-    qInfo() << "Found" << inputDevices.size() << "input audio devices and"
-            << outputDevices.size() << "output audio devices";
-}
-
-void Softphone::initVideoDevicesList()
-{
-    auto status = pjmedia_vid_dev_refresh();
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot refresh video device list", status, false);
-    }
-    const auto dev_count = static_cast<pjmedia_vid_dev_index>(pjmedia_vid_dev_count());
-    qInfo() << "Found" << dev_count << "video devices";
-    QVector<VideoDevices::DeviceInfo> videoDevices;
-    for (pjmedia_vid_dev_index dev_idx = 0; dev_idx < dev_count; ++dev_idx) {
-        pjmedia_vid_dev_info info;
-        status = pjmedia_vid_dev_get_info(dev_idx, &info);
-        if (PJ_SUCCESS != status) {
-            errorHandler("Cannot get video device info.", status);
-            break;
-        }
-        switch (info.dir) {
-        case PJMEDIA_DIR_ENCODING:
-            [[fallthrough]];
-        case PJMEDIA_DIR_ENCODING_DECODING: {
-            const VideoDevices::DeviceInfo videoInfo{info.name, dev_idx};
-            videoDevices.push_back(videoInfo);
-            //qDebug() << "Video dir encoding" << dev_idx << info.name;
-        }
-            break;
-        case PJMEDIA_DIR_NONE:
-            //qDebug() << "Video dir none" << dev_idx << info.name;
-            break;
-        case PJMEDIA_DIR_DECODING:
-            //qDebug() << "Video dir decoding" << dev_idx << info.name;
-            break;
-        default:
-            qWarning() << "Video dir unknown" << dev_idx << info.name << info.dir;
-        }
-    }
-    if (videoDevices.isEmpty()) {
-        errorDialog(tr("No video devices"));
-    }
-    _videoDevices->init(videoDevices);
-    const auto deviceInfo = Settings::videoDeviceInfo();
-    auto deviceIndex = _videoDevices->deviceIndex(deviceInfo);
-    if (VideoDevices::INVALID_MODEL_INDEX == deviceIndex) {
-        qDebug() << "Invalid video device, using default device";
-        deviceIndex = 0;
-    }
-    _settings->setVideoModelIndex(deviceIndex);
-
-    qInfo() << "Found" << videoDevices.size() << "input video devices";
+    return _sipClient->record(value, callId);
 }
 
 bool Softphone::disableAudio(bool force)
 {
-    if (!force && !_audioEnabled) {
-        return true;
-    }
-    auto status = pjsua_set_null_snd_dev();
-    if (PJ_SUCCESS != status) {
-        Softphone::errorHandler("Cannot set null audio device", status, false);
-        return false;
-    }
-    _audioEnabled = false;
-    return true;
+    Q_UNUSED(force)
+    return _sipClient->disableAudio();
 }
 
 bool Softphone::sendDtmf(const QString &dtmf)
 {
-
+    return _sipClient->sendDtmf(dtmf);
 }
 
 void Softphone::manuallyRegister()
 {
-
-}
-
-bool Softphone::setMicrophoneVolume(pjsua_conf_port_id portId, bool mute)
-{
-    //microphone volume
-    const qreal microphoneLevel = mute ? 0 : _settings->microphoneVolume();
-    qInfo() << "Mic level" << microphoneLevel;
-    const pj_status_t status = pjsua_conf_adjust_tx_level(portId,
-                                                    static_cast<float>(microphoneLevel));
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot adjust tx level", status);
-        return false;
-    }
-    return true;
-}
-
-bool Softphone::setSpeakersVolume(pjsua_conf_port_id portId, bool mute)
-{
-    //speakers volume
-    const qreal speakersLevel = mute ? 0 : _settings->speakersVolume();
-    qInfo() << "Speakers level" << speakersLevel;
-    const pj_status_t status = pjsua_conf_adjust_rx_level(portId,
-                                                    static_cast<float>(speakersLevel));
-    if (PJ_SUCCESS != status) {
-        errorHandler("Cannot adjust rx level", status);
-        return false;
-    }
-    return true;
+    _sipClient->manuallyRegister();
 }
 
 void Softphone::hangupAll()
 {
-}
-
-
-void Softphone::setupConferenceCall(pjsua_call_id callId)
-{
-
+    _sipClient->hangupAll();
 }
 
 void Softphone::startCurrentUserTimer()
@@ -864,37 +474,17 @@ void Softphone::onMicrophoneVolumeChanged()
 {
     qDebug() << "onMicrophoneVolumeChanged";
     const auto currentCallId = _activeCallModel->currentCallId();
-    if ((PJSUA_INVALID_ID == currentCallId) ||
-            (PJ_FALSE == pjsua_call_is_active(currentCallId))) {
-        qDebug() << "No active call";
-        return;
-    }
-    const pjsua_conf_port_id confSlot = pjsua_call_get_conf_port(currentCallId);
-    if (PJSUA_INVALID_ID != confSlot) {
-        setMicrophoneVolume(confSlot);
-    } else {
-        qCritical() << "Cannot get conference slot of call ID" << currentCallId;
-    }
+    _sipClient->setMicrophoneVolume(currentCallId);
 }
 
 void Softphone::onSpeakersVolumeChanged()
 {
     qDebug() << "onSpeakersVolumeChanged";
     const auto currentCallId = _activeCallModel->currentCallId();
-    if ((PJSUA_INVALID_ID == currentCallId) ||
-            (PJ_FALSE == pjsua_call_is_active(currentCallId))) {
-        qDebug() << "No active call";
-        return;
-    }
-    const pjsua_conf_port_id confSlot = pjsua_call_get_conf_port(currentCallId);
-    if (PJSUA_INVALID_ID != confSlot) {
-        setSpeakersVolume(confSlot);
-    } else {
-        qCritical() << "Cannot get conference slot of call ID" << currentCallId;
-    }
+    _sipClient->setSpeakersVolume(currentCallId);
 }
 
 bool Softphone::playDigit(const QString& digit)
 {
-
+    return _sipClient->playDigit(digit);
 }

@@ -75,6 +75,19 @@ public:
 
     bool setupConferenceCall(pjsua_call_id callId);
 
+    bool enableAudio();
+    bool disableAudio();
+    bool setAudioCodecPriority(const QString &codecId, int priority);
+    void initAudioDevicesList();
+
+    bool setMicrophoneVolume(pjsua_call_id callId, bool mute = false);
+    bool setSpeakersVolume(pjsua_call_id callId, bool mute = false);
+
+    bool startPlayingRingTone(pjsua_call_id id, bool incoming);
+    void stopPlayingRingTone(pjsua_call_id id);
+
+    bool setVideoCodecPriority(const QString &codecId, int priority);
+
 signals:
     void errorMessage(const QString& msg);
     void registrationStatusChanged(RegistrationStatus registrationStatus, const QString& registrationStatusText);
@@ -105,13 +118,17 @@ private:
     static void onBuddyState(pjsua_buddy_id buddyId);
     static void pjsuaLogCallback(int level, const char *data, int len);
 
+    void processRegistrationStatus(const pjsua_acc_info &info);
+    void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
+    void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
+    void processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info);
+    void dumpStreamStats(pjmedia_stream *strm);
+    void processBuddyState(pjsua_buddy_id buddyId);
+
     void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS);
-    bool disableAudio();
-    void initAudioDevicesList();
     void initVideoDevicesList();
     void listAudioCodecs();
     void listVideoCodecs();
-    bool setAudioCodecPriority(const QString &codecId, int priority);
     bool setVideoCodecBitrate(const QString &codecId, int bitrate);
 
     static bool disableTcpSwitch(bool value);
@@ -131,11 +148,9 @@ private:
     }
 
     bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
-    bool enableAudio();
+    static pjsua_conf_port_id callConfPort(pjsua_call_id callId);
 
     bool initRingTonePlayer(pjsua_call_id id, bool incoming);
-    bool startPlayingRingTone(pjsua_call_id id, bool incoming);
-    void stopPlayingRingTone(pjsua_call_id id);
     bool releaseRingTonePlayer(pjsua_call_id id);
     void releaseRingTonePlayers();
 
@@ -147,16 +162,7 @@ private:
     bool stopRecording(pjsua_call_id callId);
     bool releaseRecorder(pjsua_call_id callId);
 
-    void processRegistrationStatus(const pjsua_acc_info &info);
-    void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
-    void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
-    void processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info);
-    void dumpStreamStats(pjmedia_stream *strm);
-    void processBuddyState(pjsua_buddy_id buddyId);
-
     void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
-    bool setMicrophoneVolume(pjsua_conf_port_id portId, bool mute = false);
-    bool setSpeakersVolume(pjsua_conf_port_id portId, bool mute = false);
 
     Settings* _settings = nullptr;
     AudioDevices* _inputAudioDevices = nullptr;
