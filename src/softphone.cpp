@@ -27,16 +27,6 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     setObjectName("softphone");
     qmlRegisterType<Softphone>("Softphone", 1, 0, "Softphone");
 
-    //setup call duration timer
-    _currentUserTimer.setInterval(USER_TIMER_PERIOD_MS);
-    _currentUserTimer.setSingleShot(false);
-    _currentUserTimer.setTimerType(Qt::PreciseTimer);
-    _currentUserTimer.stop();
-    connect(&_currentUserTimer, &QTimer::timeout, [&]() {
-        ++_currentUserElapsedSec;
-        emit currentUserElapsedSecChanged();
-    });
-
     //init SIP client connections
     connect(_sipClient, &SipClient::confirmed, this, &Softphone::onConfirmed);
     connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
@@ -154,7 +144,6 @@ void Softphone::onConfirmed(int callId)
     setConfirmedCall(true);
     _sipClient->stopPlayingRingTone(callId);
 
-    startCurrentUserTimer();
     _activeCallModel->setCallState(callId, ActiveCallModel::CallState::CONFIRMED);
     _callHistoryModel->updateCallStatus(callId,
                                         CallHistoryModel::CallStatus::UNKNOWN,
@@ -199,7 +188,7 @@ void Softphone::onDisconnected(int callId)
     _callHistoryModel->updateCallStatus(callId,
                                         CallHistoryModel::CallStatus::REJECTED,
                                         false);
-    stopCurrentUserTimer();
+
     setDialedText(_activeCallModel->currentPhoneNumber());
     if (0 == _activeCallModel->callCount()) {
         setActiveCall(false);
@@ -292,23 +281,6 @@ void Softphone::manuallyRegister()
 void Softphone::hangupAll()
 {
     _sipClient->hangupAll();
-}
-
-void Softphone::startCurrentUserTimer()
-{
-    if (!_currentUserTimer.isActive()) {
-        setCurrentUserElapsedSec(0);
-        _currentUserTimer.start();
-    }
-}
-
-void Softphone::stopCurrentUserTimer()
-{
-    /*if (_callModel->isEmpty()) {
-        _currentUserTimer.stop();
-    } else {
-        setCurrentUserElapsedSec(_callModel->callDurationSec(_currentCallId));
-    }*/
 }
 
 void Softphone::raiseWindow()

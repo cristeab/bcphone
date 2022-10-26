@@ -57,8 +57,6 @@ class Softphone : public QObject {
     QML_CONSTANT_PROPERTY_PTR(ActiveCallModel, activeCallModel)
     QML_CONSTANT_PROPERTY_PTR(PresenceModel, presenceModel)
 
-    QML_WRITABLE_PROPERTY(quint32, currentUserElapsedSec, setCurrentUserElapsedSec, 0)
-
     QML_CONSTANT_PROPERTY(int, invalidCallId, PJSUA_INVALID_ID)
 
     QML_WRITABLE_PROPERTY(bool, blindTransfer, setBlindTransfer, false)
@@ -99,16 +97,11 @@ signals:
 private:
     Q_DISABLE_COPY_MOVE(Softphone)
 
-    enum { USER_TIMER_PERIOD_MS = 1000 };
-
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);
     void onIncoming(int callCount, int callId, const QString &userId,
                     const QString &userName);
     void onDisconnected(int callId);
-
-    void startCurrentUserTimer();
-    void stopCurrentUserTimer();
 
     void onMicrophoneVolumeChanged();
     void onSpeakersVolumeChanged();
@@ -124,7 +117,6 @@ private:
 
     SipClient *_sipClient = nullptr;
     QObject *_mainForm = nullptr;
-    QTimer _currentUserTimer;
     static const QString _notAvailable;
     QHash<pjsua_call_id, pjsua_player_id> _playerId;
     QHash<pjsua_call_id, pjsua_recorder_id> _recId;
