@@ -46,12 +46,14 @@ class Softphone : public QObject {
     QML_WRITABLE_PROPERTY(int, winWidth, setWinWidth, 0)
 
     QML_CONSTANT_PROPERTY_PTR(Settings, settings)
+
     QML_CONSTANT_PROPERTY_SET_PTR(AudioDevices, inputAudioDevices, setInputAudioDevices)
     QML_CONSTANT_PROPERTY_SET_PTR(AudioDevices, outputAudioDevices, setOutputAudioDevices)
-    QML_CONSTANT_PROPERTY_PTR(RingTonesModel, ringTonesModel)
     QML_CONSTANT_PROPERTY_SET_PTR(VideoDevices, videoDevices, setVideoDevices)
     QML_CONSTANT_PROPERTY_SET_PTR(AudioCodecs, audioCodecs, setAudioCodecs)
     QML_CONSTANT_PROPERTY_SET_PTR(VideoCodecs, videoCodecs, setVideoCodecs)
+
+    QML_CONSTANT_PROPERTY_PTR(RingTonesModel, ringTonesModel)
     QML_CONSTANT_PROPERTY_PTR(ContactsModel, contactsModel)
     QML_CONSTANT_PROPERTY_PTR(CallHistoryModel, callHistoryModel)
     QML_CONSTANT_PROPERTY_PTR(ActiveCallModel, activeCallModel)

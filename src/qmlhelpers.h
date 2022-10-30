@@ -70,12 +70,12 @@
     protected: \
         Q_PROPERTY(type* name MEMBER _##name CONSTANT) \
     public: \
-        const type* name() const { return _##name; } \
+        type* name() const { return _##name; } \
     private: \
-        void setter(const type *value) { \
+        void setter(type *value) { \
             _##name = value; \
         } \
-        const type* _##name = nullptr;
+        type* _##name = nullptr;
 
 // NOTE : to avoid "no suitable class found" MOC note
 class QmlProperty : public QObject { Q_OBJECT };

@@ -27,19 +27,19 @@ public:
               ActiveCallModel* activeCallModel,
               QObject *parent = nullptr);
 
-    const AudioDevices* inputAudioDevices() const {
+    AudioDevices* inputAudioDevices() const {
         return _inputAudioDevices;
     }
-    const AudioDevices* outputAudioDevices() const {
+    AudioDevices* outputAudioDevices() const {
         return _outputAudioDevices;
     }
-    const VideoDevices* videoDevices() const {
+    VideoDevices* videoDevices() const {
         return _videoDevices;
     }
-    const AudioCodecs* audioCodecs() const {
+    AudioCodecs* audioCodecs() const {
         return _audioCodecs;
     }
-    const VideoCodecs* videoCodecs() const {
+    VideoCodecs* videoCodecs() const {
         return _videoCodecs;
     }
 
