@@ -110,7 +110,10 @@ Softphone::Softphone()
     _ringTonesModel->initDefaultRingTones();
 
     //init SIP client
-    _sipClient = new SipClient(this);
+    _sipClient = SipClient::instance(this);
+    if (nullptr == _sipClient) {
+        QApplication::quit();
+    }
     connect(_sipClient, &SipClient::confirmed, this, &Softphone::onConfirmed);
     connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
     connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
@@ -170,6 +173,8 @@ void Softphone::onIncoming(int callId, const QString &userId, const QString &use
 
     raiseWindow();
     _sipClient->startPlayingRingTone(callId, true);
+    //TODO: when is conf
+    emit incoming(_activeCallModel->callCount(), callId, userId, userName, false);
 }
 
 void Softphone::onDisconnected(int callId)
@@ -192,6 +197,8 @@ void Softphone::onDisconnected(int callId)
     disableAudio();
 
     _sipClient->releaseVideoWindow();
+
+    emit disconnected(callId);
 }
 
 bool Softphone::makeCall(const QString &userId)

@@ -22,7 +22,7 @@ public:
     enum class RegistrationStatus { Unregistered, Trying, InProgress, Registered,
                                     ServiceUnavailable, TemporarilyUnavailable };
 
-    SipClient(Softphone *softphone);
+    static SipClient* instance(Softphone *softphone);
 
     bool init();
     void release();
@@ -82,6 +82,7 @@ signals:
     void buddyStatusChanged(int buddyId, const QString& status);
 
 private:
+    SipClient(QObject *parent);
     Q_DISABLE_COPY_MOVE(SipClient)
 
     enum { MAX_CODECS = 32, MAX_PRIORITY = 255, DEFAULT_BITRATE_KBPS = 256,

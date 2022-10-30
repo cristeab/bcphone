@@ -93,6 +93,12 @@ public:
 signals:
     void phoneStateChanged();
     void audioDevicesChanged();
+    void incoming(int callCount,
+                  int callId,
+                  const QString &userId,
+                  const QString &userName,
+                  bool isConf);
+    void disconnected(int callId);
 
 private:
     Q_DISABLE_COPY_MOVE(Softphone)

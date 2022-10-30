@@ -10,20 +10,38 @@
 
 static SipClient* _instance = nullptr;
 
-SipClient::SipClient(Softphone *softphone) :
-    _settings(softphone->settings()),
-    _inputAudioDevices(softphone->inputAudioDevices()),
-    _outputAudioDevices(softphone->outputAudioDevices()),
-    _videoDevices(softphone->videoDevices()),
-    _audioCodecs(softphone->audioCodecs()),
-    _videoCodecs(softphone->videoCodecs()),
-    _ringTonesModel(softphone->ringTonesModel()),
-    _callHistoryModel(softphone->callHistoryModel()),
-    _activeCallModel(softphone->activeCallModel()),
-    QObject(softphone)
+SipClient* SipClient::instance(Softphone *softphone)
 {
-    _instance = this;
+    if (nullptr == _instance) {
+        if ((nullptr == softphone->settings()) ||
+                (nullptr == softphone->inputAudioDevices()) ||
+                (nullptr == softphone->outputAudioDevices()) ||
+                (nullptr == softphone->videoDevices()) ||
+                (nullptr == softphone->audioCodecs()) ||
+                (nullptr == softphone->videoCodecs()) ||
+                (nullptr == softphone->ringTonesModel()) ||
+                (nullptr == softphone->callHistoryModel()) ||
+                (nullptr == softphone->activeCallModel())) {
+            qCritical() << "Cannot init SIP client";
+            return nullptr;
+        }
 
+        _instance = new SipClient(softphone);
+        _instance->_settings = QPointer(softphone->settings());
+        _instance->_inputAudioDevices = QPointer(softphone->inputAudioDevices());
+        _instance->_outputAudioDevices = QPointer(softphone->outputAudioDevices());
+        _instance->_videoDevices = QPointer(softphone->videoDevices());
+        _instance->_audioCodecs = QPointer(softphone->audioCodecs());
+        _instance->_videoCodecs = QPointer(softphone->videoCodecs());
+        _instance->_ringTonesModel = QPointer(softphone->ringTonesModel());
+        _instance->_callHistoryModel = QPointer(softphone->callHistoryModel());
+        _instance->_activeCallModel = QPointer(softphone->activeCallModel());
+    }
+    return _instance;
+}
+
+SipClient::SipClient(QObject *softphone) : QObject(softphone)
+{
     //setup tone generator
     _toneGenTimer.setInterval(TONE_GEN_TIMEOUT_MS);
     _toneGenTimer.setSingleShot(true);
