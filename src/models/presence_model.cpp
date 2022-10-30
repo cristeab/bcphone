@@ -3,10 +3,6 @@
 #include "sip_client.h"
 #include "settings.h"
 
-PresenceModel::PresenceModel(QObject *parent) : QAbstractListModel(parent)
-{
-}
-
 int PresenceModel::rowCount(const QModelIndex& /*parent*/) const
 {
     return _presenceInfo.size();

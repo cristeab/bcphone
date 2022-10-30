@@ -18,7 +18,7 @@ public:
         int defaultPriority = -1;
     };
 
-    GenericCodecs(QObject *parent = nullptr);
+    GenericCodecs(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
     virtual ~GenericCodecs() = default;
     virtual void init() = 0;
     int rowCount(const QModelIndex & = QModelIndex()) const override {

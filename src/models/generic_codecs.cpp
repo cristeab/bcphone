@@ -1,9 +1,5 @@
 #include "generic_codecs.h"
 
-GenericCodecs::GenericCodecs(QObject *parent) : QAbstractTableModel(parent)
-{
-}
-
 QVariant GenericCodecs::data(const QModelIndex &index, int role) const
 {
     QVariant out;

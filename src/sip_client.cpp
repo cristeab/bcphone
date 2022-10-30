@@ -1,11 +1,5 @@
 #include "sip_client.h"
-#include "settings.h"
-#include "models/audio_devices.h"
-#include "models/audio_codecs.h"
-#include "models/video_codecs.h"
-#include "models/ring_tones_model.h"
-#include "models/call_history_model.h"
-#include "models/active_call_model.h"
+#include "softphone.h"
 #include <QDebug>
 #include <QFile>
 #include <QRegularExpression>
@@ -16,21 +10,17 @@
 
 static SipClient* _instance = nullptr;
 
-SipClient::SipClient(Settings *settings,
-                     const RingTonesModel* ringTonesModel,
-                     CallHistoryModel* callHistoryModel,
-                     ActiveCallModel* activeCallModel,
-                     QObject *parent) :
-    _settings(settings),
-    _inputAudioDevices(new AudioDevices(settings, parent)),
-    _outputAudioDevices(new AudioDevices(settings, parent)),
-    _videoDevices(new VideoDevices(settings, parent)),
-    _audioCodecs(new AudioCodecs(parent)),
-    _videoCodecs(new VideoCodecs(parent)),
-    _ringTonesModel(ringTonesModel),
-    _callHistoryModel(callHistoryModel),
-    _activeCallModel(activeCallModel),
-    QObject{parent}
+SipClient::SipClient(Softphone *softphone) :
+    _settings(softphone->settings()),
+    _inputAudioDevices(softphone->inputAudioDevices()),
+    _outputAudioDevices(softphone->outputAudioDevices()),
+    _videoDevices(softphone->videoDevices()),
+    _audioCodecs(softphone->audioCodecs()),
+    _videoCodecs(softphone->videoCodecs()),
+    _ringTonesModel(softphone->ringTonesModel()),
+    _callHistoryModel(softphone->callHistoryModel()),
+    _activeCallModel(softphone->activeCallModel()),
+    QObject(softphone)
 {
     _instance = this;
 

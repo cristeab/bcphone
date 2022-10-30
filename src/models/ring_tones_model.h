@@ -18,11 +18,12 @@ public:
         QString filePath;
     };
 
+    explicit RingTonesModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QHash<int,QByteArray> roleNames() const;
 
-    explicit RingTonesModel(QObject *parent = nullptr);
     bool initDefaultRingTones();
     void init(const QVector<RingTonesInfo> &ringTones);
     QString filePath(int index) const;

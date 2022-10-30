@@ -27,7 +27,7 @@ public:
         QString status;
     };
 
-    explicit PresenceModel(QObject *parent = nullptr);
+    explicit PresenceModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int,QByteArray> roleNames() const override;

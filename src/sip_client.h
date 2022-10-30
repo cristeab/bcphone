@@ -5,6 +5,7 @@
 #include <QPointer>
 #include <unordered_map>
 
+class Softphone;
 class Settings;
 class AudioDevices;
 class VideoDevices;
@@ -21,27 +22,7 @@ public:
     enum class RegistrationStatus { Unregistered, Trying, InProgress, Registered,
                                     ServiceUnavailable, TemporarilyUnavailable };
 
-    SipClient(Settings *settings,
-              const RingTonesModel* ringTonesModel,
-              CallHistoryModel* callHistoryModel,
-              ActiveCallModel* activeCallModel,
-              QObject *parent = nullptr);
-
-    AudioDevices* inputAudioDevices() const {
-        return _inputAudioDevices;
-    }
-    AudioDevices* outputAudioDevices() const {
-        return _outputAudioDevices;
-    }
-    VideoDevices* videoDevices() const {
-        return _videoDevices;
-    }
-    AudioCodecs* audioCodecs() const {
-        return _audioCodecs;
-    }
-    VideoCodecs* videoCodecs() const {
-        return _videoCodecs;
-    }
+    SipClient(Softphone *softphone);
 
     bool init();
     void release();
@@ -173,15 +154,15 @@ private:
     void releasePreviewWindow();
     void setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int width, int height);
 
-    Settings* _settings = nullptr;
-    AudioDevices* _inputAudioDevices = nullptr;
-    AudioDevices* _outputAudioDevices = nullptr;
-    VideoDevices* _videoDevices = nullptr;
-    AudioCodecs* _audioCodecs = nullptr;
-    VideoCodecs* _videoCodecs = nullptr;
-    const RingTonesModel* _ringTonesModel = nullptr;
-    CallHistoryModel* _callHistoryModel = nullptr;
-    ActiveCallModel* _activeCallModel = nullptr;
+    QPointer<Settings> _settings;
+    QPointer<AudioDevices> _inputAudioDevices;
+    QPointer<AudioDevices> _outputAudioDevices;
+    QPointer<VideoDevices> _videoDevices;
+    QPointer<AudioCodecs> _audioCodecs;
+    QPointer<VideoCodecs> _videoCodecs;
+    QPointer<RingTonesModel> _ringTonesModel;
+    QPointer<CallHistoryModel> _callHistoryModel;
+    QPointer<ActiveCallModel> _activeCallModel;
 
     pjsua_acc_id _accId = PJSUA_INVALID_ID;
     std::unordered_map<pjsua_call_id, pjsua_player_id> _playerId;

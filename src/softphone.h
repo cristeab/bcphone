@@ -46,13 +46,11 @@ class Softphone : public QObject {
     QML_WRITABLE_PROPERTY(int, winWidth, setWinWidth, 0)
 
     QML_CONSTANT_PROPERTY_PTR(Settings, settings)
-
-    QML_CONSTANT_PROPERTY_SET_PTR(AudioDevices, inputAudioDevices, setInputAudioDevices)
-    QML_CONSTANT_PROPERTY_SET_PTR(AudioDevices, outputAudioDevices, setOutputAudioDevices)
-    QML_CONSTANT_PROPERTY_SET_PTR(VideoDevices, videoDevices, setVideoDevices)
-    QML_CONSTANT_PROPERTY_SET_PTR(AudioCodecs, audioCodecs, setAudioCodecs)
-    QML_CONSTANT_PROPERTY_SET_PTR(VideoCodecs, videoCodecs, setVideoCodecs)
-
+    QML_CONSTANT_PROPERTY_PTR(AudioDevices, inputAudioDevices)
+    QML_CONSTANT_PROPERTY_PTR(AudioDevices, outputAudioDevices)
+    QML_CONSTANT_PROPERTY_PTR(VideoDevices, videoDevices)
+    QML_CONSTANT_PROPERTY_PTR(AudioCodecs, audioCodecs)
+    QML_CONSTANT_PROPERTY_PTR(VideoCodecs, videoCodecs)
     QML_CONSTANT_PROPERTY_PTR(RingTonesModel, ringTonesModel)
     QML_CONSTANT_PROPERTY_PTR(ContactsModel, contactsModel)
     QML_CONSTANT_PROPERTY_PTR(CallHistoryModel, callHistoryModel)
@@ -118,7 +116,6 @@ private:
 
     SipClient *_sipClient = nullptr;
     QObject *_mainForm = nullptr;
-    static const QString _notAvailable;
     QHash<pjsua_call_id, pjsua_player_id> _playerId;
     QHash<pjsua_call_id, pjsua_recorder_id> _recId;
     QHash<pjsua_call_id, pjsua_player_id> _playbackPlayerId;

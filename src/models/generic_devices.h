@@ -21,10 +21,13 @@ public:
         bool isValid() const { return !name.isEmpty() && (INVALID_DEVICE_INDEX != index); }
         QString toString() const { return name + ": " + QString::number(index); }
     };
-    GenericDevices(const Settings *settings, QObject *parent) :
-        _settings(settings),
+    GenericDevices(QObject *parent) :
         QAbstractListModel(parent) {}
     virtual ~GenericDevices() = default;
+
+    void setSettings(const Settings *settings) {
+        _settings = settings;
+    }
 
     QHash<int,QByteArray> roleNames() const override {
         static const auto roles = QHash<int, QByteArray> {
@@ -65,5 +68,5 @@ protected:
         return ((index >= 0) && (index < _devs.count()));
     }
     QVector<DeviceInfo> _devs;
-    const Settings *const _settings = nullptr;
+    const Settings *_settings = nullptr;
 };

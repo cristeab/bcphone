@@ -16,23 +16,14 @@
 #include <QVBoxLayout>
 #include <array>
 
-const QString Softphone::_notAvailable = tr("N/A");
-
-Softphone::Softphone() : _sipClient(new SipClient(_settings,
-                                                  _ringTonesModel,
-                                                  _callHistoryModel,
-                                                  _activeCallModel,
-                                                  this))
+Softphone::Softphone()
 {
     setObjectName("softphone");
     qmlRegisterType<Softphone>("Softphone", 1, 0, "Softphone");
 
-    //init SIP client connections
-    connect(_sipClient, &SipClient::confirmed, this, &Softphone::onConfirmed);
-    connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
-    connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
-    connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
-    connect(_sipClient, &SipClient::errorMessage, this, &Softphone::errorDialog);
+    _inputAudioDevices->setSettings(_settings);
+    _outputAudioDevices->setSettings(_settings);
+    _videoDevices->setSettings(_settings);
 
     //init connections with active calls model
     connect(_activeCallModel, &ActiveCallModel::activeCallChanged, this, [this](bool value) {
@@ -78,7 +69,7 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
         hold(_holdCall, cid);
     });
 
-    //connection with call history model
+    //init call history model
     _callHistoryModel->setContactsModel(_contactsModel);
 
     //connection with volume settings
@@ -118,8 +109,14 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     //ringtones init
     _ringTonesModel->initDefaultRingTones();
 
-    qInfo() << "SSL version" << QSslSocket::sslLibraryVersionString();
-    qInfo() << "Can register" << _settings->canRegister();
+    //init SIP client
+    _sipClient = new SipClient(this);
+    connect(_sipClient, &SipClient::confirmed, this, &Softphone::onConfirmed);
+    connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
+    connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
+    connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
+    connect(_sipClient, &SipClient::errorMessage, this, &Softphone::errorDialog);
+
     if (_sipClient->init() && _settings->canRegister()) {
         qInfo() << "Autologin";
         const auto rc = _sipClient->registerAccount();
@@ -129,13 +126,6 @@ Softphone::Softphone() : _sipClient(new SipClient(_settings,
     } else {
         setLoggedOut(true);
     }
-
-    //must be after init
-    setInputAudioDevices(_sipClient->inputAudioDevices());
-    setOutputAudioDevices(_sipClient->outputAudioDevices());
-    setVideoDevices(_sipClient->videoDevices());
-    setAudioCodecs(_sipClient->audioCodecs());
-    setVideoCodecs(_sipClient->videoCodecs());
 
     connect(this, &Softphone::audioDevicesChanged, _sipClient, &SipClient::initAudioDevicesList);
 }
