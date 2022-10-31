@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.20)
 include(cmake/internal_utils.cmake)
 get_app_version(SOFTPHONE_VERSION "1.0")
 
+option (UNIT_TESTS "Build unit tests" ON)
+
 option(PRODUCTION_BUILD "Build the application for production" OFF)
 if (PRODUCTION_BUILD)
     add_definitions(-DQT_NO_DEBUG_OUTPUT -DQT_NO_WARNING_OUTPUT -DQT_NO_INFO_OUTPUT)
@@ -66,6 +68,7 @@ file (GLOB_RECURSE SRCS src/*.cpp)
 qt6_add_resources (RSCS res.qrc)
 
 if (APPLE)
+
     set (PLATFORM_SRCS platform/macos/device_notifier.mm platform/macos/dock_click_handler.mm)
     add_executable ("${PROJECT_NAME}" MACOSX_BUNDLE ${SRCS} ${PLATFORM_SRCS} ${RSCS}
         "${CMAKE_SOURCE_DIR}/img/bcphone.icns")
@@ -88,13 +91,28 @@ if (APPLE)
 
     #custom plist file
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/platform/macos/Info.plist.in)
+
+    if (UNIT_TESTS)
+        find_package (Qt6 6.4 COMPONENTS
+                                Test
+                               REQUIRED)
+        file (GLOB MODEL_SRCS src/models/*.cpp)
+        add_executable (${PROJECT_NAME}_ut test/main.cpp src/sip_client.cpp src/settings.cpp ${MODEL_SRCS})
+        target_include_directories (${PROJECT_NAME}_ut PRIVATE src ${PJSIP_INCLUDE_DIRS})
+        target_link_directories(${PROJECT_NAME}_ut PRIVATE ${OPENSSL_ROOT_DIR}/lib ${OPENH264_ROOT_DIR}/lib)
+        target_link_libraries (${PROJECT_NAME}_ut Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Test
+                                                ${PJSIP_STATIC_LDFLAGS_STR} ${OPENH264_LIBRARIES})
+    endif ()
+
 elseif (WIN32)
+
     set (PLATFORM_SRCS platform/win/win_utils.cpp)
     add_executable(${PROJECT_NAME} WIN32 ${SRCS} ${PLATFORM_SRCS} ${RSCS} "${CMAKE_SOURCE_DIR}/img/app.rc")
     target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
     target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
     target_link_directories(${PROJECT_NAME} PRIVATE "${PJSIP_ROOT_DIR}/lib;${PRECOMPILED_ROOT_DIR}/lib;${OPENSSL_ROOT_DIR}/lib")
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg ${PJSIP_LIBRARIES} ${PRECOMPILED_LIBRARIES} ${OPENSSL_LIBRARIES})
+
 endif()
 
 #installer setup
