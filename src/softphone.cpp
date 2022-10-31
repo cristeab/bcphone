@@ -173,7 +173,7 @@ void Softphone::onIncoming(int callId, const QString &userId, const QString &use
 
     raiseWindow();
     _sipClient->startPlayingRingTone(callId, true);
-    //TODO: when is conf
+    //TODO: when is conf ??
     emit incoming(_activeCallModel->callCount(), callId, userId, userName, false);
 }
 
