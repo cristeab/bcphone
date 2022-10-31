@@ -1,17 +1,27 @@
+#include "sip_client.h"
 #include <QTest>
 
-class TestQString: public QObject
+class TestSipClient: public QObject
 {
     Q_OBJECT
 private slots:
-    void toUpper();
+    void initTestCase();
+    void testInit();
+
+private:
+    SipClient *_instance = nullptr;
 };
 
-void TestQString::toUpper()
+void TestSipClient::initTestCase()
 {
-    QString str = "Hello";
-    QVERIFY(str.toUpper() == "HELLO");
+    _instance = SipClient::instance(nullptr);
 }
 
-QTEST_MAIN(TestQString)
+void TestSipClient::testInit()
+{
+    QVERIFY(nullptr != _instance);
+    QVERIFY(_instance->init());
+}
+
+QTEST_MAIN(TestSipClient)
 #include "main.moc"
