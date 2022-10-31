@@ -13,6 +13,12 @@ static SipClient* _instance = nullptr;
 SipClient* SipClient::instance(Softphone *softphone)
 {
     if (nullptr == _instance) {
+        if (nullptr == softphone) {
+            qInfo() << "SIP client without UI";
+            _instance = new SipClient(softphone);
+            return _instance;
+        }
+
         if ((nullptr == softphone->settings()) ||
                 (nullptr == softphone->inputAudioDevices()) ||
                 (nullptr == softphone->outputAudioDevices()) ||
