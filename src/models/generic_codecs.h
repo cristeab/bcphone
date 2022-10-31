@@ -18,7 +18,7 @@ public:
         int defaultPriority = -1;
     };
 
-    GenericCodecs(QObject *parent = nullptr);
+    GenericCodecs(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
     virtual ~GenericCodecs() = default;
     virtual void init() = 0;
     int rowCount(const QModelIndex & = QModelIndex()) const override {
@@ -34,10 +34,9 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
-
     void setCodecPriority(const QString &codecId, int priority);
+
     virtual void setCodecsInfo(const QList<CodecInfo> &info) = 0;
-    virtual void saveCodecsInfo() = 0;
 
     Q_INVOKABLE bool isEnabled(int row) {
         return isValidIndex(row) ? 0 < _codecInfo.at(row).priority : false;
@@ -48,6 +47,8 @@ public:
     }
     Q_INVOKABLE void restoreAudioCodecDefaultPriorities();
     Q_INVOKABLE int defaultPriority(int row);
+
+    const QList<CodecInfo>& codecInfo() const { return _codecInfo; }
 
 signals:
     void codecPriorityChanged(const QString &codecId, int newPriority, int oldPriority);

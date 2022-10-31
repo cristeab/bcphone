@@ -9,9 +9,9 @@ class VideoDevices : public GenericDevices<pjmedia_vid_dev_index, PJMEDIA_VID_IN
     QML_ANONYMOUS
 
 public:
-    explicit VideoDevices(QObject *parent = nullptr);
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    explicit VideoDevices(QObject *parent = nullptr) :
+        GenericDevices(parent) {}
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
     void init(const QVector<DeviceInfo> &videoDevs);
     const DeviceInfo& deviceInfo() const;

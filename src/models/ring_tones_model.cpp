@@ -4,10 +4,6 @@
 #include <QFileInfo>
 #include <QDebug>
 
-RingTonesModel::RingTonesModel(QObject *parent) : QAbstractListModel(parent)
-{
-}
-
 int RingTonesModel::rowCount(const QModelIndex& /*parent*/) const
 {
     return _ringTones.size();

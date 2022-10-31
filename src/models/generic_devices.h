@@ -21,15 +21,25 @@ public:
         bool isValid() const { return !name.isEmpty() && (INVALID_DEVICE_INDEX != index); }
         QString toString() const { return name + ": " + QString::number(index); }
     };
-    GenericDevices(QObject *parent) : QAbstractListModel(parent) {}
+    GenericDevices(QObject *parent) :
+        QAbstractListModel(parent) {}
     virtual ~GenericDevices() = default;
-    QHash<int,QByteArray> roleNames() const {
+
+    void setSettings(const Settings *settings) {
+        _settings = settings;
+    }
+
+    QHash<int,QByteArray> roleNames() const override {
         static const auto roles = QHash<int, QByteArray> {
             { Name, "name" },
             { Index, "index" }
         };
         return roles;
     }
+    int rowCount(const QModelIndex &/*parent*/) const override {
+        return _devs.size();
+    }
+
     int deviceIndex(const DeviceInfo &deviceInfo) const {
         if (deviceInfo.isValid()) {
             for (int i = 0; i < _devs.size(); ++i) {
@@ -51,7 +61,6 @@ public:
         static const DeviceInfo emptyInfo;
         return emptyInfo;
     }
-    void setSettings(const Settings *settings) { _settings = settings; }
 
 protected:
     Q_DISABLE_COPY_MOVE(GenericDevices)

@@ -9,9 +9,9 @@ class AudioDevices : public GenericDevices<pjmedia_aud_dev_index, PJMEDIA_AUD_IN
     QML_ANONYMOUS
 
 public:
-    explicit AudioDevices(QObject *parent = nullptr);
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    explicit AudioDevices(QObject *parent = nullptr) :
+        GenericDevices(parent) {}
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
     void init(const QVector<DeviceInfo> &audioDevs);
     const DeviceInfo& deviceInfo() const;

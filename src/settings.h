@@ -18,31 +18,43 @@ class Settings : public QObject {
 public:
     enum SipTransport { Udp, Tcp, Tls };
     enum MediaTransport { Rtp, Srtp };
-    //enum { StunPortUdpAndTcp = 3478, StunPortTls = 5349 };
 
 private:
+    //enum { StunPortUdpAndTcp = 3478, StunPortTls = 5349 };
+    enum { SIP_PORT =  5060, PROXY_PORT = 5096,
+           INVALID_INDEX = -1,
+           INBOUND_RING_TONE_INDEX = 0, OUTBOUND_RING_TONE_INDEX = 1,
+           TRANSPORT_DEFAULT_PORT = 0 };
+    static constexpr double DIALPAD_SOUND_VOLUME = 0.75;
+    static constexpr double MICROPHONE_VOLUME = 1.0;
+    static constexpr double SPEAKERS_VOLUME = 1.0;
+    static constexpr bool PROXY_ENABLED = false;
+    static constexpr bool ENABLE_SIP_LOG = true;
+    static constexpr bool ENABLE_VAD = true;
+    static constexpr bool DISABLE_TCP_SWITCH = false;
+
     QML_CONSTANT_PROPERTY(QString, orgName, ORG_NAME)
     QML_CONSTANT_PROPERTY(QString, appName, APP_NAME)
     QML_CONSTANT_PROPERTY(QString, appVersion, APP_VERSION)
 
     QML_WRITABLE_PROPERTY(QString, sipServer, setSipServer, "")
-    QML_WRITABLE_PROPERTY(int, sipPort, setSipPort, 5060)
+    QML_WRITABLE_PROPERTY(int, sipPort, setSipPort, SIP_PORT)
     QML_WRITABLE_PROPERTY(QString, userName, setUserName, "")
     QML_WRITABLE_PROPERTY(QString, password, setPassword, "")
     QML_WRITABLE_PROPERTY(QString, accountName, setAccountName, "")
     QML_WRITABLE_PROPERTY(int, sipTransport, setSipTransport, SipTransport::Udp)
     QML_WRITABLE_PROPERTY(int, mediaTransport, setMediaTransport, MediaTransport::Rtp)
 
-    QML_WRITABLE_PROPERTY(int, inputAudioModelIndex, setInputAudioModelIndex, -1)
-    QML_WRITABLE_PROPERTY(int, outputAudioModelIndex, setOutputAudioModelIndex, -1)
-    QML_WRITABLE_PROPERTY(int, videoModelIndex, setVideoModelIndex, -1)
+    QML_WRITABLE_PROPERTY(int, inputAudioModelIndex, setInputAudioModelIndex, INVALID_INDEX)
+    QML_WRITABLE_PROPERTY(int, outputAudioModelIndex, setOutputAudioModelIndex, INVALID_INDEX)
+    QML_WRITABLE_PROPERTY(int, videoModelIndex, setVideoModelIndex, INVALID_INDEX)
 
-    QML_WRITABLE_PROPERTY(int, inboundRingTonesModelIndex, setInboundRingTonesModelIndex, 0)
-    QML_WRITABLE_PROPERTY(int, outboundRingTonesModelIndex, setOutboundRingTonesModelIndex, 1)
+    QML_WRITABLE_PROPERTY(int, inboundRingTonesModelIndex, setInboundRingTonesModelIndex, INBOUND_RING_TONE_INDEX)
+    QML_WRITABLE_PROPERTY(int, outboundRingTonesModelIndex, setOutboundRingTonesModelIndex, OUTBOUND_RING_TONE_INDEX)
 
-    QML_WRITABLE_PROPERTY_FLOAT(qreal, microphoneVolume, setMicrophoneVolume, 2.0)
-    QML_WRITABLE_PROPERTY_FLOAT(qreal, speakersVolume, setSpeakersVolume, 2.0)
-    QML_WRITABLE_PROPERTY_FLOAT(qreal, dialpadSoundVolume, setDialpadSoundVolume, 0.4)
+    QML_WRITABLE_PROPERTY_FLOAT(qreal, microphoneVolume, setMicrophoneVolume, MICROPHONE_VOLUME)
+    QML_WRITABLE_PROPERTY_FLOAT(qreal, speakersVolume, setSpeakersVolume, SPEAKERS_VOLUME)
+    QML_WRITABLE_PROPERTY_FLOAT(qreal, dialpadSoundVolume, setDialpadSoundVolume, DIALPAD_SOUND_VOLUME)
 
     QML_WRITABLE_PROPERTY(QString, recPath, setRecPath, "")
 
@@ -50,9 +62,14 @@ private:
     //QML_WRITABLE_PROPERTY(int, stunPort, setStunPort, 3478)
 
     QML_WRITABLE_PROPERTY(QString, authUserName, setAuthUserName, "")
-    QML_WRITABLE_PROPERTY(bool, proxyEnabled, setProxyEnabled, false)
+    QML_WRITABLE_PROPERTY(bool, proxyEnabled, setProxyEnabled, PROXY_ENABLED)
     QML_WRITABLE_PROPERTY(QString, proxyServer, setProxyServer, "")
-    QML_WRITABLE_PROPERTY(int, proxyPort, setProxyPort, 5096)
+    QML_WRITABLE_PROPERTY(int, proxyPort, setProxyPort, PROXY_PORT)
+
+    QML_WRITABLE_PROPERTY(bool, enableSipLog, setEnableSipLog, ENABLE_SIP_LOG)
+    QML_WRITABLE_PROPERTY(bool, enableVad, setEnableVad, ENABLE_VAD)
+    QML_WRITABLE_PROPERTY(uint32_t, transportSourcePort, setTransportSourcePort, TRANSPORT_DEFAULT_PORT)
+    QML_WRITABLE_PROPERTY(bool, disableTcpSwitch, setDisableTcpSwitch, DISABLE_TCP_SWITCH)
 
 public:
 

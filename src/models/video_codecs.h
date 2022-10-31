@@ -8,8 +8,7 @@ class VideoCodecs : public GenericCodecs
     QML_ANONYMOUS
 
 public:
-    explicit VideoCodecs(QObject *parent = nullptr);
+    explicit VideoCodecs(QObject *parent = nullptr) : GenericCodecs(parent) {}
     void init() override;
     void setCodecsInfo(const QList<CodecInfo> &info) override;
-    void saveCodecsInfo() override;
 };

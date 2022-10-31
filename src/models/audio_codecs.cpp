@@ -1,10 +1,6 @@
 #include "audio_codecs.h"
 #include "settings.h"
 
-AudioCodecs::AudioCodecs(QObject *parent) : GenericCodecs(parent)
-{
-}
-
 void AudioCodecs::init()
 {
     //load existing codec priorities
@@ -31,9 +27,4 @@ void AudioCodecs::setCodecsInfo(const QList<CodecInfo> &info)
         }
     }
     sort(PRIORITY, Qt::DescendingOrder);
-}
-
-void AudioCodecs::saveCodecsInfo()
-{
-    Settings::saveAudioCodecInfo(_codecInfo);
 }

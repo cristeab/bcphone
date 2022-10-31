@@ -64,7 +64,7 @@
     public: \
         type* name() { return _##name; } \
     private: \
-        type* _##name = new type(this);
+        type *const _##name = new type(this);
 
 // NOTE : to avoid "no suitable class found" MOC note
 class QmlProperty : public QObject { Q_OBJECT };
