@@ -10,7 +10,6 @@
 #include "models/video_codecs.h"
 #include "models/active_call_model.h"
 #include "models/presence_model.h"
-#include <QObject>
 #include <QTimer>
 #include <QString>
 #include <QMap>
@@ -66,8 +65,9 @@ class Softphone : public QObject {
 
 public:
     Softphone();
-    ~Softphone();
+    virtual ~Softphone();
 
+    bool start();
     void setMainForm(QObject *mainForm) { _mainForm = mainForm; }
 
     Q_INVOKABLE bool makeCall(const QString &userId);

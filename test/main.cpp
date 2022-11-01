@@ -8,6 +8,7 @@ class TestSipClient: public QObject
 private slots:
     void initTestCase();
     void testInit();
+    void testRegisterAccount();
 
 private:
     SipClient *_instance = nullptr;
@@ -22,6 +23,11 @@ void TestSipClient::testInit()
 {
     QVERIFY(nullptr != _instance);
     QVERIFY(_instance->init());
+}
+
+void TestSipClient::testRegisterAccount()
+{
+
 }
 
 QTEST_MAIN(TestSipClient)

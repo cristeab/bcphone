@@ -159,6 +159,7 @@ bool SipClient::init()
         qDebug() << "PJSUA already running";
         return true;
     }
+    qInfo() << "Init SIP client: current state" << state;
 
     //create PJSUA
     auto status = pjsua_create();

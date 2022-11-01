@@ -108,11 +108,19 @@ Softphone::Softphone()
 
     //ringtones init
     _ringTonesModel->initDefaultRingTones();
+}
 
+Softphone::~Softphone()
+{
+    _sipClient->release();
+}
+
+bool Softphone::start()
+{
     //init SIP client
     _sipClient = SipClient::instance(this);
     if (nullptr == _sipClient) {
-        QApplication::quit();
+        return false;
     }
     connect(_sipClient, &SipClient::confirmed, this, &Softphone::onConfirmed);
     connect(_sipClient, &SipClient::calling, this, &Softphone::onCalling);
@@ -131,11 +139,7 @@ Softphone::Softphone()
     }
 
     connect(this, &Softphone::audioDevicesChanged, _sipClient, &SipClient::initAudioDevicesList);
-}
-
-Softphone::~Softphone()
-{
-    _sipClient->release();
+    return true;
 }
 
 void Softphone::onConfirmed(int callId)

@@ -32,6 +32,9 @@ int main(int argc, char *argv[])
 
     //must be instantiated before QML engine
     std::unique_ptr<Softphone> softphone(new Softphone());
+    if (!softphone->start()) {
+        return EXIT_FAILURE;
+    }
 
     QQmlApplicationEngine engine;
     //set properties
