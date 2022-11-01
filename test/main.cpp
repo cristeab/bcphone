@@ -1,4 +1,5 @@
 #include "sip_client.h"
+#include "softphone.h"
 #include <QTest>
 
 class TestSipClient: public QObject
@@ -14,7 +15,7 @@ private:
 
 void TestSipClient::initTestCase()
 {
-    _instance = SipClient::instance(nullptr);
+    _instance = SipClient::instance(new Softphone());
 }
 
 void TestSipClient::testInit()

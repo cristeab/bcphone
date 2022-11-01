@@ -14,9 +14,8 @@ SipClient* SipClient::instance(Softphone *softphone)
 {
     if (nullptr == _instance) {
         if (nullptr == softphone) {
-            qInfo() << "SIP client without UI";
-            _instance = new SipClient(softphone);
-            return _instance;
+            qCritical() << "Cannot init SIP client without backend";
+            return nullptr;
         }
 
         if ((nullptr == softphone->settings()) ||
@@ -28,7 +27,7 @@ SipClient* SipClient::instance(Softphone *softphone)
                 (nullptr == softphone->ringTonesModel()) ||
                 (nullptr == softphone->callHistoryModel()) ||
                 (nullptr == softphone->activeCallModel())) {
-            qCritical() << "Cannot init SIP client";
+            qCritical() << "Cannot init SIP client without all models";
             return nullptr;
         }
 
@@ -198,24 +197,17 @@ bool SipClient::init()
 
         //user agent contains app version and PJSIP version
         static const std::string pjsipVer(pj_get_version());
-        std::string userAgent;
-        if (!_settings.isNull()) {
-            userAgent = (_settings->appName() + "/" +
-                         _settings->appVersion()).toStdString() +
-                    " (PJSIP/" + pjsipVer + ")";
-        } else {
-            userAgent = "BcPhoneUt";
-        }
+        std::string userAgent = (_settings->appName() + "/" +
+                                 _settings->appVersion()).toStdString() +
+                " (PJSIP/" + pjsipVer + ")";
         pj_cstr(&cfg.user_agent, userAgent.c_str());
 
         pjsua_logging_config log_cfg{};
         pjsua_logging_config_default(&log_cfg);
-        if (!_settings.isNull()) {
-            log_cfg.msg_logging = _settings->enableSipLog() ? PJ_TRUE : PJ_FALSE;
-            log_cfg.level = DEFAULT_LOG_LEVEL;
-            log_cfg.console_level = DEFAULT_CONSOLE_LOG_LEVEL;
-            log_cfg.cb = &pjsuaLogCallback;
-        }
+        log_cfg.msg_logging = _settings->enableSipLog() ? PJ_TRUE : PJ_FALSE;
+        log_cfg.level = DEFAULT_LOG_LEVEL;
+        log_cfg.console_level = DEFAULT_CONSOLE_LOG_LEVEL;
+        log_cfg.cb = &pjsuaLogCallback;
 
         pjsua_media_config media_cfg{};
         pjsua_media_config_default(&media_cfg);
@@ -223,9 +215,7 @@ bool SipClient::init()
         media_cfg.ec_options = PJMEDIA_ECHO_DEFAULT |
                 PJMEDIA_ECHO_USE_NOISE_SUPPRESSOR |
                 PJMEDIA_ECHO_AGGRESSIVENESS_DEFAULT;
-        if (!_settings.isNull()) {
-            media_cfg.no_vad = _settings->enableVad() ? PJ_FALSE : PJ_TRUE;
-        }
+        media_cfg.no_vad = _settings->enableVad() ? PJ_FALSE : PJ_TRUE;
 
         status = pjsua_init(&cfg, &log_cfg, &media_cfg);
         if (PJ_SUCCESS != status) {
@@ -237,9 +227,7 @@ bool SipClient::init()
     auto addTransport = [this](pjsip_transport_type_e type) {
         pjsua_transport_config cfg;
         pjsua_transport_config_default(&cfg);
-        if (!_settings.isNull()) {
-            cfg.port = _settings->transportSourcePort();
-        }
+        cfg.port = _settings->transportSourcePort();
         const auto status = pjsua_transport_create(type, &cfg, nullptr);
         if (PJ_SUCCESS != status) {
             errorHandler(tr("Error creating transport"), status);
@@ -269,9 +257,7 @@ bool SipClient::init()
     listAudioCodecs();
     listVideoCodecs();
 
-    if (!_settings.isNull()) {
-        disableTcpSwitch(_settings->disableTcpSwitch());
-    }
+    disableTcpSwitch(_settings->disableTcpSwitch());
 
     qInfo() << "Init PJSUA library";
     return true;

@@ -97,7 +97,7 @@ if (APPLE)
                                 Test
                                REQUIRED)
         file (GLOB MODEL_SRCS src/models/*.cpp)
-        add_executable (${PROJECT_NAME}_ut test/main.cpp src/sip_client.cpp src/settings.cpp ${MODEL_SRCS})
+        add_executable (${PROJECT_NAME}_ut test/main.cpp src/sip_client.cpp src/settings.cpp src/softphone.cpp ${MODEL_SRCS})
         target_include_directories (${PROJECT_NAME}_ut PRIVATE src ${PJSIP_INCLUDE_DIRS})
         target_link_directories(${PROJECT_NAME}_ut PRIVATE ${OPENSSL_ROOT_DIR}/lib ${OPENH264_ROOT_DIR}/lib)
         target_link_libraries (${PROJECT_NAME}_ut Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Test
