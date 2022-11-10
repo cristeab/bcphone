@@ -70,6 +70,7 @@ public:
     bool start();
     void setMainForm(QObject *mainForm) { _mainForm = mainForm; }
 
+    Q_INVOKABLE bool registerAccount();
     Q_INVOKABLE bool makeCall(const QString &userId);
     Q_INVOKABLE bool answer(int callId);
     Q_INVOKABLE bool hangup(int callId);

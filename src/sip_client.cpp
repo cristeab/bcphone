@@ -260,7 +260,7 @@ bool SipClient::init()
 
     disableTcpSwitch(_settings->disableTcpSwitch());
 
-    qInfo() << "Init PJSUA library";
+    qInfo() << "Init PJSUA library" << pjsua_get_state();
     return true;
 }
 
@@ -284,8 +284,8 @@ void SipClient::release()
 bool SipClient::registerAccount()
 {
     const auto state = pjsua_get_state();
-    if (PJSUA_STATE_RUNNING == state) {
-        errorHandler(tr("PJSUA library not started"));
+    if (PJSUA_STATE_RUNNING != state) {
+        errorHandler(tr("PJSUA library not started (%1)").arg(state));
         return false;
     }
 
@@ -376,7 +376,7 @@ bool SipClient::registerAccount()
         errorHandler("Error adding account", status);
         return false;
     }
-    qInfo() << "Successfully registered account";
+    qInfo() << "Registration started";
     onRegState(_accId);
     return true;
 }
@@ -1319,10 +1319,11 @@ void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
     case PJSIP_SC_TEMPORARILY_UNAVAILABLE:
         registrationStatus = RegistrationStatus::TemporarilyUnavailable;
         break;
-    default:
-        qWarning() << "Unknown reg status" << info.status;
+    default:;
     }
-    emit registrationStatusChanged(registrationStatus, SipClient::toString(info.status_text));
+    const auto statusText = SipClient::toString(info.status_text);
+    qDebug() << "Reg status" << info.status << statusText;
+    emit registrationStatusChanged(registrationStatus, statusText);
 }
 
 void SipClient::processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info)

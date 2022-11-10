@@ -208,6 +208,11 @@ void Softphone::onDisconnected(int callId)
     emit disconnected(callId);
 }
 
+bool Softphone::registerAccount()
+{
+    return _sipClient->registerAccount();
+}
+
 bool Softphone::makeCall(const QString &userId)
 {
     const auto rc = _sipClient->makeCall(userId);
