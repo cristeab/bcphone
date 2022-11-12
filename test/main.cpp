@@ -60,6 +60,12 @@ void TestSipClient::testRegisterAccount()
     regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
     QCOMPARE(regStatus, SipClient::RegistrationStatus::Registered);
 
+    _sip->manuallyRegister();
+    QVERIFY(spy.wait(1000));
+    QCOMPARE(spy.count(), 1);
+    regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
+    QCOMPARE(regStatus, SipClient::RegistrationStatus::Registered);
+
     QVERIFY(_sip->unregisterAccount());
 }
 
