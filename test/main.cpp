@@ -2,13 +2,15 @@
 #include "softphone.h"
 #include <QSignalSpy>
 #include <QTest>
+#include <QElapsedTimer>
 
 class TestSipClient: public QObject
 {
     Q_OBJECT
 private slots:
     void initTestCase();
-    void testInit();
+    void cleanupTestCase();
+
     void testRegisterAccount();
 
 private:
@@ -17,20 +19,23 @@ private:
     const QString _unencryptedPwd{"zyVbar-jevre5-fovtaz"};
 
     Softphone *_softphone{nullptr};
-    SipClient *_instance{nullptr};
+    SipClient *_sip{nullptr};
 };
 
 void TestSipClient::initTestCase()
 {
     qRegisterMetaType<SipClient::RegistrationStatus>();
     _softphone = new Softphone();
-    _instance = SipClient::instance(_softphone);
+    _sip = SipClient::instance(_softphone);
+    QVERIFY(_sip->init());
 }
 
-void TestSipClient::testInit()
+void TestSipClient::cleanupTestCase()
 {
-    QVERIFY(nullptr != _instance);
-    QVERIFY(_instance->init());
+    QElapsedTimer timer;
+    timer.start();
+    _sip->release();
+    qDebug() << "Cleanup took" << timer.elapsed() / 1000.0 << "seconds";
 }
 
 void TestSipClient::testRegisterAccount()
@@ -42,9 +47,9 @@ void TestSipClient::testRegisterAccount()
     settings->setSipTransport(Settings::SipTransport::Udp);
     settings->setMediaTransport(Settings::MediaTransport::Rtp);
 
-    QSignalSpy spy(_instance, &SipClient::registrationStatusChanged);
+    QSignalSpy spy(_sip, &SipClient::registrationStatusChanged);
 
-    QVERIFY(_instance->registerAccount());
+    QVERIFY(_sip->registerAccount());
 
     QCOMPARE(spy.count(), 1);
     auto regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
@@ -54,6 +59,8 @@ void TestSipClient::testRegisterAccount()
     QCOMPARE(spy.count(), 1);
     regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
     QCOMPARE(regStatus, SipClient::RegistrationStatus::Registered);
+
+    QVERIFY(_sip->unregisterAccount());
 }
 
 QTEST_MAIN(TestSipClient)
