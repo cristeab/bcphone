@@ -33,7 +33,6 @@ Softphone::Softphone()
             setDialedText(_activeCallModel->currentPhoneNumber());
         }
     });
-    connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
 
     //init connection with settings
     connect(_settings, &Settings::inputAudioModelIndexChanged, this, [&]() {
@@ -127,6 +126,7 @@ bool Softphone::start()
     connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
     connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
     connect(_sipClient, &SipClient::errorMessage, this, &Softphone::errorDialog);
+    connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
 
     if (_sipClient->init() && _settings->canRegister()) {
         qInfo() << "Autologin";
