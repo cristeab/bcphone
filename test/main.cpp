@@ -50,7 +50,7 @@ void TestSipClient::initTestCase()
 {
     qRegisterMetaType<SipClient::RegistrationStatus>();
     _softphone[0] = new Softphone();
-    _sip[0] = SipClient::instance(_softphone[0]);
+    _sip[0] = SipClient::create(_softphone[0]);
     QVERIFY(_sip[0]->init());
 
     auto *settings = _softphone[0]->settings();

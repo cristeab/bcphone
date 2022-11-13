@@ -65,7 +65,6 @@ class Softphone : public QObject {
 
 public:
     Softphone();
-    virtual ~Softphone();
 
     bool start();
     void setMainForm(QObject *mainForm) { _mainForm = mainForm; }

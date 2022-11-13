@@ -8,44 +8,56 @@
 #include <QDialog>
 #include <QVBoxLayout>
 
-static SipClient* _instance = nullptr;
+#define GET_INSTANCE(accId) auto ptr = pjsua_acc_get_user_data(accId);\
+    if (nullptr == ptr) {\
+        formatErrorMessage(tr("Cannot get SIP client instance for account ID %1").arg(accId));\
+        return;\
+    }\
+    auto instance = reinterpret_cast<SipClient*>(ptr);
 
-SipClient* SipClient::instance(Softphone *softphone)
+#define GET_INSTANCE_CID(callId) pjsua_call_info ci{};\
+    const auto status = pjsua_call_get_info(callId, &ci);\
+    if (PJ_SUCCESS != status) {\
+        formatErrorMessage("Cannot get call info", status);\
+        return;\
+    }\
+    GET_INSTANCE(ci.acc_id)
+
+SipClient* SipClient::create(Softphone *softphone)
 {
-    if (nullptr == _instance) {
-        if (nullptr == softphone) {
-            qCritical() << "Cannot init SIP client without backend";
-            return nullptr;
-        }
-
-        if ((nullptr == softphone->settings()) ||
-                (nullptr == softphone->inputAudioDevices()) ||
-                (nullptr == softphone->outputAudioDevices()) ||
-                (nullptr == softphone->videoDevices()) ||
-                (nullptr == softphone->audioCodecs()) ||
-                (nullptr == softphone->videoCodecs()) ||
-                (nullptr == softphone->ringTonesModel()) ||
-                (nullptr == softphone->callHistoryModel()) ||
-                (nullptr == softphone->activeCallModel())) {
-            qCritical() << "Cannot init SIP client without all models";
-            return nullptr;
-        }
-
-        _instance = new SipClient(softphone);
-        _instance->_settings = QPointer(softphone->settings());
-        _instance->_inputAudioDevices = QPointer(softphone->inputAudioDevices());
-        _instance->_outputAudioDevices = QPointer(softphone->outputAudioDevices());
-        _instance->_videoDevices = QPointer(softphone->videoDevices());
-        _instance->_audioCodecs = QPointer(softphone->audioCodecs());
-        _instance->_videoCodecs = QPointer(softphone->videoCodecs());
-        _instance->_ringTonesModel = QPointer(softphone->ringTonesModel());
-        _instance->_callHistoryModel = QPointer(softphone->callHistoryModel());
-        _instance->_activeCallModel = QPointer(softphone->activeCallModel());
+    if (nullptr == softphone) {
+        qCritical() << "Cannot init SIP client without backend";
+        return nullptr;
     }
-    return _instance;
+
+    if ((nullptr == softphone->settings()) ||
+            (nullptr == softphone->inputAudioDevices()) ||
+            (nullptr == softphone->outputAudioDevices()) ||
+            (nullptr == softphone->videoDevices()) ||
+            (nullptr == softphone->audioCodecs()) ||
+            (nullptr == softphone->videoCodecs()) ||
+            (nullptr == softphone->ringTonesModel()) ||
+            (nullptr == softphone->callHistoryModel()) ||
+            (nullptr == softphone->activeCallModel())) {
+        qCritical() << "Cannot init SIP client without all models";
+        return nullptr;
+    }
+
+    auto instance = new SipClient(softphone);
+    instance->_settings = QPointer(softphone->settings());
+    instance->_inputAudioDevices = QPointer(softphone->inputAudioDevices());
+    instance->_outputAudioDevices = QPointer(softphone->outputAudioDevices());
+    instance->_videoDevices = QPointer(softphone->videoDevices());
+    instance->_audioCodecs = QPointer(softphone->audioCodecs());
+    instance->_videoCodecs = QPointer(softphone->videoCodecs());
+    instance->_ringTonesModel = QPointer(softphone->ringTonesModel());
+    instance->_callHistoryModel = QPointer(softphone->callHistoryModel());
+    instance->_activeCallModel = QPointer(softphone->activeCallModel());
+
+    return instance;
 }
 
-SipClient::SipClient(QObject *softphone) : QObject(softphone)
+SipClient::SipClient(QObject *parent) : QObject(parent)
 {
     //setup tone generator
     _toneGenTimer.setInterval(TONE_GEN_TIMEOUT_MS);
@@ -55,64 +67,44 @@ SipClient::SipClient(QObject *softphone) : QObject(softphone)
 
 void SipClient::onRegState(pjsua_acc_id accId)
 {
-    if (nullptr == _instance) {
-        return;
-    }
+    GET_INSTANCE(accId)
+
     pjsua_acc_info info{};
     const auto status = pjsua_acc_get_info(accId, &info);
     if (PJ_SUCCESS != status) {
-        _instance->errorHandler("Cannot get account information", status);
+        instance->errorHandler("Cannot get account information", status);
         return;
     }
-    _instance->processRegistrationStatus(info);
+    instance->processRegistrationStatus(info);
 }
 
 void SipClient::onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_rx_data *rdata)
 {
-    PJ_UNUSED_ARG(accId);
     PJ_UNUSED_ARG(rdata);
 
-    if (nullptr == _instance) {
-        return;
-    }
+    GET_INSTANCE(accId)
 
     pjsua_call_info ci{};
     const auto status = pjsua_call_get_info(callId, &ci);
     if (PJ_SUCCESS != status) {
-        _instance->errorHandler("Cannot get call info", status);
+        instance->errorHandler("Cannot get call info", status);
         return;
     }
-    _instance->processIncomingCall(callId, ci);
+    instance->processIncomingCall(callId, ci);
 }
 
 void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
 {
     PJ_UNUSED_ARG(e);
-    if (nullptr == _instance) {
-        return;
-    }
 
-    pjsua_call_info ci{};
-    const auto status = pjsua_call_get_info(callId, &ci);
-    if (PJ_SUCCESS != status) {
-        _instance->errorHandler("Cannot get call info", status);
-        return;
-    }
-    _instance->processCallState(callId, ci);
+    GET_INSTANCE_CID(callId)
+    instance->processCallState(callId, ci);
 }
 
 void SipClient::onCallMediaState(pjsua_call_id callId)
 {
-    if (nullptr == _instance) {
-        return;
-    }
-    pjsua_call_info ci{};
-    auto status = pjsua_call_get_info(callId, &ci);
-    if (PJ_SUCCESS != status) {
-        _instance->errorHandler("Cannot get media status", status);
-        return;
-    }
-    _instance->processCallMediaState(callId, ci);
+    GET_INSTANCE_CID(callId)
+    instance->processCallMediaState(callId, ci);
 }
 
 void SipClient::onStreamCreated(pjsua_call_id callId, pjmedia_stream *strm,
@@ -128,10 +120,8 @@ void SipClient::onStreamDestroyed(pjsua_call_id callId, pjmedia_stream *strm,
                               unsigned stream_idx)
 {
     qDebug() << "onStreamDestroyed" << callId << stream_idx;
-    if (nullptr == _instance) {
-        return;
-    }
-    _instance->dumpStreamStats(strm);
+    GET_INSTANCE_CID(callId)
+    instance->dumpStreamStats(strm);
 }
 
 void SipClient::onBuddyState(pjsua_buddy_id buddyId)
@@ -140,10 +130,13 @@ void SipClient::onBuddyState(pjsua_buddy_id buddyId)
         qWarning() << "Invalid buddy ID" << buddyId;
         return;
     }
-    if (nullptr == _instance) {
+    auto ptr = pjsua_buddy_get_user_data(buddyId);
+    if (nullptr == ptr) {
+        formatErrorMessage(tr("Cannot get SIP client instance for buddy ID %1").arg(buddyId));
         return;
-    }
-    _instance->processBuddyState(buddyId);
+    }\
+    auto instance = reinterpret_cast<SipClient*>(ptr);
+    instance->processBuddyState(buddyId);
 }
 
 void SipClient::pjsuaLogCallback(int level, const char *data, int len)
@@ -376,6 +369,14 @@ bool SipClient::registerAccount()
         errorHandler("Error adding account", status);
         return false;
     }
+
+    status = pjsua_acc_set_user_data(_accId, this);
+    if (PJ_SUCCESS != status) {
+        errorHandler("Error setting user data for account", status);
+        unregisterAccount();
+        return false;
+    }
+
     qInfo() << "Registration started";
     onRegState(_accId);
     return true;
@@ -668,16 +669,16 @@ bool SipClient::setupConferenceCall(pjsua_call_id callId)
     return true;
 }
 
-void SipClient::errorHandler(const QString &title, pj_status_t status)
+QString SipClient::formatErrorMessage(const QString &title, pj_status_t status)
 {
-    QString fullError = title;
+    QString fullError{title};
     if (PJ_SUCCESS != status) {
         static std::array<char, MAX_ERROR_MSG_SIZE> message;
         pj_strerror(status, message.data(), message.size());
         fullError.append(":").append(message.data());
     }
     qCritical() << fullError;
-    emit errorMessage(fullError);
+    return fullError;
 }
 
 bool SipClient::unregisterAccount()
@@ -958,24 +959,24 @@ QString SipClient::sipTransport(int type)
 
 bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer)
 {
-    const auto& domain = _instance->_settings->sipServer();
+    const auto& domain = _settings->sipServer();
     if (domain.isEmpty()) {
         qWarning() << "No SIP server";
         return false;
     }
-    const auto destPort = QString::number(_instance->_settings->sipPort());
+    const auto destPort = QString::number(_settings->sipPort());
     if (destPort.isEmpty()) {
         qWarning() << "No SIP port";
         return false;
     }
-    const auto sipTransport = SipClient::sipTransport(_instance->_settings->sipTransport());
+    const auto sipTransport = SipClient::sipTransport(_settings->sipTransport());
 
     const QString sipUri = "sip:" + userId + "@" + domain + ":" + destPort + sipTransport;
     uriBuffer = sipUri.toStdString();
     const char *uriPtr = uriBuffer.c_str();
     const auto status = verifySipUri(uriPtr);
     if (PJ_SUCCESS != status) {
-        _instance->errorHandler("URI verification failed", status);
+        errorHandler("URI verification failed", status);
         return false;
     }
     if (nullptr != uri) {
@@ -1393,7 +1394,8 @@ void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_inf
                 auto status = pjsua_call_get_stream_info(callId, medIdx, &streamInfo);
                 if (PJ_SUCCESS == status) {
                     if (PJMEDIA_TYPE_AUDIO == streamInfo.type) {
-                        _instance->connectCallToSoundDevices(info.conf_slot);
+                        GET_INSTANCE_CID(callId)
+                        instance->connectCallToSoundDevices(info.conf_slot);
                         const auto &fmt = streamInfo.info.aud.fmt;
                         qInfo() << "Audio codec info: encoding" << toString(fmt.encoding_name)
                                 << ", clock rate" << fmt.clock_rate << "Hz, channel count"
@@ -1705,4 +1707,44 @@ void SipClient::setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int
     } else {
         qWarning() << "Window is native";
     }
+}
+
+int SipClient::addBuddy(const QString &userId)
+{
+    if (PJSUA_MAX_BUDDIES <= pjsua_get_buddy_count()) {
+        errorHandler(tr("Maximum number of buddies exceeded"));
+        return PJSUA_INVALID_ID;
+    }
+    pjsua_buddy_config buddyCfg{};
+    pjsua_buddy_config_default(&buddyCfg);
+    std::string uriBuffer;
+    const bool rc = callUri(&buddyCfg.uri, userId, uriBuffer);
+    if (!rc) {
+        errorHandler(tr("Cannot buddy URI"));
+        return PJSUA_INVALID_ID;
+    }
+    pjsua_buddy_id buddyId = PJSUA_INVALID_ID;
+    buddyCfg.subscribe = PJ_TRUE;
+    buddyCfg.user_data = nullptr;
+    auto status = pjsua_buddy_add(&buddyCfg, &buddyId);
+    if (PJ_SUCCESS != status) {
+        errorHandler(tr("Cannot add buddy"), status);
+        return PJSUA_INVALID_ID;
+    }
+    status = pjsua_buddy_set_user_data(buddyId, this);
+    if (PJ_SUCCESS != status) {
+        errorHandler(tr("Cannot set buddy user data"), status);
+    }
+    qDebug() << "Added buddy" << userId << buddyId;
+    return buddyId;
+}
+
+bool SipClient::removeBuddy(int buddyId)
+{
+    const auto status = pjsua_buddy_del(buddyId);
+    if (PJ_SUCCESS != status) {
+        errorHandler(tr("Cannot del buddy"), status);
+        return false;
+    }
+    return true;
 }

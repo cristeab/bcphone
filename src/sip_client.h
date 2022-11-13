@@ -22,8 +22,11 @@ public:
     enum class RegistrationStatus { Unregistered, Trying, InProgress, Registered,
                                     ServiceUnavailable, TemporarilyUnavailable };
 
-    static SipClient* instance(Softphone *softphone);
+    ~SipClient() {
+        release();
+    }
 
+    static SipClient* create(Softphone *softphone);
     bool init();
     void release();
 
@@ -70,7 +73,8 @@ public:
     bool setVideoCodecPriority(const QString &codecId, int priority);
     void releaseVideoWindow();
 
-    static bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
+    int addBuddy(const QString &userId);
+    bool removeBuddy(int buddyId);
 
 signals:
     void errorMessage(const QString& msg);
@@ -104,6 +108,7 @@ private:
     static void onBuddyState(pjsua_buddy_id buddyId);
     static void pjsuaLogCallback(int level, const char *data, int len);
 
+    bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
     void processRegistrationStatus(const pjsua_acc_info &info);
     void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
     void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
@@ -111,7 +116,11 @@ private:
     void dumpStreamStats(pjmedia_stream *strm);
     void processBuddyState(pjsua_buddy_id buddyId);
 
-    void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS);
+    static QString formatErrorMessage(const QString &title, pj_status_t status = PJ_SUCCESS);
+    void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS) {
+        auto const &msg = formatErrorMessage(title, status);
+        emit errorMessage(msg);
+    }
     void initVideoDevicesList();
     void listAudioCodecs();
     void listVideoCodecs();

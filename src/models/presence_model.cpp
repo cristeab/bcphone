@@ -42,26 +42,14 @@ QHash<int,QByteArray> PresenceModel::roleNames() const
 
 void PresenceModel::addBuddy(const QString &userId)
 {
-    if (PJSUA_MAX_BUDDIES <= _presenceInfo.size()) {
-        emit errorMessage(tr("Maximum number of buddies exceeded"));
-        return;
-    }
-    pjsua_buddy_config buddyCfg;
-    pjsua_buddy_config_default(&buddyCfg);
-    std::string uriBuffer;
-    const bool rc = SipClient::callUri(&buddyCfg.uri, userId, uriBuffer);
-    if (!rc) {
-        return;
-    }
-    pjsua_buddy_id buddyId{};
-    buddyCfg.subscribe = PJ_TRUE;
-    buddyCfg.user_data = nullptr;
-    const pj_status_t status = pjsua_buddy_add(&buddyCfg, &buddyId);
-    if (PJ_SUCCESS != status) {
+    if (nullptr != _sipClient) {
         emit errorMessage(tr("Cannot add buddy"));
         return;
     }
-    qDebug() << "Added buddy" << userId << buddyId;
+    const auto buddyId = _sipClient->addBuddy(userId);
+    if (PJSUA_INVALID_ID == buddyId) {
+        return;
+    }
     emit layoutAboutToBeChanged();
     PresenceInfo info;
     info.id = buddyId;
@@ -80,14 +68,17 @@ void PresenceModel::addBuddy(const QString &userId)
 
 void PresenceModel::removeBuddy(int index)
 {
+    if (nullptr != _sipClient) {
+        emit errorMessage(tr("Cannot remove buddy"));
+        return;
+    }
     qDebug() << "removeBuddy" << index;
     if (!isValidIndex(index)) {
         qWarning() << "Invalid index" << index;
         return;
     }
-    const pj_status_t status = pjsua_buddy_del(_presenceInfo.at(index).id);
-    if (PJ_SUCCESS != status) {
-        emit errorMessage(tr("Cannot del buddy"));
+    const auto ok = _sipClient->removeBuddy(_presenceInfo.at(index).id);
+    if (!ok) {
         return;
     }
     emit layoutAboutToBeChanged();
@@ -121,23 +112,16 @@ void PresenceModel::load()
     if (buddies.isEmpty()) {
         return;
     }
+    if (nullptr != _sipClient) {
+        emit errorMessage(tr("Cannot load buddy list"));
+        return;
+    }
     emit layoutAboutToBeChanged();
     _presenceInfo.clear();
     for (const auto &userId: buddies) {
-        pjsua_buddy_config buddyCfg;
-        pjsua_buddy_config_default(&buddyCfg);
-        std::string uriBuffer;
-        const bool rc = SipClient::callUri(&buddyCfg.uri, userId, uriBuffer);
-        if (!rc) {
-            return;
-        }
-        pjsua_buddy_id buddyId{};
-        buddyCfg.subscribe = PJ_TRUE;
-        buddyCfg.user_data = nullptr;
-        const pj_status_t status = pjsua_buddy_add(&buddyCfg, &buddyId);
-        if (PJ_SUCCESS != status) {
-            emit errorMessage(tr("Cannot add buddy"));
-            return;
+        const auto buddyId = _sipClient->addBuddy(userId);
+        if (PJSUA_INVALID_ID == buddyId) {
+            continue;
         }
         qDebug() << "Added buddy" << userId << buddyId;
         PresenceInfo info;

@@ -6,6 +6,7 @@
 #include <QAbstractListModel>
 #include <QList>
 
+class SipClient;
 class ContactsModel;
 
 class PresenceModel : public QAbstractListModel
@@ -37,6 +38,7 @@ public:
     void updateStatus(pjsua_buddy_id id, const QString &status);
     void load();
 
+    void setSipClient(SipClient *sipClient) { _sipClient = sipClient; }
     void setContactsModel(ContactsModel *contactsModel) { _contactsModel = contactsModel; }
 
 signals:
@@ -48,5 +50,6 @@ private:
         return ((index >= 0) && (index < _presenceInfo.count()));
     }
     QList<PresenceInfo> _presenceInfo;
+    SipClient *_sipClient = nullptr;
     ContactsModel *_contactsModel = nullptr;
 };

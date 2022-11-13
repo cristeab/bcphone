@@ -109,15 +109,10 @@ Softphone::Softphone()
     _ringTonesModel->initDefaultRingTones();
 }
 
-Softphone::~Softphone()
-{
-    _sipClient->release();
-}
-
 bool Softphone::start()
 {
     //init SIP client
-    _sipClient = SipClient::instance(this);
+    _sipClient = SipClient::create(this);
     if (nullptr == _sipClient) {
         return false;
     }
@@ -127,6 +122,7 @@ bool Softphone::start()
     connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
     connect(_sipClient, &SipClient::errorMessage, this, &Softphone::errorDialog);
     connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
+    _presenceModel->setSipClient(_sipClient);
 
     if (_sipClient->init() && _settings->canRegister()) {
         qInfo() << "Autologin";
