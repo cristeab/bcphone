@@ -15,7 +15,8 @@ private slots:
     void testMakeCall();
 
 private:
-    void createSecondClient();
+    void createClient(int index);
+    void registerClient(int index);
 
     const QString _sipServer{"192.168.77.48"};
     const QString _unencryptedExt[2]{"0004*004", "0004*005"};
@@ -25,40 +26,42 @@ private:
     SipClient *_sip[2]{nullptr, nullptr};
 };
 
-void TestSipClient::createSecondClient()
+void TestSipClient::createClient(int index)
 {
-    /*_softphone[1] = new Softphone();
-    _sip[1] = SipClient::instance(_softphone[1]);
-    QVERIFY(_sip[1]->init());
+    _softphone[index] = new Softphone();
+    _sip[index] = SipClient::create(_softphone[index]);
+    QVERIFY(_sip[index]->init());
 
-    auto *settings = _softphone[1]->settings();
+    auto *settings = _softphone[index]->settings();
     settings->setSipServer(_sipServer);
-    settings->setUserName(_unencryptedExt[1]);
-    settings->setPassword(_unencryptedPwd[1]);
+    settings->setUserName(_unencryptedExt[index]);
+    settings->setPassword(_unencryptedPwd[index]);
     settings->setSipTransport(Settings::SipTransport::Udp);
     settings->setMediaTransport(Settings::MediaTransport::Rtp);
+}
 
-    QSignalSpy spy(_sip[1], &SipClient::registrationStatusChanged);
-    QVERIFY(_sip[1]->registerAccount());
-    QVERIFY(spy.wait(1000));
-
-    auto regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
-    QCOMPARE(regStatus, SipClient::RegistrationStatus::Registered);*/
+void TestSipClient::registerClient(int index)
+{
+    static constexpr uint32_t maxAttempts = 3;
+    QSignalSpy spy(_sip[index], &SipClient::registrationStatusChanged);
+    QVERIFY(_sip[index]->registerAccount());
+    auto regStatus = SipClient::RegistrationStatus::Unregistered;
+    int i = 0;
+    do {
+        QVERIFY(spy.wait(1000));
+        regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
+        ++i;
+        if (i >= maxAttempts) {
+            break;
+        }
+    } while (SipClient::RegistrationStatus::Registered != regStatus);
+    QVERIFY(i < maxAttempts);
 }
 
 void TestSipClient::initTestCase()
 {
     qRegisterMetaType<SipClient::RegistrationStatus>();
-    _softphone[0] = new Softphone();
-    _sip[0] = SipClient::create(_softphone[0]);
-    QVERIFY(_sip[0]->init());
-
-    auto *settings = _softphone[0]->settings();
-    settings->setSipServer(_sipServer);
-    settings->setUserName(_unencryptedExt[0]);
-    settings->setPassword(_unencryptedPwd[0]);
-    settings->setSipTransport(Settings::SipTransport::Udp);
-    settings->setMediaTransport(Settings::MediaTransport::Rtp);
+    createClient(0);
 }
 
 void TestSipClient::cleanupTestCase()
@@ -111,7 +114,8 @@ void TestSipClient::testMakeCall()
     //QVERIFY(confirmedSpy.wait(1000));
     QVERIFY(disconnectedSpy.wait(1000));
 
-    createSecondClient();
+    createClient(1);
+    registerClient(1);
 }
 
 QTEST_MAIN(TestSipClient)
