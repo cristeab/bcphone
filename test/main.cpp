@@ -15,8 +15,7 @@ private slots:
     void testMakeCall();
 
 private:
-    void createClient(int index);
-    void registerClient(int index);
+    void createClient(int index, bool registerAccount);
 
     const QString _sipServer{"192.168.77.48"};
     const QString _unencryptedExt[2]{"0004*004", "0004*005"};
@@ -26,7 +25,7 @@ private:
     SipClient *_sip[2]{nullptr, nullptr};
 };
 
-void TestSipClient::createClient(int index)
+void TestSipClient::createClient(int index, bool registerAccount)
 {
     _softphone[index] = new Softphone();
     _sip[index] = SipClient::create(_softphone[index]);
@@ -38,30 +37,20 @@ void TestSipClient::createClient(int index)
     settings->setPassword(_unencryptedPwd[index]);
     settings->setSipTransport(Settings::SipTransport::Udp);
     settings->setMediaTransport(Settings::MediaTransport::Rtp);
-}
 
-void TestSipClient::registerClient(int index)
-{
-    static constexpr uint32_t maxAttempts = 3;
-    QSignalSpy spy(_sip[index], &SipClient::registrationStatusChanged);
-    QVERIFY(_sip[index]->registerAccount());
-    auto regStatus = SipClient::RegistrationStatus::Unregistered;
-    int i = 0;
-    do {
+    if (registerAccount) {
+        QSignalSpy spy(_sip[index], &SipClient::registrationStatusChanged);
+        QVERIFY(_sip[index]->registerAccount());
         QVERIFY(spy.wait(1000));
-        regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
-        ++i;
-        if (i >= maxAttempts) {
-            break;
-        }
-    } while (SipClient::RegistrationStatus::Registered != regStatus);
-    QVERIFY(i < maxAttempts);
+        const auto regStatus = qvariant_cast<SipClient::RegistrationStatus>(spy.takeFirst().at(0));
+        QCOMPARE(SipClient::RegistrationStatus::Registered, regStatus);
+    }
 }
 
 void TestSipClient::initTestCase()
 {
     qRegisterMetaType<SipClient::RegistrationStatus>();
-    createClient(0);
+    createClient(0, false);
 }
 
 void TestSipClient::cleanupTestCase()
@@ -114,8 +103,7 @@ void TestSipClient::testMakeCall()
     //QVERIFY(confirmedSpy.wait(1000));
     QVERIFY(disconnectedSpy.wait(1000));
 
-    createClient(1);
-    registerClient(1);
+    createClient(1, true);
 }
 
 QTEST_MAIN(TestSipClient)
