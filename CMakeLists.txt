@@ -22,7 +22,7 @@ if (APPLE)
     set (OPENH264_ROOT_DIR "/usr/local/Cellar/openh264/2.3.1")
     set (OPENH264_LIBRARIES "openh264")
 
-    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl@1.1")
+    set(OPENSSL_ROOT_DIR "/usr/local")
 elseif (WIN32)
     set (DEPS_DIR "${CMAKE_SOURCE_DIR}/../3rdparty")
     set (PJSIP_ROOT_DIR "${DEPS_DIR}/pjproject-2.12.1")
@@ -50,16 +50,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package (Qt6 6.4 COMPONENTS
-                        Core
-                        Qml
-                        Quick
-                        Widgets
-                        Svg
-                        Gui
-                        Multimedia
-                        Sql
-                       REQUIRED)
+find_package (Qt6 COMPONENTS
+    Core
+    Qml
+    Quick
+    Widgets
+    Svg
+    Gui
+    Multimedia
+    Sql
+    Network
+    REQUIRED)
 
 #set version in config file
 configure_file(${CMAKE_SOURCE_DIR}/src/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
@@ -86,16 +87,16 @@ if (APPLE)
     target_include_directories (${PROJECT_NAME} PRIVATE src ${PJSIP_INCLUDE_DIRS})
     target_link_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_ROOT_DIR}/lib ${OPENH264_ROOT_DIR}/lib)
     string (REPLACE ";" " " PJSIP_STATIC_LDFLAGS_STR "${PJSIP_STATIC_LDFLAGS}")
-    target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg
+    target_link_libraries (${PROJECT_NAME} Qt6::Core Qt6::Gui Qt6::Quick Qt6::Widgets Qt6::Svg Qt6::Network
                                             ${PJSIP_STATIC_LDFLAGS_STR} ${OPENH264_LIBRARIES})
 
     #custom plist file
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/platform/macos/Info.plist.in)
 
     if (UNIT_TESTS)
-        find_package (Qt6 6.4 COMPONENTS
-                                Test
-                               REQUIRED)
+        find_package (Qt6 COMPONENTS
+            Test
+            REQUIRED)
         file (GLOB MODEL_SRCS src/models/*.cpp)
         add_executable (${PROJECT_NAME}_ut test/main.cpp src/softphone.cpp src/sip_client.cpp src/settings.cpp ${MODEL_SRCS})
         target_include_directories (${PROJECT_NAME}_ut PRIVATE src ${PJSIP_INCLUDE_DIRS})

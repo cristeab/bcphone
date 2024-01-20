@@ -14,12 +14,15 @@
 #include <QWindow>
 #include <QDialog>
 #include <QVBoxLayout>
-#include <array>
+#include <QNetworkAccessManager>
+#include <QSslSocket>
 
 Softphone::Softphone()
 {
     setObjectName("softphone");
     qmlRegisterType<Softphone>("Softphone", 1, 0, "Softphone");
+
+    printSslBackendVersion();
 
     _inputAudioDevices->setSettings(_settings);
     _outputAudioDevices->setSettings(_settings);
@@ -141,6 +144,15 @@ bool Softphone::start()
 
     connect(this, &Softphone::audioDevicesChanged, _sipClient, &SipClient::initAudioDevicesList);
     return true;
+}
+
+void Softphone::printSslBackendVersion()
+{
+	// Initialize the network module
+	QNetworkAccessManager manager;
+
+	// Display the SSL backend version
+	qInfo() << "SSL backend version:" << QSslSocket::sslLibraryVersionString();
 }
 
 void Softphone::onConfirmed(int callId)

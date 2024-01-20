@@ -103,6 +103,7 @@ signals:
 private:
     Q_DISABLE_COPY_MOVE(Softphone)
 
+    static void printSslBackendVersion();
     void onConfirmed(int callId);
     void onCalling(int callId, const QString &userId, const QString &userName);
     void onIncoming(int callId, const QString &userId, const QString &userName);
