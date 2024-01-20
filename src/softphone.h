@@ -10,6 +10,8 @@
 #include "models/video_codecs.h"
 #include "models/active_call_model.h"
 #include "models/presence_model.h"
+#include "models/chat_list_proxy.h"
+#include "models/messages_proxy_model.h"
 #include <QTimer>
 #include <QString>
 #include <QMap>
@@ -55,6 +57,9 @@ class Softphone : public QObject {
     QML_CONSTANT_PROPERTY_PTR(CallHistoryModel, callHistoryModel)
     QML_CONSTANT_PROPERTY_PTR(ActiveCallModel, activeCallModel)
     QML_CONSTANT_PROPERTY_PTR(PresenceModel, presenceModel)
+
+    QML_CONSTANT_PROPERTY_PTR(ChatListProxy, chatList)
+    QML_CONSTANT_PROPERTY_PTR(MessagesProxyModel, messagesModel)
 
     QML_CONSTANT_PROPERTY(int, invalidCallId, PJSUA_INVALID_ID)
 

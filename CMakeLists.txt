@@ -1,5 +1,5 @@
-project("BCPhone" CXX)
 cmake_minimum_required(VERSION 3.20)
+project("BCPhone" CXX)
 
 include(cmake/internal_utils.cmake)
 get_app_version(SOFTPHONE_VERSION "1.0")
@@ -65,7 +65,7 @@ find_package (Qt6 COMPONENTS
 #set version in config file
 configure_file(${CMAKE_SOURCE_DIR}/src/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
-file (GLOB_RECURSE SRCS src/*.cpp)
+file (GLOB_RECURSE SRCS src/*.cpp src/*.h)
 qt6_add_resources (RSCS res.qrc)
 
 if (APPLE)
