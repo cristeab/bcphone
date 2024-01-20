@@ -6,7 +6,7 @@ void AudioCodecs::init()
     //load existing codec priorities
     setCodecsInfo(Settings::audioCodecInfo());
     qInfo() << "Restoring" << _codecInfo.size() << "codec priorities";
-    for (const auto &it: qAsConst(_codecInfo)) {
+    for (const auto &it: std::as_const(_codecInfo)) {
         emit codecPriorityChanged(it.codecId, it.priority, it.priority);
     }
 }

@@ -6,7 +6,7 @@ void VideoCodecs::init()
     //load existing codec priorities
     setCodecsInfo(Settings::videoCodecInfo());
     qInfo() << "Restoring" << _codecInfo.size() << "video codec priorities";
-    for (const auto &it: qAsConst(_codecInfo)) {
+    for (const auto &it: std::as_const(_codecInfo)) {
         emit codecPriorityChanged(it.codecId, it.priority, it.priority);
     }
 }

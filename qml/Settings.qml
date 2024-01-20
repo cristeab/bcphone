@@ -98,7 +98,7 @@ Page {
             LabelComboBox {
                 id: callOutputSrc
                 text: qsTr("Call Output Source")
-                width: appWin.width - 2 * Theme.windowMargin
+                width: appWin.width - 4 * Theme.windowMargin
                 model: softphone.outputAudioDevices
                 currentIndex: softphone.settings.outputAudioModelIndex
                 onCurrentIndexChanged: softphone.settings.outputAudioModelIndex = currentIndex
