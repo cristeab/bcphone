@@ -1,4 +1,4 @@
-$PJSIP_VERSION = '2.12.1'
+$PJSIP_VERSION = '2.14'
 $INSTALL_DIR = 'precompiled'
 
 Write-Output "Download $PJSIP_VERSION.zip..."
@@ -16,4 +16,4 @@ Set-Location bcg729
 Set-Location ..
 
 Write-Output "Download vpx, opus, openh264 and SDL2 libraries with conan"
-conan install . -if $INSTALL_DIR
+conan install . -of $INSTALL_DIR

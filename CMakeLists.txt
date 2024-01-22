@@ -25,7 +25,7 @@ if (APPLE)
     set(OPENSSL_ROOT_DIR "/usr/local")
 elseif (WIN32)
     set (DEPS_DIR "${CMAKE_SOURCE_DIR}/../3rdparty")
-    set (PJSIP_ROOT_DIR "${DEPS_DIR}/pjproject-2.12.1")
+    set (PJSIP_ROOT_DIR "${DEPS_DIR}/pjproject-2.14")
     set (PJSIP_INCLUDE_DIRS ${PJSIP_ROOT_DIR}/pjsip/include
                             ${PJSIP_ROOT_DIR}/pjlib/include
                             ${PJSIP_ROOT_DIR}/pjlib-util/include
@@ -36,7 +36,7 @@ elseif (WIN32)
     set (PRECOMPILED_ROOT_DIR "${DEPS_DIR}/precompiled")
     set (PRECOMPILED_LIBRARIES "openh264.lib;opus.lib;bcg729.lib;SDL2-static.lib;Setupapi.lib;Version.lib;Imm32.lib;vpxmd.lib")
 
-    set (OPENSSL_ROOT_DIR "${CMAKE_PREFIX_PATH}/../../Tools/OpenSSL/Win_x64")
+    set (OPENSSL_ROOT_DIR "${CMAKE_PREFIX_PATH}/../../Tools/OpenSSLv3/Win_x64")
     set (OPENSSL_LIBRARIES "libcrypto.lib;libssl.lib")
 else ()
     message(FATAL "Unsupported platform")
@@ -157,8 +157,8 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
         find_program(WINDEPLOYQT windeployqt PATHS ${QT5_ROOT_PATH}/bin/)
         install(PROGRAMS "${CMAKE_SOURCE_DIR}/build/${PROJECT_NAME}.exe" DESTINATION .)
         install(FILES ${CMAKE_SOURCE_DIR}/img/logo.ico DESTINATION .)
-        install(FILES ${OPENSSL_ROOT_DIR}/bin/libcrypto-1_1-x64.dll DESTINATION .)
-        install(FILES ${OPENSSL_ROOT_DIR}/bin/libssl-1_1-x64.dll DESTINATION .)
+        install(FILES ${OPENSSL_ROOT_DIR}/bin/libcrypto-3-x64.dll DESTINATION .)
+        install(FILES ${OPENSSL_ROOT_DIR}/bin/libssl-3-x64.dll DESTINATION .)
 
         add_custom_target(windeployqt ALL
             DEPENDS ${PROJECT_NAME}.exe

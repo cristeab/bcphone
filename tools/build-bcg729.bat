@@ -1,15 +1,18 @@
+set VS_PATH="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
+set CMAKE_PATH="C:\Program Files\CMake\bin"
+
 rmdir /S /Q  cmake-build
 
 mkdir cmake-build
 pushd cmake-build
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+call %VS_PATH%"\vcvarsall.bat" x64
 if %errorlevel% neq 0 (
     popd
     exit /b %errorlevel%
 )
 
-"C:\Program Files\CMake\bin\cmake.exe" .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%1 -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DENABLE_TESTS=OFF
+%CMAKE_PATH%"\cmake.exe" .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%1 -DBUILD_SHARED_LIBS=OFF
 if %errorlevel% neq 0 (
     popd
     exit /b %errorlevel%
