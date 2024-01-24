@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Material
+import Softphone 1.0
 
 pragma Singleton
 
@@ -49,6 +50,22 @@ QtObject {
         return num
     }
 
+    function sipStatusColor() {
+        let col = Theme.unknownSipStatusColor
+        switch (softphone.sipRegistrationStatus) {
+        case Softphone.Unregistered:
+            col = Theme.unregisteredColor
+            break
+        case Softphone.RegistrationInProgress:
+            col = Theme.inProgressRegistrationColor
+            break
+        case Softphone.Registered:
+            col = Theme.registeredColor
+            break
+        }
+        return col
+    }
+
     readonly property int dialpadButtonFontSize: 24
     readonly property int dialpadSubTextFontSize: 8
     readonly property int buttonFontSize: 12
@@ -85,7 +102,8 @@ QtObject {
     readonly property color incomingColor: Material.color(Material.Lime)
     readonly property color outgoingColor: Material.color(Material.Purple)
 
-    readonly property color notRegisteredColor: Material.color(Material.Red)
+    readonly property color unknownSipStatusColor: Material.color(Material.BlueGrey)
+    readonly property color unregisteredColor: Material.color(Material.Red)
     readonly property color registeredColor: Material.color(Material.Green)
     readonly property color inProgressRegistrationColor: Material.color(Material.Yellow)
 }

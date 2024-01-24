@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtMultimedia
 import Qt.labs.platform
-import Softphone 1.0
 import "custom"
 
 ApplicationWindow {

@@ -1,13 +1,24 @@
 import QtQuick
 import QtQuick.Controls
-import Softphone 1.0
 import "custom"
 
 Page {
+    Label {
+        id: regStatusText
+        anchors {
+            top: parent.top
+            topMargin: Theme.windowMargin / 2
+        }
+        width: parent.width
+        horizontalAlignment: Text.AlignHCenter
+        text: softphone.sipRegistrationText
+        font.italic: true
+        color: Theme.sipStatusColor()
+    }
     Flickable {
         id: settingsFlick
         anchors {
-            top: parent.top
+            top: regStatusText.bottom
             topMargin: Theme.windowMargin / 2
             bottom: logoutBtn.top
             bottomMargin: Theme.windowMargin / 2
