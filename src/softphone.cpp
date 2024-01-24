@@ -127,12 +127,23 @@ bool Softphone::start()
     connect(_sipClient, &SipClient::registrationStatusChanged, this,
         [this](SipClient::RegistrationStatus registrationStatus,
                const QString& registrationStatusText) {
-            if ((SipClient::RegistrationStatus::Registered == registrationStatus) &&
-                _isRegisterRequested) {
-                raiseWindow();
-                setIsRegisterRequested(false);
+            switch (registrationStatus) {
+            case SipClient::RegistrationStatus::Unregistered:
+                setSipRegistrationStatus(SipRegistrationStatus::Unregistered);
+                break;
+            case SipClient::RegistrationStatus::InProgress:
+                setSipRegistrationStatus(SipRegistrationStatus::RegistrationInProgress);
+                break;
+            case SipClient::RegistrationStatus::Registered:
+                setSipRegistrationStatus(SipRegistrationStatus::Registered);
+                if (_isRegisterRequested) {
+                    raiseWindow(); // show dialpad
+                    setIsRegisterRequested(false);
+                }
+                break;
+            default:;
             }
-            setRegistrationText(registrationStatusText);
+            setSipRegistrationText(registrationStatusText);
         }, Qt::QueuedConnection);
     connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
     _presenceModel->setSipClient(_sipClient);

@@ -20,8 +20,13 @@ class SipClient;
 
 class Softphone : public QObject {
 	Q_OBJECT
+public:
+    enum class SipRegistrationStatus { Unregistered, RegistrationInProgress, Registered };
+    Q_ENUM(SipRegistrationStatus)
 
-    QML_READABLE_PROPERTY(QString, registrationText, setRegistrationText, "Not Registered")
+private:
+    QML_READABLE_PROPERTY(QString, sipRegistrationText, setSipRegistrationText, "Not Registered")
+    QML_READABLE_PROPERTY(SipRegistrationStatus, sipRegistrationStatus, setSipRegistrationStatus, SipRegistrationStatus::Unregistered)
 
     QML_READABLE_PROPERTY(bool, showBusy, setShowBusy, false)
     QML_READABLE_PROPERTY(bool, loggedOut, setLoggedOut, false)
