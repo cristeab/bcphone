@@ -124,9 +124,8 @@ bool Softphone::start()
     connect(_sipClient, &SipClient::incoming, this, &Softphone::onIncoming);
     connect(_sipClient, &SipClient::disconnected, this, &Softphone::onDisconnected);
     connect(_sipClient, &SipClient::errorMessage, this, &Softphone::errorDialog);
-    connect(_sipClient, &SipClient::registrationStatusChanged, this, [this](SipClient::RegistrationStatus registrationStatus,
+    connect(_sipClient, &SipClient::registrationStatusChanged, this, [this](SipClient::RegistrationStatus /*registrationStatus*/,
 									    const QString& registrationStatusText) {
-
 		    setRegistrationText(registrationStatusText);
 	    }, Qt::QueuedConnection);
     connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);

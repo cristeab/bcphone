@@ -5,6 +5,7 @@ import "custom"
 
 Page {
     Flickable {
+        id: settingsFlick
         anchors {
             top: parent.top
             topMargin: Theme.windowMargin / 2
@@ -18,6 +19,14 @@ Page {
         contentWidth: devicesLayout.width
         contentHeight: devicesLayout.height
         clip: true
+        boundsMovement: Flickable.StopAtBounds
+        boundsBehavior: Flickable.DragAndOvershootBounds
+        transform: Rotation {
+            axis { x: 0; y: 1; z: 0 }
+            origin.x: settingsFlick.width / 2
+            origin.y: settingsFlick.height / 2
+            angle: Math.min(30, Math.max(-30, settingsFlick.horizontalOvershoot))
+        }
 
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
         ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
