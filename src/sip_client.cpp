@@ -993,7 +993,7 @@ pjsua_conf_port_id SipClient::callConfPort(pjsua_call_id callId)
     }
 
     const auto confSlot = pjsua_call_get_conf_port(callId);
-    if (PJSUA_INVALID_ID != confSlot) {
+    if (PJSUA_INVALID_ID == confSlot) {
         qCritical() << "Cannot get conference slot of call ID" << callId;
     }
     return confSlot;
@@ -1492,7 +1492,7 @@ void SipClient::connectCallToSoundDevices(pjsua_conf_port_id confPortId)
     setMicrophoneVolume(confPortId);
     setSpeakersVolume(confPortId);
 
-    pj_status_t status = pjsua_conf_connect(confPortId, 0);//TODO: why 0 ?
+    auto status{pjsua_conf_connect(confPortId, 0)};
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot connect conf slot to playback slot", status);
     }
@@ -1506,16 +1506,16 @@ void SipClient::connectCallToSoundDevices(pjsua_conf_port_id confPortId)
 bool SipClient::setMicrophoneVolume(pjsua_call_id callId, bool mute)
 {
     const auto confSlot = SipClient::callConfPort(callId);
-    if (PJSUA_INVALID_ID != confSlot) {
+    if (PJSUA_INVALID_ID == confSlot) {
         return false;
     }
 
     //microphone volume
-    const float microphoneLevel = mute ? 0 : _settings->microphoneVolume();
+    const float microphoneLevel = mute ? 0.0 : _settings->microphoneVolume();
     qInfo() << "Mic level" << microphoneLevel;
     const auto status = pjsua_conf_adjust_tx_level(confSlot, microphoneLevel);
     if (PJ_SUCCESS != status) {
-        formatErrorMessage("Cannot adjust tx level", status);
+	errorHandler("Cannot adjust tx level", status);
         return false;
     }
     return true;
@@ -1524,16 +1524,16 @@ bool SipClient::setMicrophoneVolume(pjsua_call_id callId, bool mute)
 bool SipClient::setSpeakersVolume(pjsua_call_id callId, bool mute)
 {
     const auto confSlot = SipClient::callConfPort(callId);
-    if (PJSUA_INVALID_ID != confSlot) {
+    if (PJSUA_INVALID_ID == confSlot) {
         return false;
     }
 
     //speakers volume
-    const float speakersLevel = mute ? 0 : _settings->speakersVolume();
+    const float speakersLevel = mute ? 0.0 : _settings->speakersVolume();
     qInfo() << "Speakers level" << speakersLevel;
     const pj_status_t status = pjsua_conf_adjust_rx_level(confSlot, speakersLevel);
     if (PJ_SUCCESS != status) {
-        formatErrorMessage("Cannot adjust rx level", status);
+	errorHandler("Cannot adjust rx level", status);
         return false;
     }
     return true;

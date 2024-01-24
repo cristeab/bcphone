@@ -51,7 +51,7 @@ Page {
     }
 
     focus: dialpadFrame.visible
-    Keys.onPressed: {
+    Keys.onPressed: (event)=> {
         if (!dialpadFrame.visible) return
         if (event.text in dialpadFrame.keyIndex) {
             dialpadFrame.dialpadButtonAction(event.text)

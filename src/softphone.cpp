@@ -141,7 +141,7 @@ bool Softphone::start()
                     raiseWindow(); // show dialpad
                     setIsRegisterRequested(false);
                 }
-                if (nullptr!= _settings) {
+		if (nullptr != _settings) {
                     _settings->save();
                 }
                 break;
