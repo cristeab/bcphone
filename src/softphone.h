@@ -68,6 +68,8 @@ class Softphone : public QObject {
 
     QML_WRITABLE_PROPERTY(bool, conference, setConference, false)
 
+    QML_WRITABLE_PROPERTY(bool, isRegisterRequested, setIsRegisterRequested, false)
+
 public:
     Softphone();
 

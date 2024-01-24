@@ -258,8 +258,10 @@ ApplicationWindow {
                 }
                 font.pointSize: Theme.tabButtonFontSize
                 onClicked: {
-                    bar.currentButtonIndex = index
-                    tabView.replace(bar.pages[index])
+                    if (bar.currentButtonIndex !== index) {
+                        bar.currentButtonIndex = index
+                        tabView.replace(bar.pages[index])
+                    }
                 }
             }
         }

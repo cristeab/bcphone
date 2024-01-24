@@ -235,6 +235,7 @@ Page {
         text: qsTr("Register")
         onClicked: {
             registerBtn.focus = true
+            softphone.isRegisterRequested = true
             softphone.registerAccount()
         }
     }
