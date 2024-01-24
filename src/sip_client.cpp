@@ -671,14 +671,14 @@ bool SipClient::setupConferenceCall(pjsua_call_id callId)
 
 QString SipClient::formatErrorMessage(const QString &title, pj_status_t status)
 {
-    QString fullError{title};
+    QString fullMsg{title};
     if (PJ_SUCCESS != status) {
         static std::array<char, MAX_ERROR_MSG_SIZE> message;
         pj_strerror(status, message.data(), message.size());
-        fullError.append(":").append(message.data());
+	fullMsg.append(":").append(message.data());
     }
-    qCritical() << fullError;
-    return fullError;
+    qWarning() << fullMsg;
+    return fullMsg;
 }
 
 bool SipClient::unregisterAccount()
@@ -1387,7 +1387,7 @@ void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_inf
              << info.last_status;
     if (PJSUA_CALL_MEDIA_ACTIVE == info.media_status) {
         qInfo() << "Media active" << info.media_cnt;
-        bool hasVideo{};
+	bool hasVideo{};
         for (unsigned medIdx = 0; medIdx < info.media_cnt; ++medIdx) {
             if (isMediaActive(info.media[medIdx])) {
                 pjsua_stream_info streamInfo{};
@@ -1405,14 +1405,14 @@ void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_inf
                         qInfo() << "Video codec info: encoding" << toString(fmt.encoding_name)
                                 << ", encoding desc." << toString(fmt.encoding_desc)
                                 << ", clock rate:" << fmt.clock_rate << "Hz";
-                        hasVideo = true;
+			hasVideo = true;
                     }
                 } else {
                     errorHandler("Cannot get stream info", status);
                 }
             }
         }
-        manageVideo(hasVideo);
+	manageVideo(hasVideo);
     } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != info.media_status) &&
                (PJSUA_CALL_MEDIA_REMOTE_HOLD != info.media_status)) {
         qWarning() << "Connection lost";
@@ -1557,35 +1557,31 @@ bool SipClient::setVideoCodecPriority(const QString &codecId, int priority)
 
 void SipClient::manageVideo(bool enable)
 {
-    const auto currentCallId = _activeCallModel->currentCallId();
+    const auto currentCallId{_activeCallModel->currentCallId()};
     if (PJSUA_INVALID_ID == currentCallId) {
         qWarning() << "No active call";
         return;
     }
 
-    const bool hasVideoStream = (-1 < pjsua_call_get_vid_stream_idx(currentCallId));
-    if (hasVideoStream && enable) {
-        qDebug() << "Video already enabled";
-        return;
-    }
+    const auto hasVideoStream{-1 < pjsua_call_get_vid_stream_idx(currentCallId)};
     if (!hasVideoStream && !enable) {
-        qDebug() << "Video already disabled";
+	qWarning() << "Video already disabled" << currentCallId;
+	return;
+    }
+    if (hasVideoStream && enable) {
+	qWarning() << "Video already enabled" << currentCallId;
         return;
     }
 
-    const pjsua_call_vid_strm_op op = enable ? PJSUA_CALL_VID_STRM_START_TRANSMIT : PJSUA_CALL_VID_STRM_STOP_TRANSMIT;
+    const auto op{enable ? PJSUA_CALL_VID_STRM_START_TRANSMIT : PJSUA_CALL_VID_STRM_STOP_TRANSMIT};
     const auto status = pjsua_call_set_vid_strm(currentCallId, op, nullptr);
     if (status == PJ_SUCCESS) {
         qInfo() << "Start transmitting" << enable;
     } else {
         const auto msg = enable ? tr("Cannot start transmitting video stream") : tr("Cannot stop transmitting video stream");
-        errorHandler(msg, status);
+	formatErrorMessage(msg, status);
     }
-    if (enable) {
-        initVideoWindow();
-    } else {
-        releaseVideoWindow();
-    }
+    enable ? initVideoWindow() : releaseVideoWindow();
 }
 
 void SipClient::initVideoWindow()
