@@ -41,7 +41,8 @@ private:
     QML_WRITABLE_PROPERTY(int, sipPort, setSipPort, SIP_PORT)
     QML_WRITABLE_PROPERTY(QString, userName, setUserName, "")
     QML_WRITABLE_PROPERTY(QString, password, setPassword, "")
-    QML_WRITABLE_PROPERTY(QString, accountName, setAccountName, "")
+    QML_WRITABLE_PROPERTY(QString, displayName, setDisplayName, "")
+    QML_WRITABLE_PROPERTY(QString, authUserName, setAuthUserName, "")
     QML_WRITABLE_PROPERTY(int, sipTransport, setSipTransport, SipTransport::Udp)
     QML_WRITABLE_PROPERTY(int, mediaTransport, setMediaTransport, MediaTransport::Rtp)
 
@@ -61,7 +62,6 @@ private:
     //QML_WRITABLE_PROPERTY(QString, stunServer, setStunServer, "stun.zoiper.com")
     //QML_WRITABLE_PROPERTY(int, stunPort, setStunPort, 3478)
 
-    QML_WRITABLE_PROPERTY(QString, authUserName, setAuthUserName, "")
     QML_WRITABLE_PROPERTY(bool, proxyEnabled, setProxyEnabled, PROXY_ENABLED)
     QML_WRITABLE_PROPERTY(QString, proxyServer, setProxyServer, "")
     QML_WRITABLE_PROPERTY(int, proxyPort, setProxyPort, PROXY_PORT)

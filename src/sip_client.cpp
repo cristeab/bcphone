@@ -282,7 +282,7 @@ bool SipClient::registerAccount()
         return false;
     }
 
-    const auto& callerId = _settings->accountName();
+    const auto& displayName = _settings->displayName();
     const auto& domain = _settings->sipServer();
     if (domain.isEmpty()) {
         errorHandler(tr("Domain is empty"));
@@ -312,12 +312,12 @@ bool SipClient::registerAccount()
     pjsua_acc_config cfg{};
     pjsua_acc_config_default(&cfg);
     QString id;
-    if (!callerId.isEmpty()) {
-        id = "\"" + callerId + "\" <";
+    if (!displayName.isEmpty()) {
+        id = "\"" + displayName + "\" <";
     }
     id += "sip:" + username + "@" + domain + ":" +
             destPort + sipTransport;
-    if (!callerId.isEmpty()) {
+    if (!displayName.isEmpty()) {
         id += ">";
     }
     qInfo() << "ID URI" << id;

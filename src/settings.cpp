@@ -45,7 +45,7 @@ void Settings::clear()
     setSipPort(SIP_PORT);
     setUserName("");
     setPassword("");
-    setAccountName("");
+    setDisplayName("");
     setSipTransport(SipTransport::Udp);
     setMediaTransport(MediaTransport::Rtp);
 
@@ -96,7 +96,7 @@ void Settings::load()
     setSipPort(GET_SETTING(sipPort).toInt());
     setUserName(GET_SETTING(userName).toString());
     setPassword(GET_SETTING(password).toString());
-    setAccountName(GET_SETTING(accountName).toString());
+    setDisplayName(GET_SETTING(displayName).toString());
     setSipTransport(GET_SETTING(sipTransport).toInt());
     setMediaTransport(GET_SETTING(mediaTransport).toInt());
 
@@ -139,7 +139,7 @@ void Settings::save()
     SET_SETTING(sipPort);
     SET_SETTING(userName);
     SET_SETTING(password);
-    SET_SETTING(accountName);
+    SET_SETTING(displayName);
     SET_SETTING(sipTransport);
     SET_SETTING(mediaTransport);
 

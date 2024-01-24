@@ -88,6 +88,12 @@ Page {
                 onEditingFinished: softphone.settings.password = editText
             }
             LabelTextField {
+                text: qsTr("Display Name")
+                width: callOutputSrc.width
+                editText: softphone.settings.displayName
+                onEditingFinished: softphone.settings.displayName = editText
+            }
+            LabelTextField {
                 text: qsTr("Authorization ID")
                 width: callOutputSrc.width
                 editText: softphone.settings.authUserName
