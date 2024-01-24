@@ -140,12 +140,14 @@ ApplicationWindow {
     StackView {
         id: tabView
         function showDialpad() {
+            console.log("Show dialpad " + bar.currentButtonIndex)
             if (2 !== bar.currentButtonIndex) {
                 bar.currentButtonIndex = 2
                 tabView.replace("qrc:/qml/Dialpad.qml")
             }
         }
         function showSettings() {
+            console.log("Show settings " + bar.currentButtonIndex)
             if (4 !== bar.currentButtonIndex) {
                 bar.currentButtonIndex = 4
                 tabView.replace("qrc:/qml/Settings.qml")

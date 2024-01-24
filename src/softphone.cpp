@@ -140,21 +140,26 @@ bool Softphone::start()
                     raiseWindow(); // show dialpad
                     setIsRegisterRequested(false);
                 }
+                if (nullptr!= _settings) {
+                    _settings->save();
+                }
                 break;
             default:;
             }
             setSipRegistrationText(registrationStatusText);
+            qDebug() << "Reg status" << registrationStatusText;
         }, Qt::QueuedConnection);
     connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
     _presenceModel->setSipClient(_sipClient);
 
-    if (_sipClient->init() && _settings->canRegister()) {
+    auto rc{_sipClient->init() && _settings->canRegister()};
+    if (rc) {
         qInfo() << "Autologin";
-        const auto rc = _sipClient->registerAccount();
-        if (!rc) {
-            setLoggedOut(true);
-        }
+        rc = _sipClient->registerAccount();
     } else {
+        qWarning() << "Cannot register";
+    }
+    if (!rc) {
         setLoggedOut(true);
     }
 
