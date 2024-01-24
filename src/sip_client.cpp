@@ -1515,7 +1515,7 @@ bool SipClient::setMicrophoneVolume(pjsua_call_id callId, bool mute)
     qInfo() << "Mic level" << microphoneLevel;
     const auto status = pjsua_conf_adjust_tx_level(confSlot, microphoneLevel);
     if (PJ_SUCCESS != status) {
-        errorHandler("Cannot adjust tx level", status);
+        formatErrorMessage("Cannot adjust tx level", status);
         return false;
     }
     return true;
@@ -1533,7 +1533,7 @@ bool SipClient::setSpeakersVolume(pjsua_call_id callId, bool mute)
     qInfo() << "Speakers level" << speakersLevel;
     const pj_status_t status = pjsua_conf_adjust_rx_level(confSlot, speakersLevel);
     if (PJ_SUCCESS != status) {
-        errorHandler("Cannot adjust rx level", status);
+        formatErrorMessage("Cannot adjust rx level", status);
         return false;
     }
     return true;
