@@ -137,6 +137,7 @@ bool Softphone::start()
             case SipClient::RegistrationStatus::Registered:
                 setSipRegistrationStatus(SipRegistrationStatus::Registered);
                 if (_isRegisterRequested) {
+		    setLoggedOut(false);//make sure we are in the correct state
                     raiseWindow(); // show dialpad
                     setIsRegisterRequested(false);
                 }
