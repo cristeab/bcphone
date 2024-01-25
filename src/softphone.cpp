@@ -248,6 +248,11 @@ bool Softphone::registerAccount()
     return _sipClient->registerAccount();
 }
 
+bool Softphone::unregisterAccount()
+{
+    return _sipClient->unregisterAccount();
+}
+
 bool Softphone::makeCall(const QString &userId)
 {
     const auto rc = _sipClient->makeCall(userId);

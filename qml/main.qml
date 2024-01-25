@@ -33,6 +33,7 @@ ApplicationWindow {
         softphone.winWidth = appWin.width
     }
     function logout() {
+        softphone.unregisterAccount()
         softphone.loggedOut = true
         softphone.settings.clear()
     }
@@ -231,10 +232,13 @@ ApplicationWindow {
         readonly property var icons: ["qrc:/img/clock.svg", "qrc:/img/address-book.svg", "qrc:/img/dialpad.svg", "qrc:/img/chat.svg", "qrc:/img/settings.svg"]
         readonly property var pages: ["qrc:/qml/CallHistory.qml", "qrc:/qml/Contacts.qml", "qrc:/qml/Dialpad.qml", "qrc:/qml/Chat.qml", "qrc:/qml/Settings.qml"]
 
+        onCurrentButtonIndexChanged: bar.currentIndex = bar.currentButtonIndex
+
         anchors {
             bottom: parent.bottom
             bottomMargin: 0
         }
+        currentIndex: bar.currentButtonIndex
         width: parent.width
         position: TabBar.Footer
         spacing: 0

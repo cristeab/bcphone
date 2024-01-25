@@ -690,6 +690,7 @@ bool SipClient::unregisterAccount()
             return false;
         }
         _accId = PJSUA_INVALID_ID;
+	emit registrationStatusChanged(RegistrationStatus::Unregistered, tr("Not Registered"));
         qDebug() << "Account unregistered";
     } else {
         qDebug() << "No account to unregister";

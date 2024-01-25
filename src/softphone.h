@@ -25,7 +25,7 @@ public:
     Q_ENUM(SipRegistrationStatus)
 
 private:
-    QML_READABLE_PROPERTY(QString, sipRegistrationText, setSipRegistrationText, "Not Registered")
+    QML_READABLE_PROPERTY(QString, sipRegistrationText, setSipRegistrationText, tr("Not Registered"))
     QML_READABLE_PROPERTY(SipRegistrationStatus, sipRegistrationStatus, setSipRegistrationStatus, SipRegistrationStatus::Unregistered)
 
     QML_READABLE_PROPERTY(bool, showBusy, setShowBusy, false)
@@ -82,6 +82,7 @@ public:
     void setMainForm(QObject *mainForm) { _mainForm = mainForm; }
 
     Q_INVOKABLE bool registerAccount();
+    Q_INVOKABLE bool unregisterAccount();
     Q_INVOKABLE bool makeCall(const QString &userId);
     Q_INVOKABLE bool answer(int callId);
     Q_INVOKABLE bool hangup(int callId);
