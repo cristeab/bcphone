@@ -148,7 +148,6 @@ bool Softphone::start()
             default:;
             }
             setSipRegistrationText(registrationStatusText);
-            qDebug() << "Reg status" << registrationStatusText;
         }, Qt::QueuedConnection);
     connect(_activeCallModel, &ActiveCallModel::unholdCall, _sipClient, &SipClient::unhold);
     _presenceModel->setSipClient(_sipClient);

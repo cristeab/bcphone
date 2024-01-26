@@ -1304,7 +1304,7 @@ bool SipClient::releaseRecorder(pjsua_call_id callId)
 
 void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
 {
-    RegistrationStatus registrationStatus = RegistrationStatus::Unregistered;
+    auto registrationStatus{RegistrationStatus::Unregistered};
     switch (info.status) {
     case PJSIP_SC_OK:
         registrationStatus = RegistrationStatus::Registered;
@@ -1323,8 +1323,8 @@ void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
         break;
     default:;
     }
-    const auto statusText = SipClient::toString(info.status_text);
-    qDebug() << "Reg status" << info.status << statusText;
+    const auto statusText = SipClient::toString(info.status_text) + QString(" (%1)").arg(info.status);
+    qDebug() << "Reg status" << statusText;
     emit registrationStatusChanged(registrationStatus, statusText);
 }
 
@@ -1350,7 +1350,7 @@ void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &in
             (PJSIP_SC_REQUEST_TERMINATED != info.last_status) &&
             (PJSIP_SC_REQUEST_TIMEOUT != info.last_status)) {
         //show all SIP errors above Client Failure Responses
-        emit errorMessage(stateText + " (" + QString::number(info.last_status) + ")");
+	emit errorMessage(lastStatusText.isEmpty() ? stateText : lastStatusText);
     }
 
     switch (info.state) {
@@ -1378,7 +1378,7 @@ void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &in
         emit disconnected(callId);
         break;
     default:
-        qCritical() << "unhandled call state" << info.state;
+	qCritical() << "Unhandled call state" << info.state;
     }
 }
 
