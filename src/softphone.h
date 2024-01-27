@@ -100,9 +100,6 @@ public:
     bool rec(bool value, int callId);
     QString convertNumber(const QString &num);
 
-    static void errorHandler(const QString &title, pj_status_t status = PJ_SUCCESS,
-                             bool emitSignal = false);
-
 signals:
     void phoneStateChanged();
     void audioDevicesChanged();

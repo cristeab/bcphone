@@ -67,6 +67,7 @@
         <file>img/logo.png</file>
         <file>img/eye-slash-solid.svg</file>
         <file>img/eye-solid.svg</file>
+        <file>img/message-solid.svg</file>
         <file>qtquickcontrols2.conf</file>
         <file>qml/main.qml</file>
         <file>qml/Theme.qml</file>
@@ -100,5 +101,8 @@
         <file>qml/custom/RegistrationStatus.qml</file>
         <file>qml/custom/CustomToolButton.qml</file>
         <file>qml/custom/LabelTextFieldPwd.qml</file>
+        <file>qml/custom/ChatBubble.qml</file>
+        <file>qml/custom/ChatList.qml</file>
+        <file>qml/custom/ChatSend.qml</file>
     </qresource>
 </RCC>

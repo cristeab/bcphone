@@ -1,0 +1,62 @@
+import QtQuick
+import ".."
+
+Item {
+    id: messageFrame
+    height: messageTextField.height + Theme.windowMargin
+    CustomIconButton {
+        id: attachButton
+        anchors {
+            left: parent.left
+            leftMargin: Theme.windowMargin
+            verticalCenter: parent.verticalCenter
+            verticalCenterOffset: attachButton.hasAtt ? -5 : 0
+        }
+        height: Theme.toolButtonHeight
+        width: height
+        backgroundColor: "transparent"
+        source: "qrc:/img/paperclip.svg"
+        toolTip: qsTr("Attach File")
+        onClicked: {
+            fileDlgLoader.active = true
+            fileDlgLoader.item.visible = true
+        }
+    }
+
+    TextAreaWithScroll {
+        id: messageTextField
+        anchors {
+            verticalCenter: parent.verticalCenter
+            left: attachButton.right
+            leftMargin: Theme.windowMargin
+            right: sendButton.left
+            rightMargin: Theme.windowMargin
+        }
+        onSend: sendButton.sendAction()
+    }
+    CustomIconButton {
+        id: sendButton
+
+        function sendAction() {
+            softphone.pbxClient.sendSms(softphone.currentDestination, messageTextField.text)
+            softphone.messagesModel.appendOutgoing(softphone.settings.extension,
+                                                   softphone.currentDestination,
+                                                   messageTextField.text)
+            //TODO add a warning to the message if it cannot be send
+            messageTextField.text = ""
+        }
+
+        anchors {
+            right: parent.right
+            rightMargin: Theme.windowMargin
+            verticalCenter: parent.verticalCenter
+        }
+        enableButton: "" !== messageTextField.text
+        height: attachButton.height
+        width: attachButton.width
+        backgroundColor: "transparent"
+        source: "qrc:/img/paper-plane-regular.svg"
+        toolTip: qsTr("Send")
+        onClicked: sendButton.sendAction()
+    }
+}
