@@ -32,6 +32,7 @@ Item {
             right: sendButton.left
             rightMargin: Theme.windowMargin
         }
+        height: Theme.sendAreaHeight
         onSend: sendButton.sendAction()
     }
     CustomIconButton {
