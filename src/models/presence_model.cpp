@@ -42,7 +42,7 @@ QHash<int,QByteArray> PresenceModel::roleNames() const
 
 void PresenceModel::addBuddy(const QString &userId)
 {
-    if (nullptr != _sipClient) {
+    if (nullptr == _sipClient) {
         emit errorMessage(tr("Cannot add buddy"));
         return;
     }
@@ -68,7 +68,7 @@ void PresenceModel::addBuddy(const QString &userId)
 
 void PresenceModel::removeBuddy(int index)
 {
-    if (nullptr != _sipClient) {
+    if (nullptr == _sipClient) {
         emit errorMessage(tr("Cannot remove buddy"));
         return;
     }
@@ -112,7 +112,7 @@ void PresenceModel::load()
     if (buddies.isEmpty()) {
         return;
     }
-    if (nullptr != _sipClient) {
+    if (nullptr == _sipClient) {
         emit errorMessage(tr("Cannot load buddy list"));
         return;
     }
