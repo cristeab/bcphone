@@ -130,9 +130,11 @@ bool Softphone::start()
             switch (registrationStatus) {
             case SipClient::RegistrationStatus::Unregistered:
                 setSipRegistrationStatus(SipRegistrationStatus::Unregistered);
+		_isFirstRegistration = true;
                 break;
             case SipClient::RegistrationStatus::InProgress:
                 setSipRegistrationStatus(SipRegistrationStatus::RegistrationInProgress);
+		_isFirstRegistration = true;
                 break;
             case SipClient::RegistrationStatus::Registered:
                 setSipRegistrationStatus(SipRegistrationStatus::Registered);
@@ -141,9 +143,15 @@ bool Softphone::start()
                     raiseWindow(); // show dialpad
                     setIsRegisterRequested(false);
                 }
-		if (nullptr != _settings) {
-                    _settings->save();
-                }
+		if (_isFirstRegistration) {
+		    _isFirstRegistration = false;
+		    if (nullptr != _settings) {
+			_settings->save();
+		    }
+		    if (nullptr != _presenceModel) {
+			_presenceModel->load();
+		    }
+		}
                 break;
             default:;
             }

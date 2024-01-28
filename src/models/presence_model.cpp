@@ -63,7 +63,6 @@ void PresenceModel::addBuddy(const QString &userId)
     }
     _presenceInfo << info;
     emit layoutChanged();
-    Settings::setBuddyList(_presenceInfo);
 }
 
 void PresenceModel::removeBuddy(int index)
@@ -84,7 +83,6 @@ void PresenceModel::removeBuddy(int index)
     emit layoutAboutToBeChanged();
     _presenceInfo.removeAt(index);
     emit layoutChanged();
-    Settings::setBuddyList(_presenceInfo);
 }
 
 void PresenceModel::updateStatus(pjsua_buddy_id id, const QString &status)
@@ -108,22 +106,23 @@ void PresenceModel::updateStatus(pjsua_buddy_id id, const QString &status)
 
 void PresenceModel::load()
 {
-    const auto &buddies = Settings::buddyList();
-    if (buddies.isEmpty()) {
-        return;
-    }
     if (nullptr == _sipClient) {
-        emit errorMessage(tr("Cannot load buddy list"));
+	emit errorMessage(tr("SIP client is NULL"));
         return;
     }
+    if (nullptr == _contactsModel) {
+	    emit errorMessage(tr("Contacts model is NULL"));
+	    return;
+    }
+
     emit layoutAboutToBeChanged();
     _presenceInfo.clear();
-    for (const auto &userId: buddies) {
+    for (int index = 0; index < _contactsModel->rowCount(); ++index) {
+	const auto& userId{_contactsModel->phoneNumber(index)};
         const auto buddyId = _sipClient->addBuddy(userId);
         if (PJSUA_INVALID_ID == buddyId) {
             continue;
         }
-        qDebug() << "Added buddy" << userId << buddyId;
         PresenceInfo info;
         info.id = buddyId;
         info.phoneNumber = userId;
@@ -136,5 +135,6 @@ void PresenceModel::load()
         }
         _presenceInfo << info;
     }
+    qDebug() << "Loaded" << _presenceInfo.count() << "buddies";
     emit layoutChanged();
 }

@@ -102,9 +102,6 @@ public:
     static QList<GenericCodecs::CodecInfo> videoCodecInfo();
     static void saveVideoCodecInfo(const QList<GenericCodecs::CodecInfo> &codecInfo);
 
-    static QStringList buddyList();
-    static void setBuddyList(const QList<PresenceModel::PresenceInfo> &buddies);
-
     Q_INVOKABLE void save();
     Q_INVOKABLE void clear();
     static void uninstallClear();

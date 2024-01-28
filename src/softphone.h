@@ -133,11 +133,12 @@ private:
         setDialogMessage(msg);
     }
 
-    SipClient *_sipClient = nullptr;
-    QObject *_mainForm = nullptr;
+    SipClient *_sipClient{nullptr};
+    QObject *_mainForm{nullptr};
     QHash<pjsua_call_id, pjsua_player_id> _playerId;
     QHash<pjsua_call_id, pjsua_recorder_id> _recId;
     QHash<pjsua_call_id, pjsua_player_id> _playbackPlayerId;
-    bool _manualHangup = false;
-    bool _audioEnabled = false;
+    bool _manualHangup{false};
+    bool _audioEnabled{false};
+    bool _isFirstRegistration{true};
 };

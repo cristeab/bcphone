@@ -316,30 +316,6 @@ void Settings::saveAudioCodecInfo(const QList<GenericCodecs::CodecInfo> &codecIn
     settings.endArray();
 }
 
-QStringList Settings::buddyList()
-{
-    QStringList buddies;
-    QSettings settings(ORG_NAME, APP_NAME);
-    const auto size = settings.beginReadArray(XSTR(buddyList));
-    for (int i = 0; i < size; ++i) {
-        settings.setArrayIndex(i);
-        buddies << settings.value(XSTR(buddyUserId)).toString();
-    }
-    settings.endArray();
-    return buddies;
-}
-
-void Settings::setBuddyList(const QList<PresenceModel::PresenceInfo> &buddies)
-{
-    QSettings settings(ORG_NAME, APP_NAME);
-    settings.beginWriteArray(XSTR(buddyList));
-    for (int i = 0; i < buddies.size(); ++i) {
-        settings.setArrayIndex(i);
-        settings.setValue(XSTR(buddyUserId), buddies.at(i).phoneNumber);
-    }
-    settings.endArray();
-}
-
 QList<GenericCodecs::CodecInfo> Settings::videoCodecInfo()
 {
     QList<GenericCodecs::CodecInfo> codecInfo;
