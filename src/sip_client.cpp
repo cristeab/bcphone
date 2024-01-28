@@ -149,7 +149,7 @@ void SipClient::onPager(pjsua_call_id callId, const pj_str_t *from, const pj_str
 	const auto dstOrig{PTR_TO_STR(contact)};
 	const auto contentType{PTR_TO_STR(mimeType)};
 	const auto msg{PTR_TO_STR(body)};
-	qDebug() << "Pager" << callId <<
+	qDebug() << "Pager: call ID" << callId <<
 		", from" << src <<
 		", to" << dst <<
 		", contact" << dstOrig <<
@@ -163,10 +163,10 @@ void SipClient::onPagerStatus(pjsua_call_id callId, const pj_str_t *to, const pj
 	const auto dst{PTR_TO_STR(to)};
 	const auto msg{PTR_TO_STR(body)};
 	const auto motive{PTR_TO_STR(reason)};
-	qDebug() << "Pager status" << callId <<
+	qDebug() << "Pager status: call ID" << callId <<
 		", to" << dst <<
 		", body" << msg <<
-		formatErrorMessage(", status", status) <<
+		", status" << status <<
 		", reason" << motive;
 }
 
@@ -176,7 +176,7 @@ void SipClient::onTyping(pjsua_call_id callId, const pj_str_t *from, const pj_st
 	const auto src{PTR_TO_STR(from)};
 	const auto dst{PTR_TO_STR(to)};
 	const auto dstOrig{PTR_TO_STR(contact)};
-	qDebug() << "Typing" << callId <<
+	qDebug() << "Typing: call ID" << callId <<
 		", from" << src <<
 		", to" << dst <<
 		", contact" << dstOrig <<
@@ -1795,8 +1795,12 @@ bool SipClient::sendText(const QString& userId, const QString& txt)
 		errorHandler(tr("No registered account"), PJ_SUCCESS);
 		return false;
 	}
-	if (userId.isEmpty() || txt.isEmpty()) {
-		errorHandler(tr("Empty user ID or message"), PJ_SUCCESS);
+	if (userId.isEmpty()) {
+		errorHandler(tr("Empty user ID"), PJ_SUCCESS);
+		return false;
+	}
+	if (txt.isEmpty()) {
+		errorHandler(tr("Empty message"), PJ_SUCCESS);
 		return false;
 	}
 

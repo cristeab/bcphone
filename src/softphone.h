@@ -65,6 +65,7 @@ private:
 
     QML_CONSTANT_PROPERTY_PTR(ChatListProxy, chatList)
     QML_CONSTANT_PROPERTY_PTR(MessagesProxyModel, messagesModel)
+    QML_WRITABLE_PROPERTY(QString, currentDestination, setCurrentDestination, "")
 
     QML_CONSTANT_PROPERTY(int, invalidCallId, PJSUA_INVALID_ID)
 

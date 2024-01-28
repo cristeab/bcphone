@@ -173,7 +173,8 @@ Page {
                         text: qsTr("Chat")
                     }
                     onClicked: {
-                        softphone.chatList.addEmptyChat(phoneNumber, userNameLabel.text)
+                        softphone.currentDestination = phoneNumber
+                        softphone.chatList.addEmptyChat(userNameLabel.text, phoneNumber)
                         bar.showTab(bar.chatIndex)
                     }
                 }

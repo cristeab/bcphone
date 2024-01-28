@@ -25,7 +25,7 @@ void MessagesProxyModel::appendOutgoing(const QString& srcExtension,
 {
 	if (nullptr != _messagesModel) {
 		MessagesModel::Message msg;
-		msg.timestamp = QDateTime::currentDateTimeUtc();
+		msg.timestamp = QDateTime::currentDateTime();
 		msg.srcAdditionalInfo.extension = srcExtension;
 		msg.dstAdditionalInfo.extension = dstExtension;
 		msg.message = message;
