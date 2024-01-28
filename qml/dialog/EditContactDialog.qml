@@ -39,10 +39,6 @@ Dialog {
             firstName.error = true
             return false
         }
-        if ("" === lastName.editText) {
-            lastName.error = true
-            return false
-        }
         if ("" === phoneNumber.editText) {
             phoneNumber.error = true
             return false
@@ -52,8 +48,11 @@ Dialog {
 
     onAccepted: {
         if (!control.validate()) {
-            editContactDlg.active = true
             editContactDlg.item.visible = true
+            editContactDlg.active = true
+
+            msgDlgProps.okCancel = false
+            dialogMessage.show(true, qsTr("First name or phone number are empty"))
             return
         }
         const contactId = softphone.contactsModel.contactId(msgDlgProps.contactIndex)
@@ -99,7 +98,7 @@ Dialog {
             spacing: 10
             LabelTextField {
                 id: firstName
-                text: qsTr("First Name")
+                text: qsTr("First Name <font color='red'>*</font>")
                 width: control.width - 2 * Theme.windowMargin
             }
             LabelTextField {
@@ -109,7 +108,7 @@ Dialog {
             }
             LabelTextField {
                 id: phoneNumber
-                text: qsTr("Phone Number")
+                text: qsTr("Phone Number <font color='red'>*</font>")
                 width: firstName.width
             }
             LabelTextField {

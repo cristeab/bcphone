@@ -210,6 +210,13 @@ ApplicationWindow {
     }
 
     Loader {
+        id: dialogMessage
+
+        function show(isError, msg) {
+            softphone.dialogError = isError
+            softphone.dialogMessage = msg
+        }
+
         active: "" !== softphone.dialogMessage
         source: "qrc:/qml/dialog/MessageDialog.qml"
     }

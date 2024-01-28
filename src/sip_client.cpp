@@ -23,6 +23,8 @@
     }\
     GET_INSTANCE(ci.acc_id)
 
+#define PTR_TO_STR(ptr) (nullptr != ptr) ? SipClient::toString(*ptr) : QString()
+
 SipClient* SipClient::create(Softphone *softphone)
 {
     if (nullptr == softphone) {
@@ -139,6 +141,48 @@ void SipClient::onBuddyState(pjsua_buddy_id buddyId)
     instance->processBuddyState(buddyId);
 }
 
+void SipClient::onPager(pjsua_call_id callId, const pj_str_t *from, const pj_str_t *to,
+	     const pj_str_t *contact, const pj_str_t *mimeType, const pj_str_t *body)
+{
+	const auto src{PTR_TO_STR(from)};
+	const auto dst{PTR_TO_STR(to)};
+	const auto dstOrig{PTR_TO_STR(contact)};
+	const auto contentType{PTR_TO_STR(mimeType)};
+	const auto msg{PTR_TO_STR(body)};
+	qDebug() << "Pager" << callId <<
+		", from" << src <<
+		", to" << dst <<
+		", contact" << dstOrig <<
+		", mimeType" << contentType <<
+		", body" << msg;
+}
+
+void SipClient::onPagerStatus(pjsua_call_id callId, const pj_str_t *to, const pj_str_t *body,
+		   void *user_data, pjsip_status_code status, const pj_str_t *reason)
+{
+	const auto dst{PTR_TO_STR(to)};
+	const auto msg{PTR_TO_STR(body)};
+	const auto motive{PTR_TO_STR(reason)};
+	qDebug() << "Pager status" << callId <<
+		", to" << dst <<
+		", body" << msg <<
+		formatErrorMessage(", status", status) <<
+		", reason" << motive;
+}
+
+void SipClient::onTyping(pjsua_call_id callId, const pj_str_t *from, const pj_str_t *to,
+	      const pj_str_t *contact, pj_bool_t isTyping)
+{
+	const auto src{PTR_TO_STR(from)};
+	const auto dst{PTR_TO_STR(to)};
+	const auto dstOrig{PTR_TO_STR(contact)};
+	qDebug() << "Typing" << callId <<
+		", from" << src <<
+		", to" << dst <<
+		", contact" << dstOrig <<
+		", typing" << isTyping;
+}
+
 void SipClient::pjsuaLogCallback(int level, const char *data, int len)
 {
     qDebug() << QString("PJSUA [%1]").arg(level) << QString::fromStdString(std::string(data, len));
@@ -174,6 +218,9 @@ bool SipClient::init()
         cfg.cb.on_stream_created = &onStreamCreated;
         cfg.cb.on_stream_destroyed = &onStreamDestroyed;
         cfg.cb.on_buddy_state = &onBuddyState;
+	cfg.cb.on_pager = &onPager;
+	cfg.cb.on_pager_status = &onPagerStatus;
+	cfg.cb.on_typing = &onTyping;
 
         //configure STUN if any
         /*if (!_settings->stunServer().isEmpty()) {
@@ -413,13 +460,13 @@ bool SipClient::makeCall(const QString &userId)
     //open audio device only when needed
     enableAudio();
 
-    pjsua_call_setting callSetting;
+    pjsua_call_setting callSetting{};
     pjsua_call_setting_default(&callSetting);
     callSetting.vid_cnt = 1;
 
-    pjsua_call_id callId = PJSUA_INVALID_ID;
-    const pj_status_t status = pjsua_call_make_call(_accId, &uriStr, &callSetting,
-                                                    nullptr, nullptr, &callId);
+    pjsua_call_id callId{PJSUA_INVALID_ID};
+    const auto status{pjsua_call_make_call(_accId, &uriStr, &callSetting,
+					    nullptr, nullptr, &callId)};
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot make call", status);
         return false;
@@ -960,14 +1007,18 @@ QString SipClient::sipTransport(int type)
 
 bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer)
 {
+    if (nullptr == uri) {
+	qCritical() << "Invalid output";
+	return false;
+    }
     const auto& domain = _settings->sipServer();
     if (domain.isEmpty()) {
-        qWarning() << "No SIP server";
+	qCritical() << "No SIP server";
         return false;
     }
     const auto destPort = QString::number(_settings->sipPort());
     if (destPort.isEmpty()) {
-        qWarning() << "No SIP port";
+	qCritical() << "No SIP port";
         return false;
     }
     const auto sipTransport = SipClient::sipTransport(_settings->sipTransport());
@@ -980,9 +1031,8 @@ bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBu
         errorHandler("URI verification failed", status);
         return false;
     }
-    if (nullptr != uri) {
-        pj_cstr(uri, uriPtr);
-    }
+    pj_cstr(uri, uriPtr);
+
     return true;
 }
 
@@ -1744,4 +1794,58 @@ bool SipClient::removeBuddy(int buddyId)
         return false;
     }
     return true;
+}
+
+bool SipClient::sendText(const QString& userId, const QString& txt)
+{
+	qDebug() << "sendText" << userId;
+	if (PJSUA_INVALID_ID == _accId) {
+		qCritical() << "No registered account";
+		return false;
+	}
+	if (userId.isEmpty()) {
+		qCritical() << "Empty user ID";
+		return false;
+	}
+
+	std::string uriBuffer;
+	pj_str_t uriStr{};
+	if (!callUri(&uriStr, userId, uriBuffer)) {
+		return false;
+	}
+
+	const auto msg{txt.toStdString()};
+	pj_str_t content{};
+	pj_cstr(&content, msg.c_str());
+	const auto status{pjsua_im_send(_accId, &uriStr, nullptr, &content, nullptr, &_accId)};
+	if (PJ_SUCCESS != status) {
+		errorHandler("Cannot send text", status);
+		return false;
+	}
+	return true;
+}
+
+bool SipClient::sendTyping(const QString& userId, bool isTyping)
+{
+	qDebug() << "sendTyping" << userId << isTyping;
+	if (PJSUA_INVALID_ID == _accId) {
+		qCritical() << "No registered account";
+		return false;
+	}
+	if (userId.isEmpty()) {
+		qCritical() << "Empty user ID";
+		return false;
+	}
+
+	std::string uriBuffer;
+	pj_str_t uriStr{};
+	if (!callUri(&uriStr, userId, uriBuffer)) {
+		return false;
+	}
+	const auto status{pjsua_im_typing(_accId, &uriStr, isTyping ? PJ_TRUE : PJ_FALSE, nullptr)};
+	if (PJ_SUCCESS != status) {
+		errorHandler("Cannot send typing", status);
+		return false;
+	}
+	return true;
 }

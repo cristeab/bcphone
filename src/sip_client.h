@@ -76,6 +76,9 @@ public:
     int addBuddy(const QString &userId);
     bool removeBuddy(int buddyId);
 
+    bool sendText(const QString& userId, const QString& txt);
+    bool sendTyping(const QString& userId, bool isTyping);
+
 signals:
     void errorMessage(const QString& msg);
     void registrationStatusChanged(RegistrationStatus registrationStatus, const QString& registrationStatusText);
@@ -106,6 +109,14 @@ private:
     static void onStreamDestroyed(pjsua_call_id callId, pjmedia_stream *strm,
                                   unsigned streamIdx);
     static void onBuddyState(pjsua_buddy_id buddyId);
+
+    static void onPager(pjsua_call_id callId, const pj_str_t *from, const pj_str_t *to,
+			const pj_str_t *contact, const pj_str_t *mimeType, const pj_str_t *body);
+    static void onPagerStatus(pjsua_call_id callId, const pj_str_t *to, const pj_str_t *body,
+			void *user_data, pjsip_status_code status, const pj_str_t *reason);
+    static void onTyping(pjsua_call_id callId, const pj_str_t *from, const pj_str_t *to,
+			const pj_str_t *contact, pj_bool_t isTyping);
+
     static void pjsuaLogCallback(int level, const char *data, int len);
 
     bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
