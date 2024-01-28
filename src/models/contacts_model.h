@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.h"
 #include <QAbstractListModel>
 #include <QVector>
 #include <QQmlEngine>
@@ -10,7 +11,6 @@ class ContactsModel : public QAbstractListModel
     QML_ANONYMOUS
 
 public:
-    enum { INVALID_CONTACT_ID = -1, INVALID_CONTACT_INDEX = -1 };
     enum ContactRoles {
         ContactId = Qt::UserRole+1,
         FirstName,
@@ -25,7 +25,7 @@ public:
         Comment
     };
     struct ContactInfo {
-        int id = INVALID_CONTACT_ID;
+	int id{models::INVALID_CONTACT_ID};
         QString firstName;
         QString lastName;
         QString email;
@@ -36,11 +36,11 @@ public:
         QString city;
         QString zip;
         QString comment;
-        bool isValid() const {
-            return INVALID_CONTACT_ID != id;
+	constexpr bool isValid() const {
+	    return models::INVALID_CONTACT_ID != id;
         }
         void clear() {
-            id = INVALID_CONTACT_ID;
+	    id = models::INVALID_CONTACT_ID;
             firstName = lastName = email = phoneNumber = mobileNumber = address = state = city = zip = comment = "";
         }
     };
@@ -51,7 +51,7 @@ public:
     QHash<int,QByteArray> roleNames() const;
 
     Q_INVOKABLE int contactId(int index) const {
-        const int id = isValidIndex(index) ? _contacts.at(index).id : INVALID_CONTACT_ID;
+	const int id = isValidIndex(index) ? _contacts.at(index).id : models::INVALID_CONTACT_ID;
         return id;
     }
     Q_INVOKABLE QString firstName(int index) const {

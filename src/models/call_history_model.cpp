@@ -1,4 +1,5 @@
 #include "call_history_model.h"
+#include "contacts_model.h"
 #include "settings.h"
 #include <unordered_map>
 
@@ -22,7 +23,7 @@ QVariant CallHistoryModel::data(const QModelIndex &index, int role) const
     const auto &history = _history.at(index.row());
     switch (role) {
     case IsContact:
-        out = ContactsModel::INVALID_CONTACT_ID != history.contactId;
+	out = models::INVALID_CONTACT_ID != history.contactId;
         break;
     case UserName:
         out = history.userName;
@@ -101,7 +102,7 @@ void CallHistoryModel::addContact(int callId, const QString &user,
     item.callId = callId;
     if (nullptr != _contactsModel) {
         const auto contactIndex = _contactsModel->indexFromPhoneNumber(phone);
-        if (ContactsModel::INVALID_CONTACT_INDEX != contactIndex) {
+	if (models::INVALID_CONTACT_INDEX != contactIndex) {
             item.userName = formatUserName(_contactsModel->firstName(contactIndex),
                                            _contactsModel->lastName(contactIndex));
         }
@@ -167,7 +168,7 @@ void CallHistoryModel::onContactsReady()
     if (nullptr != _contactsModel) {
         for (auto &it: _history) {
             const auto contactIndex = _contactsModel->indexFromContactId(it.contactId);
-            if (ContactsModel::INVALID_CONTACT_INDEX != contactIndex) {
+	    if (models::INVALID_CONTACT_INDEX != contactIndex) {
                 it.userName = formatUserName(_contactsModel->firstName(contactIndex),
                                              _contactsModel->lastName(contactIndex));
                 it.phoneNumber = _contactsModel->phoneNumber(contactIndex);
@@ -218,5 +219,5 @@ int CallHistoryModel::calId2index(int callId)
             return i;
         }
     }
-    return ContactsModel::INVALID_CONTACT_INDEX;
+    return models::INVALID_CONTACT_INDEX;
 }

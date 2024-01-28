@@ -133,7 +133,7 @@ int ContactsModel::indexFromContactId(int contactId)
             return i;
         }
     }
-    return INVALID_CONTACT_INDEX;
+    return models::INVALID_CONTACT_INDEX;
 }
 
 int ContactsModel::indexFromPhoneNumber(const QString &phoneNumber)
@@ -143,7 +143,7 @@ int ContactsModel::indexFromPhoneNumber(const QString &phoneNumber)
             return i;
         }
     }
-    return INVALID_CONTACT_INDEX;
+    return models::INVALID_CONTACT_INDEX;
 }
 
 void ContactsModel::sortContacts()

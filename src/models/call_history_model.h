@@ -1,11 +1,12 @@
 #pragma once
 
 #include "qmlhelpers.h"
-#include "contacts_model.h"
+#include "constants.h"
 #include "pjsua.h"
 #include <QAbstractListModel>
 #include <QVector>
 #include <QDateTime>
+#include <QQmlEngine>
 
 class ContactsModel;
 
@@ -28,7 +29,7 @@ public:
         CallStatusRole
     };
     struct CallHistoryInfo {
-        int contactId = ContactsModel::INVALID_CONTACT_ID;
+	int contactId = models::INVALID_CONTACT_ID;
         QString userName;
         QString phoneNumber;
         QDateTime dateTime;
@@ -41,7 +42,7 @@ public:
             dateTime = QDateTime::currentDateTime();
         }
         void clear() {
-            contactId = ContactsModel::INVALID_CONTACT_ID;
+	    contactId = models::INVALID_CONTACT_ID;
             userName = phoneNumber = "";
             dateTime = QDateTime();
         }

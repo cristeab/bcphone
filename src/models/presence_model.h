@@ -2,6 +2,7 @@
 
 #include "qmlhelpers.h"
 #include "pjsua.h"
+#include "constants.h"
 #include <QQmlEngine>
 #include <QAbstractListModel>
 #include <QList>
@@ -22,10 +23,11 @@ public:
         Status
     };
     struct PresenceInfo {
-        pjsua_buddy_id id;
+	pjsua_buddy_id id{PJSUA_INVALID_ID};
         QString userName;
         QString phoneNumber;
         QString status;
+	int contactId{models::INVALID_CONTACT_INDEX};
     };
 
     explicit PresenceModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}

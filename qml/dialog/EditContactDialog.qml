@@ -99,7 +99,7 @@ Dialog {
             LabelTextField {
                 id: firstName
                 text: qsTr("First Name <font color='red'>*</font>")
-                width: control.width - 2 * Theme.windowMargin
+                width: control.width - 4 * Theme.windowMargin
             }
             LabelTextField {
                 id: lastName

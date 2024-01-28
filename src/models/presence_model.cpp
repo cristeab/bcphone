@@ -56,7 +56,7 @@ void PresenceModel::addBuddy(const QString &userId)
     info.phoneNumber = userId;
     if (nullptr != _contactsModel) {
         const auto index = _contactsModel->indexFromPhoneNumber(userId);
-        if (ContactsModel::INVALID_CONTACT_INDEX != index) {
+	if (models::INVALID_CONTACT_INDEX != index) {
             info.userName = CallHistoryModel::formatUserName(_contactsModel->firstName(index),
                                                              _contactsModel->lastName(index));
         }
@@ -128,7 +128,7 @@ void PresenceModel::load()
         info.phoneNumber = userId;
         if (nullptr != _contactsModel) {
             const auto index = _contactsModel->indexFromPhoneNumber(userId);
-            if (ContactsModel::INVALID_CONTACT_INDEX != index) {
+	    if (models::INVALID_CONTACT_INDEX != index) {
                 info.userName = CallHistoryModel::formatUserName(_contactsModel->firstName(index),
                                                                  _contactsModel->lastName(index));
             }
