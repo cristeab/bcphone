@@ -173,8 +173,10 @@ void ContactsModel::addUpdate(int id,
                            address, state, city, zipCode, comment};
     const auto index = indexFromContactId(id);
     if (isValidIndex(index)) {
+	qDebug() << "Update contact" << id << index;
         update(contactInfo);
     } else {
+	qDebug() << "Append contact" << id << index;
         append(contactInfo);
     }
 }

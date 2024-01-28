@@ -87,6 +87,15 @@ Page {
 
     LabelToolTip {
         id: extLabel
+
+        function formattedExt() {
+            let ext = softphone.settings.userName
+            if ("" !== softphone.settings.displayName) {
+                ext += " (" + softphone.settings.displayName +  ")"
+            }
+            return ext
+        }
+
         anchors {
             top: parent.top
             topMargin: Theme.windowMargin
@@ -94,11 +103,12 @@ Page {
             leftMargin: Theme.windowMargin
             right: callDurationLabel.left
         }
-        text: softphone.settings.userName
+        text: extLabel.formattedExt()
         maximumLineCount: 1
         clip: true
         elide: Text.ElideRight
-        forceTooltip: true
+        forceTooltip: false
+        wrapMode: Text.ElideRight
     }
     RegistrationStatus {
         anchors {
