@@ -411,6 +411,7 @@ bool SipClient::registerAccount()
     cfg.vid_out_auto_transmit = PJ_FALSE;
 
     cfg.allow_sdp_nat_rewrite = PJ_TRUE;
+    cfg.publish_enabled = PJ_TRUE;
 
     pj_status_t status = pjsua_acc_add(&cfg, PJ_TRUE, &_accId);
     if (PJ_SUCCESS != status) {
