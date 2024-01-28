@@ -163,10 +163,14 @@ void SipClient::onPagerStatus(pjsua_call_id callId, const pj_str_t *to, const pj
 	const auto dst{PTR_TO_STR(to)};
 	const auto msg{PTR_TO_STR(body)};
 	const auto motive{PTR_TO_STR(reason)};
+
+	static std::array<char, MAX_ERROR_MSG_SIZE> statusMessage;
+	pj_strerror(status, statusMessage.data(), statusMessage.size());
+
 	qDebug() << "Pager status: call ID" << callId <<
 		", to" << dst <<
 		", body" << msg <<
-		", status" << status <<
+		", status" << statusMessage.data() <<
 		", reason" << motive;
 }
 
