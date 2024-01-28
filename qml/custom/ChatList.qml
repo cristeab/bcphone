@@ -7,6 +7,7 @@ Item {
     width: Theme.activeCallListWidth
     SearchTextField {
         id: searchField
+        visible: 1 < listViewControl.count
         height: 35
         anchors {
             top: parent.top
