@@ -113,7 +113,7 @@ ApplicationWindow {
     Component.onCompleted: {
         appWin.updateWindowRect()
         if (softphone.loggedOut) {
-            tabView.showSettings()
+            bar.showTab(bar.settingsIndex)
         }
     }
     onXChanged: appWin.updateWindowRect()
@@ -140,20 +140,6 @@ ApplicationWindow {
 
     StackView {
         id: tabView
-        function showDialpad() {
-            console.log("Show dialpad " + bar.currentButtonIndex)
-            if (2 !== bar.currentButtonIndex) {
-                bar.currentButtonIndex = 2
-                tabView.replace("qrc:/qml/Dialpad.qml")
-            }
-        }
-        function showSettings() {
-            console.log("Show settings " + bar.currentButtonIndex)
-            if (4 !== bar.currentButtonIndex) {
-                bar.currentButtonIndex = 4
-                tabView.replace("qrc:/qml/Settings.qml")
-            }
-        }
         anchors {
             top: parent.top
             bottom: bar.top
@@ -196,7 +182,7 @@ ApplicationWindow {
         }
         function onLoggedOutChanged() {
             if (softphone.loggedOut) {
-                tabView.showSettings()
+                bar.showTab(bar.settingsIndex)
             }
         }
     }
@@ -239,6 +225,17 @@ ApplicationWindow {
         readonly property var icons: ["qrc:/img/clock.svg", "qrc:/img/address-book.svg", "qrc:/img/dialpad.svg", "qrc:/img/chat.svg", "qrc:/img/settings.svg"]
         readonly property var pages: ["qrc:/qml/CallHistory.qml", "qrc:/qml/Contacts.qml", "qrc:/qml/Dialpad.qml", "qrc:/qml/Chat.qml", "qrc:/qml/Settings.qml"]
 
+        readonly property int dialpadIndex: 2
+        readonly property int chatIndex: 3
+        readonly property int settingsIndex: 4
+
+        function showTab(idx) {
+            if (idx !== bar.currentButtonIndex) {
+                bar.currentButtonIndex = idx
+                tabView.replace(bar.pages[idx])
+            }
+        }
+
         onCurrentButtonIndexChanged: bar.currentIndex = bar.currentButtonIndex
 
         anchors {
@@ -269,12 +266,7 @@ ApplicationWindow {
                     color: Theme.backgroundColor
                 }
                 font.pointSize: Theme.tabButtonFontSize
-                onClicked: {
-                    if (bar.currentButtonIndex !== index) {
-                        bar.currentButtonIndex = index
-                        tabView.replace(bar.pages[index])
-                    }
-                }
+                onClicked: bar.showTab(index)
             }
         }
     }

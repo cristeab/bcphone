@@ -8,7 +8,7 @@ Page {
 
     function callSelected(phoneNumber) {
         softphone.dialedText = Theme.formatTelephoneNumber(phoneNumber)
-        tabView.showDialpad()
+        bar.showTab(bar.dialpadIndex)
         if (softphone.blindTransfer) {
             softphone.blindTransferUserName = userName
         } else {

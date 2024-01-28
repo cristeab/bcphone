@@ -55,7 +55,7 @@ Page {
                 height: parent.height
                 rowSpacing: 0
                 rows: 4
-                columns: 3
+                columns: 4
                 flow: GridLayout.LeftToRight
                 //1st column
                 ToolButton {
@@ -72,11 +72,11 @@ Page {
                     }
                     ToolTip {
                         visible: parent.hovered
-                        text:softphone.blindTransfer ? qsTr("Transfer to") : qsTr("Call")
+                        text: softphone.blindTransfer ? qsTr("Transfer to") : qsTr("Call")
                     }
                     onClicked: {
                         softphone.dialedText = Theme.formatTelephoneNumber(phoneNumber)
-                        tabView.showDialpad()
+                        bar.showTab(bar.dialpadIndex)
                         if (softphone.blindTransfer) {
                             softphone.blindTransferUserName = userNameLabel.text
                         } else {
@@ -143,6 +143,28 @@ Page {
                     }
                     clip: true
                     elide: Text.ElideRight
+                }
+                //4th column
+                ToolButton {
+                    Layout.preferredWidth: listView.avatarWidth
+                    Layout.rowSpan: 4
+                    display: AbstractButton.IconOnly
+                    enabled: true
+                    icon {
+                        source: "qrc:/img/paper-plane-regular.svg"
+                        color: Theme.tabButtonColor
+                    }
+                    background: Rectangle {
+                        color: Theme.backgroundColor
+                    }
+                    ToolTip {
+                        visible: parent.hovered
+                        text: qsTr("Chat")
+                    }
+                    onClicked: {
+                        listView.addEmptyChat(number, name)
+                        bar.showTab(bar.chatIndex)
+                    }
                 }
             }
             Rectangle {
