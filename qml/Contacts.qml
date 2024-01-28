@@ -27,7 +27,7 @@ Page {
     ListView {
         id: listView
         readonly property int avatarWidth: 40
-        readonly property int itemWidth: (listView.width - listView.avatarWidth - 2 * Theme.windowMargin) / 2
+        readonly property int itemWidth: (listView.width - 2 * listView.avatarWidth - 4 * Theme.windowMargin) / 2
         readonly property int swipeWidth: 70
         anchors {
             top: sep.bottom
@@ -60,6 +60,8 @@ Page {
                 //1st column
                 ToolButton {
                     Layout.preferredWidth: listView.avatarWidth
+                    Layout.row: 0
+                    Layout.column: 0
                     Layout.rowSpan: 4
                     display: AbstractButton.IconOnly
                     enabled: true
@@ -84,10 +86,12 @@ Page {
                         }
                     }
                 }
-                //1st row
+                // middle columns
                 LabelToolTip {
                     id: userNameLabel
                     Layout.preferredWidth: 2 * listView.itemWidth
+                    Layout.row: 0
+                    Layout.column: 1
                     Layout.columnSpan: 2
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -100,8 +104,9 @@ Page {
                     elide: Text.ElideRight
                     rightPadding: 15
                 }
-                //2nd row
                 LabelToolTip {
+                    Layout.row: 1
+                    Layout.column: 1
                     Layout.preferredWidth: listView.itemWidth
                     text: qsTr("Phone: ") + Theme.formatWithNa(phoneNumber)
                     font {
@@ -112,17 +117,8 @@ Page {
                     elide: Text.ElideRight
                 }
                 LabelToolTip {
-                    Layout.preferredWidth: listView.itemWidth
-                    Layout.fillHeight: true
-                    Layout.rowSpan: 2
-                    text: qsTr("Address: ") + Theme.formatWithNa(Theme.formatWithComma4(address, city, state, zip))
-                    font.pointSize: Theme.textFontSize
-                    clip: true
-                    elide: Text.ElideRight
-                    maximumLineCount: 2
-                }
-                //3rd row
-                LabelToolTip {
+                    Layout.row: 1
+                    Layout.column: 2
                     Layout.preferredWidth: listView.itemWidth
                     text: qsTr("Mobile: ") + Theme.formatWithNa(mobileNumber)
                     font {
@@ -132,10 +128,23 @@ Page {
                     clip: true
                     elide: Text.ElideRight
                 }
-                //4th row
                 LabelToolTip {
-                    Layout.preferredWidth: 2 * listView.itemWidth
+                    Layout.row: 2
+                    Layout.column: 1
                     Layout.columnSpan: 2
+                    Layout.preferredWidth: 2 * listView.itemWidth
+                    Layout.fillHeight: true
+                    text: qsTr("Address: ") + Theme.formatWithNa(Theme.formatWithComma4(address, city, state, zip))
+                    font.pointSize: Theme.textFontSize
+                    clip: true
+                    elide: Text.ElideRight
+                    maximumLineCount: 2
+                }
+                LabelToolTip {
+                    Layout.row: 3
+                    Layout.column: 1
+                    Layout.columnSpan: 2
+                    Layout.preferredWidth: 2 * listView.itemWidth
                     text: comment
                     font {
                         italic: true
@@ -146,8 +155,10 @@ Page {
                 }
                 //4th column
                 ToolButton {
-                    Layout.preferredWidth: listView.avatarWidth
+                    Layout.row: 0
+                    Layout.column: 3
                     Layout.rowSpan: 4
+                    Layout.preferredWidth: listView.avatarWidth
                     display: AbstractButton.IconOnly
                     enabled: true
                     icon {
@@ -162,7 +173,7 @@ Page {
                         text: qsTr("Chat")
                     }
                     onClicked: {
-                        listView.addEmptyChat(number, name)
+                        softphone.chatList.addEmptyChat(phoneNumber, userNameLabel.text)
                         bar.showTab(bar.chatIndex)
                     }
                 }
