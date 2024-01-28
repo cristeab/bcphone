@@ -329,7 +329,6 @@ bool SipClient::registerAccount()
         return false;
     }
 
-    const auto& displayName = _settings->displayName();
     const auto& domain = _settings->sipServer();
     if (domain.isEmpty()) {
         errorHandler(tr("Domain is empty"));
@@ -359,6 +358,7 @@ bool SipClient::registerAccount()
     pjsua_acc_config cfg{};
     pjsua_acc_config_default(&cfg);
     QString id;
+    const auto& displayName = _settings->displayName();
     if (!displayName.isEmpty()) {
         id = "\"" + displayName + "\" <";
     }
@@ -1011,19 +1011,19 @@ bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBu
 	qCritical() << "Invalid output";
 	return false;
     }
-    const auto& domain = _settings->sipServer();
+    const auto& domain{_settings->sipServer()};
     if (domain.isEmpty()) {
 	qCritical() << "No SIP server";
         return false;
     }
-    const auto destPort = QString::number(_settings->sipPort());
+    const auto destPort{QString::number(_settings->sipPort())};
     if (destPort.isEmpty()) {
 	qCritical() << "No SIP port";
         return false;
     }
-    const auto sipTransport = SipClient::sipTransport(_settings->sipTransport());
+    const auto sipTransport{SipClient::sipTransport(_settings->sipTransport())};
+    const auto sipUri{"sip:" + userId + "@" + domain + ":" + destPort + sipTransport};
 
-    const QString sipUri = "sip:" + userId + "@" + domain + ":" + destPort + sipTransport;
     uriBuffer = sipUri.toStdString();
     const char *uriPtr = uriBuffer.c_str();
     const auto status = verifySipUri(uriPtr);
