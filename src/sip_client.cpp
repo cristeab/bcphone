@@ -1500,7 +1500,22 @@ void SipClient::processBuddyState(pjsua_buddy_id buddyId)
         errorHandler(tr("Cannot get buddy info"), status);
         return;
     }
-    emit buddyStatusChanged(buddyId, SipClient::toString(info.rpid.note));
+
+    QString buddyState;
+    switch (info.status) {
+    case PJSUA_BUDDY_STATUS_UNKNOWN:
+	buddyState = tr("Unknown");
+	break;
+    case PJSUA_BUDDY_STATUS_ONLINE:
+	buddyState = tr("Online");
+	break;
+    case  PJSUA_BUDDY_STATUS_OFFLINE:
+	buddyState = tr("Offline");
+	break;
+    }
+
+    qDebug() << "Buddy state" << buddyId << buddyState;
+    emit buddyStatusChanged(buddyId, buddyState);
 }
 
 void SipClient::extractUserNameAndId(QString& userName, QString& userId, const QString &info)
@@ -1777,6 +1792,11 @@ int SipClient::addBuddy(const QString &userId)
     status = pjsua_buddy_set_user_data(buddyId, this);
     if (PJ_SUCCESS != status) {
         errorHandler(tr("Cannot set buddy user data"), status);
+    }
+    //must update the presence after setting the user data
+    status = pjsua_buddy_update_pres(buddyId);
+    if (PJ_SUCCESS != status) {
+	errorHandler(tr("Cannot update buddy presence"), status);
     }
     qDebug() << "Added buddy" << userId << buddyId;
     return buddyId;

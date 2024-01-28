@@ -111,8 +111,8 @@ void PresenceModel::load()
         return;
     }
     if (nullptr == _contactsModel) {
-	    emit errorMessage(tr("Contacts model is NULL"));
-	    return;
+	emit errorMessage(tr("Contacts model is NULL"));
+	return;
     }
 
     emit layoutAboutToBeChanged();
