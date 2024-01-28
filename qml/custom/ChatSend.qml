@@ -4,7 +4,7 @@ import ".."
 Item {
     id: messageFrame
     height: messageTextField.height + Theme.windowMargin
-    CustomIconButton {
+    /*CustomIconButton {
         id: attachButton
         anchors {
             left: parent.left
@@ -21,13 +21,14 @@ Item {
             fileDlgLoader.active = true
             fileDlgLoader.item.visible = true
         }
-    }
+    }*/
 
     TextAreaWithScroll {
         id: messageTextField
         anchors {
             verticalCenter: parent.verticalCenter
-            left: attachButton.right
+            //left: attachButton.right
+            left: parent.left
             leftMargin: Theme.windowMargin
             right: sendButton.left
             rightMargin: Theme.windowMargin
@@ -53,8 +54,8 @@ Item {
             verticalCenter: parent.verticalCenter
         }
         enableButton: "" !== messageTextField.text
-        height: attachButton.height
-        width: attachButton.width
+        height: Theme.toolButtonHeight
+        width: height
         backgroundColor: "transparent"
         source: "qrc:/img/paper-plane-regular.svg"
         toolTip: qsTr("Send")
