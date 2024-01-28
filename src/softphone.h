@@ -94,6 +94,7 @@ public:
     Q_INVOKABLE bool sendDtmf(const QString &dtmf);
     Q_INVOKABLE void manuallyRegister();
     Q_INVOKABLE bool playDigit(const QString& digit);
+    Q_INVOKABLE bool sendText(const QString& userId, const QString& txt);
 
     bool hold(bool value, int callId);
     bool mute(bool value, int callId);

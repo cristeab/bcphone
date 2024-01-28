@@ -24,7 +24,7 @@ ApplicationWindow {
         appWin.raise()
         appWin.requestActivate()
         if (!softphone.loggedOut) {
-            tabView.showDialpad()
+            bar.showTab(bar.dialpadIndex)
         }
     }
     function updateWindowRect() {

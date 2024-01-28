@@ -366,3 +366,8 @@ bool Softphone::playDigit(const QString& digit)
 {
     return _sipClient->playDigit(digit);
 }
+
+bool Softphone::sendText(const QString& userId, const QString& txt)
+{
+    return _sipClient->sendText(userId, txt);
+}

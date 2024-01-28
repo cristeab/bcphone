@@ -1006,11 +1006,11 @@ QString SipClient::sipTransport(int type)
 bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer)
 {
     if (nullptr == uri) {
-	qCritical() << "Invalid output";
+	errorHandler(tr("Invalid output"), PJ_SUCCESS);
 	return false;
     }
     if (_serverDomain.isEmpty()) {
-	qCritical() << "No SIP server";
+	errorHandler(tr("No SIP server"), PJ_SUCCESS);
         return false;
     }
 
@@ -1020,7 +1020,7 @@ bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBu
     const char *uriPtr = uriBuffer.c_str();
     const auto status = verifySipUri(uriPtr);
     if (PJ_SUCCESS != status) {
-        errorHandler("URI verification failed", status);
+	errorHandler(tr("URI verification failed"), status);
         return false;
     }
     pj_cstr(uri, uriPtr);
@@ -1792,11 +1792,11 @@ bool SipClient::sendText(const QString& userId, const QString& txt)
 {
 	qDebug() << "sendText" << userId;
 	if (PJSUA_INVALID_ID == _accId) {
-		qCritical() << "No registered account";
+		errorHandler(tr("No registered account"), PJ_SUCCESS);
 		return false;
 	}
-	if (userId.isEmpty()) {
-		qCritical() << "Empty user ID";
+	if (userId.isEmpty() || txt.isEmpty()) {
+		errorHandler(tr("Empty user ID or message"), PJ_SUCCESS);
 		return false;
 	}
 

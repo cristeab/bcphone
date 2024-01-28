@@ -40,12 +40,12 @@ Item {
         id: sendButton
 
         function sendAction() {
-            softphone.pbxClient.sendSms(softphone.currentDestination, messageTextField.text)
-            softphone.messagesModel.appendOutgoing(softphone.settings.extension,
-                                                   softphone.currentDestination,
-                                                   messageTextField.text)
-            //TODO add a warning to the message if it cannot be send
-            messageTextField.text = ""
+            if (softphone.sendText(softphone.currentDestination, messageTextField.text)) {
+                softphone.messagesModel.appendOutgoing(softphone.settings.extension,
+                                                       softphone.currentDestination,
+                                                       messageTextField.text)
+                messageTextField.text = ""
+            }
         }
 
         anchors {
