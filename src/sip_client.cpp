@@ -355,22 +355,19 @@ bool SipClient::registerAccount()
     //unregister previous account if needed
     unregisterAccount();
 
+    _serverDomain = domain + ":" + destPort + sipTransport;
+
     pjsua_acc_config cfg{};
     pjsua_acc_config_default(&cfg);
-    QString id;
+    auto id{"sip:" + username + "@" + _serverDomain};
     const auto& displayName = _settings->displayName();
     if (!displayName.isEmpty()) {
-        id = "\"" + displayName + "\" <";
-    }
-    id += "sip:" + username + "@" + domain + ":" +
-            destPort + sipTransport;
-    if (!displayName.isEmpty()) {
-        id += ">";
+	id = "\"" + displayName + "\" <" + id + ">";
     }
     qInfo() << "ID URI" << id;
     auto tmpId = id.toStdString();
     pj_cstr(&cfg.id, tmpId.c_str());
-    QString regUri = "sip:" + domain + ":" + destPort + sipTransport;
+    QString regUri = "sip:" + _serverDomain;
     qInfo() << "Reg URI" << regUri;
     auto tmpRegUri = regUri.toStdString();
     pj_cstr(&cfg.reg_uri, tmpRegUri.c_str());
@@ -737,6 +734,7 @@ bool SipClient::unregisterAccount()
             return false;
         }
         _accId = PJSUA_INVALID_ID;
+	_serverDomain.clear();
 	emit registrationStatusChanged(RegistrationStatus::Unregistered, tr("Not Registered"));
         qDebug() << "Account unregistered";
     } else {
@@ -1011,18 +1009,12 @@ bool SipClient::callUri(pj_str_t *uri, const QString &userId, std::string &uriBu
 	qCritical() << "Invalid output";
 	return false;
     }
-    const auto& domain{_settings->sipServer()};
-    if (domain.isEmpty()) {
+    if (_serverDomain.isEmpty()) {
 	qCritical() << "No SIP server";
         return false;
     }
-    const auto destPort{QString::number(_settings->sipPort())};
-    if (destPort.isEmpty()) {
-	qCritical() << "No SIP port";
-        return false;
-    }
-    const auto sipTransport{SipClient::sipTransport(_settings->sipTransport())};
-    const auto sipUri{"sip:" + userId + "@" + domain + ":" + destPort + sipTransport};
+
+    const auto sipUri{"sip:" + userId + "@" + _serverDomain};
 
     uriBuffer = sipUri.toStdString();
     const char *uriPtr = uriBuffer.c_str();

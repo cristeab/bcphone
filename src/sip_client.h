@@ -185,6 +185,7 @@ private:
     QPointer<CallHistoryModel> _callHistoryModel;
     QPointer<ActiveCallModel> _activeCallModel;
 
+    QString _serverDomain;
     pjsua_acc_id _accId = PJSUA_INVALID_ID;
     std::unordered_map<pjsua_call_id, pjsua_player_id> _playerId;
     std::unordered_map<pjsua_call_id, pjsua_recorder_id> _recorderId;
