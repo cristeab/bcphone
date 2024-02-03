@@ -117,8 +117,8 @@ private:
 
     static void printSslBackendVersion();
     void onConfirmed(int callId);
-    void onCalling(int callId, const QString &userId, const QString &userName);
-    void onIncoming(int callId, const QString &userId, const QString &userName);
+    void onCalling(int callId, const QString &userName, const QString &userId);
+    void onIncoming(int callId, const QString &userName, const QString &userId);
     void onDisconnected(int callId);
 
     void onMicrophoneVolumeChanged();

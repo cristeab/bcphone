@@ -1408,7 +1408,7 @@ void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &in
         QString userName;
         QString userId;
         SipClient::extractUserNameAndId(userName, userId, remoteInfo);
-        emit calling(callId, userId, userName);
+	emit calling(callId, userName, userId);
     }
         break;
     case PJSIP_INV_STATE_INCOMING:

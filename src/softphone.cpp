@@ -201,13 +201,13 @@ void Softphone::onConfirmed(int callId)
     }
 }
 
-void Softphone::onCalling(int callId, const QString &userId, const QString &userName)
+void Softphone::onCalling(int callId, const QString &userName, const QString &userId)
 {
     _activeCallModel->addCall(callId, userName, userId);
     _callHistoryModel->updateContact(callId, userName, userId);
 }
 
-void Softphone::onIncoming(int callId, const QString &userId, const QString &userName)
+void Softphone::onIncoming(int callId, const QString &userName, const QString &userId)
 {
     setActiveCall(true);
     //open audio device only when needed (automatically closed when the call ends)

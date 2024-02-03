@@ -28,7 +28,7 @@ else
     done
 fi
 
-QT_VER=6.4.0
+QT_VER=6.6.1
 APP_NAME=BCPhone
 APP_IDENTIFIER="com.cristeab.bcphone"
 MAJOR_NUMBER=1
