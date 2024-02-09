@@ -292,7 +292,10 @@ bool Softphone::unsupervisedTransfer(const QString &phoneNumber)
 	auto ok{_sipClient->unsupervisedTransfer(phoneNumber,
 						  _activeCallModel->currentUserName())};
 	if (ok) {
-		ok = _sipClient->hangup(_activeCallModel->currentCallId());
+		ok = _sipClient->hold(_activeCallModel->currentCallId());
+		if (ok) {
+			setBlindTransfer(false);
+		}
 	}
 	return ok;
 }
