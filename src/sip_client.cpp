@@ -227,13 +227,14 @@ bool SipClient::init()
 	cfg.cb.on_typing = &onTyping;
 
         //configure STUN if any
-        /*if (!_settings->stunServer().isEmpty()) {
+	/*std::string stunSrv;
+	if (!_settings->stunServer().isEmpty()) {
             cfg.stun_srv_cnt = 1;
             if (0 < _settings->stunPort()) {
                 port = ":" + QString::number(_settings->stunPort());
             }
-            const auto srv = _settings->stunServer() + port;
-            pj_cstr(cfg.stun_srv, srv.toStdString().c_str());
+	    stunSrv = (_settings->stunServer() + port).toStdString();
+	    pj_cstr(cfg.stun_srv, stunSrv.c_str());
             cfg.stun_map_use_stun2 = PJ_FALSE;
             cfg.stun_ignore_failure = PJ_TRUE;
             cfg.stun_try_ipv6 = PJ_FALSE;
@@ -391,17 +392,21 @@ bool SipClient::registerAccount()
     const bool tlsEnabled = Settings::SipTransport::Tls == _settings->sipTransport();
     cfg.srtp_secure_signaling = tlsEnabled ? 1 : 0;
 
+    std::string proxyUri;
     if (_settings->proxyEnabled()) {
-        qInfo() << "Outbound proxy is enabled";
         auto proxyServer = "sip:" + _settings->proxyServer();
         if (0 < _settings->proxyPort()) {
             proxyServer += ":" + QString::number(_settings->proxyPort());
         }
         proxyServer += sipTransport;
-        cfg.proxy_cnt = 1;
-        qInfo() << "Proxy URI" << proxyServer;
-        const auto proxyUri = proxyServer.toStdString();
-        pj_cstr(&cfg.proxy[0], proxyUri.c_str());
+	proxyUri = proxyServer.toStdString();
+	const auto status{verifySipUri(proxyUri.c_str())};
+	if (PJ_SUCCESS != status) {
+		errorHandler(tr("Invalid outbound proxy URL"), status);
+		return false;
+	}
+	qInfo() << "Outbound proxy URI" << proxyServer;
+	pj_cstr(&cfg.proxy[cfg.proxy_cnt++], proxyUri.c_str());
         cfg.reg_use_proxy = PJSUA_REG_USE_OUTBOUND_PROXY | PJSUA_REG_USE_ACC_PROXY;
     }
 
@@ -413,7 +418,7 @@ bool SipClient::registerAccount()
     cfg.allow_sdp_nat_rewrite = PJ_TRUE;
     cfg.publish_enabled = PJ_TRUE;
 
-    pj_status_t status = pjsua_acc_add(&cfg, PJ_TRUE, &_accId);
+    auto status = pjsua_acc_add(&cfg, PJ_TRUE, &_accId);
     if (PJ_SUCCESS != status) {
         errorHandler("Error adding account", status);
         return false;
