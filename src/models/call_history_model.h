@@ -1,7 +1,7 @@
 #pragma once
 
 #include "qmlhelpers.h"
-#include "constants.h"
+#include "model_constants.h"
 #include "pjsua.h"
 #include <QAbstractListModel>
 #include <QVector>

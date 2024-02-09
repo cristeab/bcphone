@@ -2,7 +2,7 @@
 
 #include "qmlhelpers.h"
 #include "pjsua.h"
-#include "constants.h"
+#include "model_constants.h"
 #include <QQmlEngine>
 #include <QAbstractListModel>
 #include <QList>

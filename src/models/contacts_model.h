@@ -1,6 +1,6 @@
 #pragma once
 
-#include "constants.h"
+#include "model_constants.h"
 #include <QAbstractListModel>
 #include <QVector>
 #include <QQmlEngine>
