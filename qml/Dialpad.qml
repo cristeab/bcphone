@@ -308,6 +308,9 @@ Page {
                 if (softphone.conference) {
                     return Theme.confCallButtonColor
                 }
+                if (softphone.blindTransfer) {
+                    return Theme.callButtonColor
+                }
                 return softphone.activeCall ? Theme.activeCallButtonColor : Theme.callButtonColor
             }
             enabled: ("" !== softphone.dialedText) && (Softphone.REGISTERED === softphone.registrationStatus)
