@@ -65,6 +65,13 @@ SipClient::SipClient(QObject *parent) : QObject(parent)
     _toneGenTimer.setInterval(TONE_GEN_TIMEOUT_MS);
     _toneGenTimer.setSingleShot(true);
     connect(&_toneGenTimer, &QTimer::timeout, this, &SipClient::releaseToneGenerator);
+    // connect private signals
+    connect(this, &SipClient::registrationStatusReady, this, &SipClient::processRegistrationStatus);
+    connect(this, &SipClient::incomingCallReady, this, &SipClient::processIncomingCall);
+    connect(this, &SipClient::callStateReady, this, &SipClient::processCallState);
+    connect(this, &SipClient::callMediaStateReady, this, &SipClient::processCallMediaState);
+    connect(this, &SipClient::streamStatsReady, this, &SipClient::dumpStreamStats);
+    connect(this, &SipClient::buddyStateReady, this, &SipClient::processBuddyState);
 }
 
 void SipClient::onRegState(pjsua_acc_id accId)
@@ -77,7 +84,7 @@ void SipClient::onRegState(pjsua_acc_id accId)
         instance->errorHandler("Cannot get account information", status);
         return;
     }
-    instance->processRegistrationStatus(info);
+    emit instance->registrationStatusReady(info);
 }
 
 void SipClient::onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_rx_data *rdata)
@@ -92,7 +99,7 @@ void SipClient::onIncomingCall(pjsua_acc_id accId, pjsua_call_id callId, pjsip_r
         instance->errorHandler("Cannot get call info", status);
         return;
     }
-    instance->processIncomingCall(callId, ci);
+    emit instance->incomingCallReady(callId, ci);
 }
 
 void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
@@ -100,13 +107,13 @@ void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
     PJ_UNUSED_ARG(e);
 
     GET_INSTANCE_CID(callId)
-    instance->processCallState(callId, ci);
+    emit instance->callStateReady(callId, ci);
 }
 
 void SipClient::onCallMediaState(pjsua_call_id callId)
 {
     GET_INSTANCE_CID(callId)
-    instance->processCallMediaState(callId, ci);
+    emit instance->callMediaStateReady(callId, ci);
 }
 
 void SipClient::onStreamCreated(pjsua_call_id callId, pjmedia_stream *strm,
@@ -123,7 +130,13 @@ void SipClient::onStreamDestroyed(pjsua_call_id callId, pjmedia_stream *strm,
 {
     qDebug() << "onStreamDestroyed" << callId << stream_idx;
     GET_INSTANCE_CID(callId)
-    instance->dumpStreamStats(strm);
+    pjmedia_rtcp_stat stat{};
+    const auto st = pjmedia_stream_get_stat(strm, &stat);
+    if (PJ_SUCCESS != st) {
+	    instance->errorHandler(tr("Cannot get stream stats"), status);
+	    return;
+    }
+    emit instance->streamStatsReady(stat);
 }
 
 void SipClient::onBuddyState(pjsua_buddy_id buddyId)
@@ -138,7 +151,7 @@ void SipClient::onBuddyState(pjsua_buddy_id buddyId)
         return;
     }\
     auto instance = reinterpret_cast<SipClient*>(ptr);
-    instance->processBuddyState(buddyId);
+    emit instance->buddyStateReady(buddyId);
 }
 
 void SipClient::onPager(pjsua_call_id callId, const pj_str_t *from, const pj_str_t *to,
@@ -1354,10 +1367,10 @@ bool SipClient::releaseRecorder(pjsua_call_id callId)
     return true;
 }
 
-void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
+void SipClient::processRegistrationStatus(pjsua_acc_info accInfo)
 {
     auto registrationStatus{RegistrationStatus::Unregistered};
-    switch (info.status) {
+    switch (accInfo.status) {
     case PJSIP_SC_OK:
         registrationStatus = RegistrationStatus::Registered;
         break;
@@ -1375,14 +1388,14 @@ void SipClient::processRegistrationStatus(const pjsua_acc_info& info)
         break;
     default:;
     }
-    const auto statusText = SipClient::toString(info.status_text) + QString(" (%1)").arg(info.status);
+    const auto statusText = SipClient::toString(accInfo.status_text) + QString(" (%1)").arg(accInfo.status);
     qDebug() << "Reg status" << statusText;
     emit registrationStatusChanged(registrationStatus, statusText);
 }
 
-void SipClient::processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info)
+void SipClient::processIncomingCall(pjsua_call_id callId, pjsua_call_info callInfo)
 {
-    QString remoteInfo = toString(info.remote_info);
+    QString remoteInfo = toString(callInfo.remote_info);
     qDebug() << "Incoming call from" << remoteInfo;
 
     QString userName;
@@ -1391,25 +1404,25 @@ void SipClient::processIncomingCall(pjsua_call_id callId, const pjsua_call_info 
     emit incoming(callId, userName, userId);
 }
 
-void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &info)
+void SipClient::processCallState(pjsua_call_id callId, pjsua_call_info callInfo)
 {
-    const QString stateText = toString(info.state_text);
-    const QString lastStatusText = toString(info.last_status_text);
-    qDebug() << "Call" << callId << ", state =" << stateText << "(" << info.last_status << ")"
+    const QString stateText = toString(callInfo.state_text);
+    const QString lastStatusText = toString(callInfo.last_status_text);
+    qDebug() << "Call" << callId << ", state =" << stateText << "(" << callInfo.last_status << ")"
              << lastStatusText;
 
-    if ((PJSIP_SC_BAD_REQUEST <= info.last_status) &&
-            (PJSIP_SC_REQUEST_TERMINATED != info.last_status) &&
-            (PJSIP_SC_REQUEST_TIMEOUT != info.last_status)) {
+    if ((PJSIP_SC_BAD_REQUEST <= callInfo.last_status) &&
+	    (PJSIP_SC_REQUEST_TERMINATED != callInfo.last_status) &&
+	    (PJSIP_SC_REQUEST_TIMEOUT != callInfo.last_status)) {
         //show all SIP errors above Client Failure Responses
 	emit errorMessage(lastStatusText.isEmpty() ? stateText : lastStatusText);
     }
 
-    switch (info.state) {
+    switch (callInfo.state) {
     case PJSIP_INV_STATE_NULL:
         break;
     case PJSIP_INV_STATE_CALLING: {
-	    const QString remoteInfo = SipClient::toString(info.remote_info);
+	    const QString remoteInfo = SipClient::toString(callInfo.remote_info);
 	    QString userName;
 	    QString userId;
 	    SipClient::extractUserNameAndId(userName, userId, remoteInfo);
@@ -1423,32 +1436,32 @@ void SipClient::processCallState(pjsua_call_id callId, const pjsua_call_info &in
     case PJSIP_INV_STATE_CONNECTING:
         break;
     case PJSIP_INV_STATE_CONFIRMED:
-        connectCallToSoundDevices(info.conf_slot);
+	connectCallToSoundDevices(callInfo.conf_slot);
         emit confirmed(callId);
         break;
     case PJSIP_INV_STATE_DISCONNECTED:
         emit disconnected(callId);
         break;
     default:
-	qCritical() << "Unhandled call state" << info.state;
+	qCritical() << "Unhandled call state" << callInfo.state;
     }
 }
 
-void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info)
+void SipClient::processCallMediaState(pjsua_call_id callId, pjsua_call_info callInfo)
 {
-    qDebug() << "Media state changed for call" << callId << ":" << SipClient::toString(info.last_status_text)
-             << info.last_status;
-    if (PJSUA_CALL_MEDIA_ACTIVE == info.media_status) {
-        qInfo() << "Media active" << info.media_cnt;
+    qDebug() << "Media state changed for call" << callId << ":" << SipClient::toString(callInfo.last_status_text)
+	     << callInfo.last_status;
+    if (PJSUA_CALL_MEDIA_ACTIVE == callInfo.media_status) {
+	qInfo() << "Media active" << callInfo.media_cnt;
 	bool hasVideo{};
-        for (unsigned medIdx = 0; medIdx < info.media_cnt; ++medIdx) {
-            if (isMediaActive(info.media[medIdx])) {
+	for (unsigned medIdx = 0; medIdx < callInfo.media_cnt; ++medIdx) {
+	    if (isMediaActive(callInfo.media[medIdx])) {
                 pjsua_stream_info streamInfo{};
                 auto status = pjsua_call_get_stream_info(callId, medIdx, &streamInfo);
                 if (PJ_SUCCESS == status) {
                     if (PJMEDIA_TYPE_AUDIO == streamInfo.type) {
                         GET_INSTANCE_CID(callId)
-                        instance->connectCallToSoundDevices(info.conf_slot);
+			instance->connectCallToSoundDevices(callInfo.conf_slot);
                         const auto &fmt = streamInfo.info.aud.fmt;
                         qInfo() << "Audio codec info: encoding" << toString(fmt.encoding_name)
                                 << ", clock rate" << fmt.clock_rate << "Hz, channel count"
@@ -1466,24 +1479,16 @@ void SipClient::processCallMediaState(pjsua_call_id callId, const pjsua_call_inf
             }
         }
 	manageVideo(hasVideo);
-    } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != info.media_status) &&
-               (PJSUA_CALL_MEDIA_REMOTE_HOLD != info.media_status)) {
+    } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != callInfo.media_status) &&
+	       (PJSUA_CALL_MEDIA_REMOTE_HOLD != callInfo.media_status)) {
         qWarning() << "Connection lost";
         emit registrationStatusChanged(RegistrationStatus::Unregistered, tr("Connection lost"));
         emit errorMessage(tr("You need an active Internet connection to make calls."));
     }
 }
 
-void SipClient::dumpStreamStats(pjmedia_stream *strm)
+void SipClient::dumpStreamStats(pjmedia_rtcp_stat stat)
 {
-    pjmedia_rtcp_stat stat{};
-    const auto status = pjmedia_stream_get_stat(strm, &stat);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Cannot get stream stats"), status);
-        return;
-    }
-
-    //TODO: show stats in the UI
     auto showStreamStat = [](const char *prefix, const pjmedia_rtcp_stream_stat &s) {
         qInfo() << prefix << "packets =" << s.pkt << "packets, payload ="
                 << s.bytes << "bytes, loss =" << s.loss << "packets, percent loss ="

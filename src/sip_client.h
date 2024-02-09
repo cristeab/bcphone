@@ -87,6 +87,13 @@ signals:
     void confirmed(int callId);
     void disconnected(int callId);
     void buddyStatusChanged(int buddyId, const QString& status);
+    // private signals
+    void registrationStatusReady(pjsua_acc_info accInfo);
+    void incomingCallReady(pjsua_call_id callId, pjsua_call_info callInfo);
+    void callStateReady(pjsua_call_id callId, pjsua_call_info callInfo);
+    void callMediaStateReady(pjsua_call_id callId, pjsua_call_info callInfo);
+    void streamStatsReady(pjmedia_rtcp_stat stat);
+    void buddyStateReady(pjsua_buddy_id buddyId);
 
 private:
     SipClient(QObject *parent);
@@ -120,11 +127,11 @@ private:
     static void pjsuaLogCallback(int level, const char *data, int len);
 
     bool callUri(pj_str_t *uri, const QString &userId, std::string &uriBuffer);
-    void processRegistrationStatus(const pjsua_acc_info &info);
-    void processIncomingCall(pjsua_call_id callId, const pjsua_call_info &info);
-    void processCallState(pjsua_call_id callId, const pjsua_call_info &info);
-    void processCallMediaState(pjsua_call_id callId, const pjsua_call_info &info);
-    void dumpStreamStats(pjmedia_stream *strm);
+    void processRegistrationStatus(pjsua_acc_info accInfo);
+    void processIncomingCall(pjsua_call_id callId, pjsua_call_info callInfo);
+    void processCallState(pjsua_call_id callId, pjsua_call_info callInfo);
+    void processCallMediaState(pjsua_call_id callId, pjsua_call_info callInfo);
+    void dumpStreamStats(pjmedia_rtcp_stat stat);
     void processBuddyState(pjsua_buddy_id buddyId);
 
     static QString formatErrorMessage(const QString &title, pj_status_t status = PJ_SUCCESS);
