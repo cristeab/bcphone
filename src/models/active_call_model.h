@@ -41,7 +41,7 @@ public:
     QString currentPhoneNumber() const;
 
     void setCurrentCallId(int callId);
-    int currentCallId() const { return _currentCallId; }
+    constexpr int currentCallId() const { return _currentCallId; }
     void update(bool active = true);
 
 signals:

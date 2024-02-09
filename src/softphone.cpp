@@ -285,7 +285,12 @@ bool Softphone::hangup(int callId)
 
 bool Softphone::unsupervisedTransfer(const QString &phoneNumber)
 {
-    return _sipClient->unsupervisedTransfer(phoneNumber,  "");
+	auto ok{_sipClient->unsupervisedTransfer(phoneNumber,
+						  _activeCallModel->currentUserName())};
+	if (ok) {
+		ok = _sipClient->hangup(_activeCallModel->currentCallId());
+	}
+	return ok;
 }
 
 bool Softphone::holdAndAnswer(int callId)
