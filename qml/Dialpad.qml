@@ -321,14 +321,14 @@ Page {
             }
             onClicked: {
                 if (softphone.blindTransfer) {
+                    transBtn.checked = false
                     const num = Theme.removeFormatting(softphone.dialedText)
                     softphone.unsupervisedTransfer(num)
-                    softphone.blindTransfer = false
-                    softphone.blindTransferUserName = ""
                     return
                 }
                 if (softphone.conference) {
                     console.log("Conference call")
+                    confBtn.checked = false
                     dialpadFrame.callAction()
                     return
                 }

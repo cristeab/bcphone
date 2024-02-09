@@ -228,8 +228,12 @@ void Softphone::onIncoming(int callId, const QString &userName, const QString &u
 
 void Softphone::onDisconnected(int callId)
 {
+    qDebug() << "Disconnected call" << callId;
     setConfirmedCall(false);
     setActiveCall(false);
+
+    setBlindTransfer(false);
+    setBlindTransferUserName({});
 
     _sipClient->stopPlayingRingTone(callId);
     _activeCallModel->removeCall(callId);
