@@ -260,6 +260,7 @@ bool SipClient::init()
                                  _settings->appVersion()).toStdString() +
                 " (PJSIP/" + pjsipVer + ")";
         pj_cstr(&cfg.user_agent, userAgent.c_str());
+	qInfo() << userAgent;
 
         pjsua_logging_config log_cfg{};
         pjsua_logging_config_default(&log_cfg);

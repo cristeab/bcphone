@@ -117,7 +117,7 @@ elseif (WIN32)
 endif()
 
 #installer setup
-if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
+if (CMAKE_BUILD_TYPE MATCHES "^[Rr]el")
     set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cloud based softphone")
     set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_SOURCE_DIR}/README.md)

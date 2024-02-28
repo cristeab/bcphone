@@ -28,7 +28,7 @@ else
     done
 fi
 
-QT_VER=6.6.1
+QT_VER=6.6.2
 APP_NAME=BCPhone
 APP_IDENTIFIER="com.cristeab.bcphone"
 MAJOR_NUMBER=1
@@ -50,9 +50,9 @@ if [ "$compile_app" = true ] ; then
     pushd $BUILD_DIR
 
     if [ "$old_mac" = true ] ; then
-        $CMAKE_PATH/cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/Qt/$QT_VER/macos -DPRODUCTION_BUILD=off -DOLD_MAC=on
+        $CMAKE_PATH/cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/$QT_VER/macos -DPRODUCTION_BUILD=off -DOLD_MAC=on
     else
-        $CMAKE_PATH/cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/Qt/$QT_VER/macos -DPRODUCTION_BUILD=off
+        $CMAKE_PATH/cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/$QT_VER/macos -DPRODUCTION_BUILD=off
     fi
     $CMAKE_PATH/cmake --build . -j
     $CMAKE_PATH/cmake --build . --target pack
