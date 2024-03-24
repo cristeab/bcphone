@@ -148,7 +148,7 @@ private:
     bool setVideoCodecBitrate(const QString &codecId, int bitrate);
 #endif
 
-    static bool disableTcpSwitch(bool value);
+    bool disableTcpSwitch();
     static QString sipTransport(int type);
     static pj_status_t verifySipUri(const char *url) {
         return (strlen(url) > SIP_URI_SIZE) ? PJSIP_EURITOOLONG : pjsua_verify_sip_url(url);

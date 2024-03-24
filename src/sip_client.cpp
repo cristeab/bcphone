@@ -319,7 +319,7 @@ bool SipClient::init()
     listVideoCodecs();
 #endif
 
-    disableTcpSwitch(_settings->disableTcpSwitch());
+    disableTcpSwitch();
 
     qInfo() << "Init PJSUA library" << pjsua_get_state();
     return true;
@@ -431,8 +431,10 @@ bool SipClient::registerAccount()
     cfg.vid_in_auto_show = PJ_FALSE;
     cfg.vid_out_auto_transmit = PJ_FALSE;
 
-    cfg.allow_sdp_nat_rewrite = PJ_TRUE;
-    cfg.publish_enabled = PJ_TRUE;
+    cfg.allow_sdp_nat_rewrite = _settings->allowSdpNatRewrite() ? PJ_TRUE : PJ_FALSE;
+    cfg.allow_contact_rewrite = _settings->allowContactAndViaRewrite() ? PJ_TRUE : PJ_FALSE;
+    cfg.allow_via_rewrite = cfg.allow_contact_rewrite;
+    cfg.publish_enabled = _settings->publishEnabled() ? PJ_TRUE : PJ_FALSE;
 
     auto status = pjsua_acc_add(&cfg, PJ_TRUE, &_accId);
     if (PJ_SUCCESS != status) {
@@ -1009,14 +1011,15 @@ bool SipClient::setVideoCodecBitrate(const QString &codecId, int bitrate)
 }
 #endif
 
-bool SipClient::disableTcpSwitch(bool value)
+bool SipClient::disableTcpSwitch()
 {
-    pjsip_cfg_t *cfg = pjsip_cfg();
+    auto *cfg = pjsip_cfg();
     bool rc{};
     if (nullptr != cfg) {
-        cfg->endpt.disable_tcp_switch = value ? PJ_TRUE : PJ_FALSE;
+	const auto disable = _settings->disableTcpSwitch();
+	cfg->endpt.disable_tcp_switch = disable ? PJ_TRUE : PJ_FALSE;
         rc = true;
-        qDebug() << "Disable TCP switch" << value;
+	qDebug() << "Disable TCP switch" << disable;
     } else {
         qWarning() << "Cannot get PJSIP config";
     }

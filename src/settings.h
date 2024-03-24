@@ -71,6 +71,10 @@ private:
     QML_WRITABLE_PROPERTY(uint32_t, transportSourcePort, setTransportSourcePort, TRANSPORT_DEFAULT_PORT)
     QML_WRITABLE_PROPERTY(bool, disableTcpSwitch, setDisableTcpSwitch, DISABLE_TCP_SWITCH)
 
+    QML_WRITABLE_PROPERTY(bool, allowSdpNatRewrite, setAllowSdpNatRewrite, true)
+    QML_WRITABLE_PROPERTY(bool, allowContactAndViaRewrite, setAllowContactAndViaRewrite, true)
+    QML_WRITABLE_PROPERTY(bool, publishEnabled, setPublishEnabled, true)
+
 public:
 
     explicit Settings(QObject *parent = nullptr);
