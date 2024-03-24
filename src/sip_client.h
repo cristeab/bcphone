@@ -70,8 +70,10 @@ public:
     bool startPlayingRingTone(pjsua_call_id id, bool incoming);
     void stopPlayingRingTone(pjsua_call_id id);
 
+#ifdef ENABLE_VIDEO
     bool setVideoCodecPriority(const QString &codecId, int priority);
     void releaseVideoWindow();
+#endif
 
     int addBuddy(const QString &userId);
     bool removeBuddy(int buddyId);
@@ -139,10 +141,12 @@ private:
         auto const &msg = formatErrorMessage(title, status);
         emit errorMessage(msg);
     }
-    void initVideoDevicesList();
     void listAudioCodecs();
+#ifdef ENABLE_VIDEO
+    void initVideoDevicesList();
     void listVideoCodecs();
     bool setVideoCodecBitrate(const QString &codecId, int bitrate);
+#endif
 
     static bool disableTcpSwitch(bool value);
     static QString sipTransport(int type);
@@ -176,11 +180,13 @@ private:
 
     void connectCallToSoundDevices(pjsua_conf_port_id confPortId);
 
+#ifdef ENABLE_VIDEO
     void manageVideo(bool enable);
     void initVideoWindow();
     void initPreviewWindow();
     void releasePreviewWindow();
     void setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int width, int height);
+#endif
 
     QPointer<Settings> _settings;
     QPointer<AudioDevices> _inputAudioDevices;
@@ -202,6 +208,8 @@ private:
     pjsua_conf_port_id _toneGenConfPort = PJSUA_INVALID_ID;
     QTimer _toneGenTimer;
 
+#ifdef ENABLE_VIDEO
     QPointer<QWidget> _previewWindow;
     QPointer<QWidget> _videoWindow;
+#endif
 };

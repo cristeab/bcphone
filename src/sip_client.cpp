@@ -312,10 +312,12 @@ bool SipClient::init()
     disableAudio();
 
     initAudioDevicesList();
-    initVideoDevicesList();
-
     listAudioCodecs();
+
+#ifdef ENABLE_VIDEO
+    initVideoDevicesList();
     listVideoCodecs();
+#endif
 
     disableTcpSwitch(_settings->disableTcpSwitch());
 
@@ -481,12 +483,17 @@ bool SipClient::makeCall(const QString &userId)
     //open audio device only when needed
     enableAudio();
 
+#ifdef ENABLE_VIDEO
     pjsua_call_setting callSetting{};
     pjsua_call_setting_default(&callSetting);
     callSetting.vid_cnt = 1;
+    pjsua_call_setting *callSettingPtr{&callSetting};
+#else
+    constexpr pjsua_call_setting *callSettingPtr{nullptr};
+#endif
 
     pjsua_call_id callId{PJSUA_INVALID_ID};
-    const auto status{pjsua_call_make_call(_accId, &uriStr, &callSetting,
+    const auto status{pjsua_call_make_call(_accId, &uriStr, callSettingPtr,
 					    nullptr, nullptr, &callId)};
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot make call", status);
@@ -531,11 +538,16 @@ bool SipClient::answer(int callId)
         return false;
     }
 
+#ifdef ENABLE_VIDEO
     pjsua_call_setting callSetting{};
     pjsua_call_setting_default(&callSetting);
     callSetting.vid_cnt = 1;
+    pjsua_call_setting *callSettingPtr{&callSetting};
+#else
+    constexpr pjsua_call_setting *callSettingPtr{nullptr};
+#endif
 
-    const auto status = pjsua_call_answer2(callId, &callSetting, 200, nullptr, nullptr);
+    const auto status = pjsua_call_answer2(callId, callSettingPtr, 200, nullptr, nullptr);
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot answer call", status);
         return false;
@@ -833,6 +845,61 @@ void SipClient::initAudioDevicesList()
             << outputDevices.size() << "output audio devices";
 }
 
+void SipClient::listAudioCodecs()
+{
+	std::array<pjsua_codec_info, MAX_CODECS> codecInfo;
+	auto codecCount = static_cast<unsigned int>(codecInfo.size());
+
+	//read first default priorities
+	pj_status_t status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
+	if (PJ_SUCCESS != status) {
+		errorHandler(tr("Cannot enum audio codecs"), status);
+		return;
+	}
+	QHash<QString,int> defaultPrio;
+	for (unsigned int n = 0; n < codecCount; ++n) {
+		const auto id = toString(codecInfo[n].codec_id);
+		setAudioCodecPriority(id, codecInfo[n].priority);
+		defaultPrio[id] = codecInfo[n].priority;
+	}
+
+	_audioCodecs->init();//init first codecs
+
+	//get again codecs
+	status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
+	if (PJ_SUCCESS != status) {
+		errorHandler(tr("Cannot enum audio codecs"), status);
+		return;
+	}
+	qInfo() << "Audio codecs:" << codecCount;
+	QList<AudioCodecs::CodecInfo> audioCodecsInfo;
+	for (unsigned int n = 0; n < codecCount; ++n) {
+		const auto id = toString(codecInfo[n].codec_id);
+		const auto priority = codecInfo[n].priority;
+		const auto defaultPriority = defaultPrio.contains(id) ? defaultPrio[id] : -1;
+		qInfo() << id << priority;
+		audioCodecsInfo.append({ id, id, priority, 0 < priority, defaultPriority });
+	}
+	_audioCodecs->setCodecsInfo(audioCodecsInfo);
+}
+
+bool SipClient::setAudioCodecPriority(const QString &codecId, int priority)
+{
+	if ((0 > priority) || (priority > MAX_PRIORITY)) {
+		qWarning() << "Invalid audio codec priority" << codecId << priority;
+		return false;
+	}
+	const auto stdCodecId = codecId.toStdString();
+	pj_str_t pjCodecId{};
+	pj_cstr(&pjCodecId, stdCodecId.c_str());
+	const auto status = pjsua_codec_set_priority(&pjCodecId, priority);
+	if (PJ_SUCCESS != status) {
+		errorHandler(tr("Cannot set audio codec priority"), status);
+	}
+	return PJ_SUCCESS == status;
+}
+
+#ifdef ENABLE_VIDEO
 void SipClient::initVideoDevicesList()
 {
     auto status = pjmedia_vid_dev_refresh();
@@ -882,44 +949,6 @@ void SipClient::initVideoDevicesList()
     qInfo() << "Found" << videoDevices.size() << "input video devices";
 }
 
-void SipClient::listAudioCodecs()
-{
-    std::array<pjsua_codec_info, MAX_CODECS> codecInfo;
-    auto codecCount = static_cast<unsigned int>(codecInfo.size());
-
-    //read first default priorities
-    pj_status_t status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Cannot enum audio codecs"), status);
-        return;
-    }
-    QHash<QString,int> defaultPrio;
-    for (unsigned int n = 0; n < codecCount; ++n) {
-        const auto id = toString(codecInfo[n].codec_id);
-        setAudioCodecPriority(id, codecInfo[n].priority);
-        defaultPrio[id] = codecInfo[n].priority;
-    }
-
-    _audioCodecs->init();//init first codecs
-
-    //get again codecs
-    status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Cannot enum audio codecs"), status);
-        return;
-    }
-    qInfo() << "Audio codecs:" << codecCount;
-    QList<AudioCodecs::CodecInfo> audioCodecsInfo;
-    for (unsigned int n = 0; n < codecCount; ++n) {
-        const auto id = toString(codecInfo[n].codec_id);
-        const auto priority = codecInfo[n].priority;
-        const auto defaultPriority = defaultPrio.contains(id) ? defaultPrio[id] : -1;
-        qInfo() << id << priority;
-        audioCodecsInfo.append({ id, id, priority, 0 < priority, defaultPriority });
-    }
-    _audioCodecs->setCodecsInfo(audioCodecsInfo);
-}
-
 void SipClient::listVideoCodecs()
 {
     std::array<pjsua_codec_info, MAX_CODECS> codecInfo;
@@ -958,22 +987,6 @@ void SipClient::listVideoCodecs()
     _videoCodecs->setCodecsInfo(videoCodecsInfo);
 }
 
-bool SipClient::setAudioCodecPriority(const QString &codecId, int priority)
-{
-    if ((0 > priority) || (priority > MAX_PRIORITY)) {
-        qWarning() << "Invalid audio codec priority" << codecId << priority;
-        return false;
-    }
-    const auto stdCodecId = codecId.toStdString();
-    pj_str_t pjCodecId{};
-    pj_cstr(&pjCodecId, stdCodecId.c_str());
-    const auto status = pjsua_codec_set_priority(&pjCodecId, priority);
-    if (PJ_SUCCESS != status) {
-        errorHandler(tr("Cannot set audio codec priority"), status);
-    }
-    return PJ_SUCCESS == status;
-}
-
 bool SipClient::setVideoCodecBitrate(const QString &codecId, int bitrate)
 {
     const auto stdCodecId = codecId.toStdString();
@@ -994,6 +1007,7 @@ bool SipClient::setVideoCodecBitrate(const QString &codecId, int bitrate)
     }
     return true;
 }
+#endif
 
 bool SipClient::disableTcpSwitch(bool value)
 {
@@ -1467,19 +1481,23 @@ void SipClient::processCallMediaState(pjsua_call_id callId, pjsua_call_info call
                         qInfo() << "Audio codec info: encoding" << toString(fmt.encoding_name)
                                 << ", clock rate" << fmt.clock_rate << "Hz, channel count"
                                 << fmt.channel_cnt;
+#ifdef ENABLE_VIDEO
                     } else if (PJMEDIA_TYPE_VIDEO == streamInfo.type) {
                         const auto &fmt = streamInfo.info.vid.codec_info;
                         qInfo() << "Video codec info: encoding" << toString(fmt.encoding_name)
                                 << ", encoding desc." << toString(fmt.encoding_desc)
                                 << ", clock rate:" << fmt.clock_rate << "Hz";
 			hasVideo = true;
+#endif
                     }
                 } else {
                     errorHandler("Cannot get stream info", status);
                 }
             }
         }
+#ifdef ENABLE_VIDEO
 	manageVideo(hasVideo);
+#endif
     } else if ((PJSUA_CALL_MEDIA_LOCAL_HOLD != callInfo.media_status) &&
 	       (PJSUA_CALL_MEDIA_REMOTE_HOLD != callInfo.media_status)) {
         qWarning() << "Connection lost";
@@ -1613,6 +1631,7 @@ bool SipClient::setSpeakersVolume(pjsua_call_id callId, bool mute)
     return true;
 }
 
+#ifdef ENABLE_VIDEO
 bool SipClient::setVideoCodecPriority(const QString &codecId, int priority)
 {
     if ((0 > priority) || (priority > MAX_PRIORITY)) {
@@ -1778,6 +1797,7 @@ void SipClient::setVideoWindowSize(pj_bool_t isNative, pjsua_vid_win_id wid, int
         qWarning() << "Window is native";
     }
 }
+#endif
 
 int SipClient::addBuddy(const QString &userId)
 {

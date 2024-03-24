@@ -94,6 +94,7 @@ Softphone::Softphone()
     });
 
     //connection with video codecs
+#ifdef ENABLE_VIDEO
     connect(_videoCodecs, &VideoCodecs::codecPriorityChanged,
             _videoCodecs, [this](const QString &codecId, int newPriority, int oldPriority) {
         if (_sipClient->setVideoCodecPriority(codecId, newPriority)) {
@@ -103,6 +104,7 @@ Softphone::Softphone()
             qInfo() << "Restored video codec priority" << codecId << oldPriority;
         }
     });
+#endif
 
     //setup presence model
     _presenceModel->setContactsModel(_contactsModel);
@@ -248,8 +250,9 @@ void Softphone::onDisconnected(int callId)
     }
     setRecord(false);//TODO
     disableAudio();
-
+#ifdef ENABLE_VIDEO
     _sipClient->releaseVideoWindow();
+#endif
 
     emit disconnected(callId);
 }

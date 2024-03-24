@@ -4,12 +4,16 @@ project("BCPhone" CXX)
 include(cmake/internal_utils.cmake)
 get_app_version(SOFTPHONE_VERSION "1.0")
 
+option (ENABLE_VIDEO "Enable video" ON)
 option (UNIT_TESTS "Build unit tests" ON)
-
 option(PRODUCTION_BUILD "Build the application for production" OFF)
+
+if (ENABLE_VIDEO)
+    add_definitions(-DENABLE_VIDEO)
+endif ()
 if (PRODUCTION_BUILD)
     add_definitions(-DQT_NO_DEBUG_OUTPUT -DQT_NO_WARNING_OUTPUT -DQT_NO_INFO_OUTPUT)
-endif()
+endif ()
 
 if (APPLE)
     if (NOT PJSIP_ROOT_DIR)
