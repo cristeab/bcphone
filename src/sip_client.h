@@ -37,7 +37,7 @@ public:
     bool makeCall(const QString &userId);
     bool sendDtmf(const QString &dtmf);
 
-    bool answer(int callId);
+    bool answer(int callId, int statusCode = PJSIP_SC_OK);
     bool hangup(int callId);
     void hangupAll();
 

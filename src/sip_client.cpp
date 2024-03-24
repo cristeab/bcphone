@@ -531,7 +531,7 @@ bool SipClient::sendDtmf(const QString &dtmf)
     return true;
 }
 
-bool SipClient::answer(int callId)
+bool SipClient::answer(int callId, int statusCode)
 {
     if (PJSUA_INVALID_ID == callId) {
         qCritical() << "Invalid call ID";
@@ -547,7 +547,7 @@ bool SipClient::answer(int callId)
     constexpr pjsua_call_setting *callSettingPtr{nullptr};
 #endif
 
-    const auto status = pjsua_call_answer2(callId, callSettingPtr, 200, nullptr, nullptr);
+    const auto status = pjsua_call_answer2(callId, callSettingPtr, statusCode, nullptr, nullptr);
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot answer call", status);
         return false;
@@ -1412,6 +1412,8 @@ void SipClient::processIncomingCall(pjsua_call_id callId, pjsua_call_info callIn
 {
     QString remoteInfo = toString(callInfo.remote_info);
     qDebug() << "Incoming call from" << remoteInfo;
+
+    answer(callId, PJSIP_SC_RINGING);
 
     QString userName;
     QString userId;
