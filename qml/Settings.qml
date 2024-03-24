@@ -67,6 +67,12 @@ Page {
                 currentIndex: softphone.settings.sipTransport
                 onCurrentIndexChanged: softphone.settings.sipTransport = currentIndex
             }
+            Switch {
+                visible: 0 === softphone.settings.sipTransport
+                text: qsTr("Disable TCP Switch")
+                checked: softphone.settings.disableTcpSwitch
+                onCheckedChanged: softphone.settings.disableTcpSwitch = checked
+            }
             LabelComboBox {
                 width: callOutputSrc.width
                 text: qsTr("Media Transport")
@@ -87,6 +93,11 @@ Page {
                 editText: softphone.settings.password
                 onEditingFinished: softphone.settings.password = editText
             }
+            Switch {
+                text: qsTr("Publish Presence Information")
+                checked: softphone.settings.publishEnabled
+                onCheckedChanged: softphone.settings.publishEnabled = checked
+            }
             LabelTextField {
                 text: qsTr("Display Name")
                 width: callOutputSrc.width
@@ -94,7 +105,7 @@ Page {
                 onEditingFinished: softphone.settings.displayName = editText
             }
             LabelTextField {
-                text: qsTr("Authorization ID")
+                text: qsTr("Authorization ID (Usually Same as \"User Name\")")
                 width: callOutputSrc.width
                 editText: softphone.settings.authUserName
                 onEditingFinished: softphone.settings.authUserName = editText
@@ -180,14 +191,6 @@ Page {
                 value: softphone.settings.dialpadSoundVolume
                 onValueChanged: softphone.settings.dialpadSoundVolume = value
             }
-            LabelComboBox {
-                id: videoDevs
-                text: qsTr("Video Source")
-                width: callOutputSrc.width
-                model: softphone.videoDevices
-                currentIndex: softphone.settings.videoModelIndex
-                onCurrentIndexChanged: softphone.settings.videoModelIndex = videoDevs.currentIndex
-            }
             LabelTextFieldBrowser {
                 selectFolder: true
                 text: qsTr("Recordings Path")
@@ -205,6 +208,15 @@ Page {
                 text: qsTr("Restore Default Audio Codec Priorities")
                 onClicked: softphone.audioCodecs.restoreAudioCodecDefaultPriorities()
             }
+            // video settings
+            LabelComboBox {
+                id: videoDevs
+                text: qsTr("Video Source")
+                width: callOutputSrc.width
+                model: softphone.videoDevices
+                currentIndex: softphone.settings.videoModelIndex
+                onCurrentIndexChanged: softphone.settings.videoModelIndex = videoDevs.currentIndex
+            }
             CustomTableView {
                 codecsModel: softphone.videoCodecs
                 text: qsTr("Video Codecs Priority")
@@ -215,6 +227,17 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("Restore Default Video Codec Priorities")
                 onClicked: softphone.videoCodecs.restoreVideoCodecDefaultPriorities()
+            }
+            // NAT settings
+            Switch {
+                text: qsTr("Allow SDP NAT Rewrite")
+                checked: softphone.settings.allowSdpNatRewrite
+                onCheckedChanged: softphone.settings.allowSdpNatRewrite = checked
+            }
+            Switch {
+                text: qsTr("Allow Contact & Via Rewrite")
+                checked: softphone.settings.allowContactAndViaRewrite
+                onCheckedChanged: softphone.settings.allowContactAndViaRewrite = checked
             }
             Item {
                 height: Theme.windowMargin / 2

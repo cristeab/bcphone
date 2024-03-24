@@ -33,6 +33,10 @@ private:
     static constexpr bool ENABLE_VAD = true;
     static constexpr bool DISABLE_TCP_SWITCH = false;
 
+    static constexpr bool ALLOW_SDP_NAT_REWRITE = true;
+    static constexpr bool ALLOW_CONTACT_AND_VIA_REWRITE = true;
+    static constexpr bool PUBLISH_ENABLED = true;
+
     QML_CONSTANT_PROPERTY(QString, orgName, ORG_NAME)
     QML_CONSTANT_PROPERTY(QString, appName, APP_NAME)
     QML_CONSTANT_PROPERTY(QString, appVersion, APP_VERSION)
@@ -71,9 +75,9 @@ private:
     QML_WRITABLE_PROPERTY_POD(uint32_t, transportSourcePort, setTransportSourcePort, TRANSPORT_DEFAULT_PORT)
     QML_WRITABLE_PROPERTY_POD(bool, disableTcpSwitch, setDisableTcpSwitch, DISABLE_TCP_SWITCH)
 
-    QML_WRITABLE_PROPERTY_POD(bool, allowSdpNatRewrite, setAllowSdpNatRewrite, true)
-    QML_WRITABLE_PROPERTY_POD(bool, allowContactAndViaRewrite, setAllowContactAndViaRewrite, true)
-    QML_WRITABLE_PROPERTY_POD(bool, publishEnabled, setPublishEnabled, true)
+    QML_WRITABLE_PROPERTY_POD(bool, allowSdpNatRewrite, setAllowSdpNatRewrite, ALLOW_SDP_NAT_REWRITE)
+    QML_WRITABLE_PROPERTY_POD(bool, allowContactAndViaRewrite, setAllowContactAndViaRewrite, ALLOW_CONTACT_AND_VIA_REWRITE)
+    QML_WRITABLE_PROPERTY_POD(bool, publishEnabled, setPublishEnabled, PUBLISH_ENABLED)
 
 public:
 

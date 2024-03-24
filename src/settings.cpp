@@ -74,6 +74,10 @@ void Settings::clear()
     setTransportSourcePort(TRANSPORT_DEFAULT_PORT);
     setDisableTcpSwitch(DISABLE_TCP_SWITCH);
 
+    setAllowSdpNatRewrite(ALLOW_SDP_NAT_REWRITE);
+    setAllowContactAndViaRewrite(ALLOW_CONTACT_AND_VIA_REWRITE);
+    setPublishEnabled(PUBLISH_ENABLED);
+
     Settings::uninstallClear();
 }
 
@@ -128,6 +132,10 @@ void Settings::load()
     setEnableVad(GET_SETTING(enableVad).toBool());
     setTransportSourcePort(GET_SETTING(transportSourcePort).toInt());
     setDisableTcpSwitch(GET_SETTING(disableTcpSwitch).toBool());
+
+    setAllowSdpNatRewrite(GET_SETTING(allowSdpNatRewrite).toBool());
+    setAllowContactAndViaRewrite(GET_SETTING(allowContactAndViaRewrite).toBool());
+    setPublishEnabled(GET_SETTING(publishEnabled).toBool());
 }
 
 void Settings::save()
@@ -163,6 +171,10 @@ void Settings::save()
     SET_SETTING(enableVad);
     SET_SETTING(transportSourcePort);
     SET_SETTING(disableTcpSwitch);
+
+    SET_SETTING(allowSdpNatRewrite);
+    SET_SETTING(allowContactAndViaRewrite);
+    SET_SETTING(publishEnabled);
 }
 
 AudioDevices::DeviceInfo Settings::inputAudioDeviceInfo()
