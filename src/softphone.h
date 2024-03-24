@@ -26,30 +26,30 @@ public:
 
 private:
     QML_READABLE_PROPERTY(QString, sipRegistrationText, setSipRegistrationText, tr("Not Registered"))
-    QML_READABLE_PROPERTY(SipRegistrationStatus, sipRegistrationStatus, setSipRegistrationStatus, SipRegistrationStatus::Unregistered)
+    QML_READABLE_PROPERTY_POD(SipRegistrationStatus, sipRegistrationStatus, setSipRegistrationStatus, SipRegistrationStatus::Unregistered)
 
-    QML_READABLE_PROPERTY(bool, showBusy, setShowBusy, false)
-    QML_READABLE_PROPERTY(bool, loggedOut, setLoggedOut, false)
+    QML_READABLE_PROPERTY_POD(bool, showBusy, setShowBusy, false)
+    QML_READABLE_PROPERTY_POD(bool, loggedOut, setLoggedOut, false)
 
     QML_WRITABLE_PROPERTY(QString, dialogMessage, setDialogMessage, "")
-    QML_READABLE_PROPERTY(bool, dialogError, setDialogError, false)
-    QML_WRITABLE_PROPERTY(bool, dialogRetry, setDialogRetry, false)
+    QML_READABLE_PROPERTY_POD(bool, dialogError, setDialogError, false)
+    QML_WRITABLE_PROPERTY_POD(bool, dialogRetry, setDialogRetry, false)
 
     QML_WRITABLE_PROPERTY(QString, dialedText, setDialedText, "")
     QML_WRITABLE_PROPERTY(QString, currentUserId, setCurrentUserId, "")
-    QML_WRITABLE_PROPERTY(bool, activeCall, setActiveCall, false)
-    QML_READABLE_PROPERTY(bool, confirmedCall, setConfirmedCall, false)
+    QML_WRITABLE_PROPERTY_POD(bool, activeCall, setActiveCall, false)
+    QML_READABLE_PROPERTY_POD(bool, confirmedCall, setConfirmedCall, false)
 
-    QML_WRITABLE_PROPERTY(bool, muteMicrophone, setMuteMicrophone, true)
-    QML_WRITABLE_PROPERTY(bool, record, setRecord, false)
-    QML_WRITABLE_PROPERTY(bool, holdCall, setHoldCall, false)
+    QML_WRITABLE_PROPERTY_POD(bool, muteMicrophone, setMuteMicrophone, true)
+    QML_WRITABLE_PROPERTY_POD(bool, record, setRecord, false)
+    QML_WRITABLE_PROPERTY_POD(bool, holdCall, setHoldCall, false)
 
-    QML_READABLE_PROPERTY(bool, hasVideo, setHasVideo, false)
-    QML_WRITABLE_PROPERTY(bool, enableVideo, setEnableVideo, false)
+    QML_READABLE_PROPERTY_POD(bool, hasVideo, setHasVideo, false)
+    QML_WRITABLE_PROPERTY_POD(bool, enableVideo, setEnableVideo, false)
 
-    QML_WRITABLE_PROPERTY(int, winPosX, setWinPosX, 0)
-    QML_WRITABLE_PROPERTY(int, winPosY, setWinPosY, 0)
-    QML_WRITABLE_PROPERTY(int, winWidth, setWinWidth, 0)
+    QML_WRITABLE_PROPERTY_POD(int, winPosX, setWinPosX, 0)
+    QML_WRITABLE_PROPERTY_POD(int, winPosY, setWinPosY, 0)
+    QML_WRITABLE_PROPERTY_POD(int, winWidth, setWinWidth, 0)
 
     QML_CONSTANT_PROPERTY_PTR(Settings, settings)
     QML_CONSTANT_PROPERTY_PTR(AudioDevices, inputAudioDevices)
@@ -67,14 +67,14 @@ private:
     QML_CONSTANT_PROPERTY_PTR(MessagesProxyModel, messagesModel)
     QML_WRITABLE_PROPERTY(QString, currentDestination, setCurrentDestination, "")
 
-    QML_CONSTANT_PROPERTY(int, invalidCallId, PJSUA_INVALID_ID)
+    QML_CONSTANT_PROPERTY_POD(int, invalidCallId, PJSUA_INVALID_ID)
 
-    QML_WRITABLE_PROPERTY(bool, blindTransfer, setBlindTransfer, false)
+    QML_WRITABLE_PROPERTY_POD(bool, blindTransfer, setBlindTransfer, false)
     QML_WRITABLE_PROPERTY(QString, blindTransferUserName, setBlindTransferUserName, "")
 
-    QML_WRITABLE_PROPERTY(bool, conference, setConference, false)
+    QML_WRITABLE_PROPERTY_POD(bool, conference, setConference, false)
 
-    QML_WRITABLE_PROPERTY(bool, isRegisterRequested, setIsRegisterRequested, false)
+    QML_WRITABLE_PROPERTY_POD(bool, isRegisterRequested, setIsRegisterRequested, false)
 
 public:
     Softphone();

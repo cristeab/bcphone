@@ -14,7 +14,7 @@ class CallHistoryModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ANONYMOUS
-    QML_WRITABLE_PROPERTY(int, currentIndex, setCurrentIndex, -1)
+    QML_WRITABLE_PROPERTY_POD(int, currentIndex, setCurrentIndex, -1)
 
 public:
     enum class CallStatus { UNKNOWN, OUTGOING, INCOMING, REJECTED, TRANSFERRED };

@@ -14,7 +14,7 @@ class PresenceModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ANONYMOUS
-    QML_WRITABLE_PROPERTY(bool, selectBuddy, setSelectBuddy, false)
+    QML_WRITABLE_PROPERTY_POD(bool, selectBuddy, setSelectBuddy, false)
 
 public:
     enum PresenceRoles {

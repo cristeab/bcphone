@@ -38,20 +38,20 @@ private:
     QML_CONSTANT_PROPERTY(QString, appVersion, APP_VERSION)
 
     QML_WRITABLE_PROPERTY(QString, sipServer, setSipServer, "")
-    QML_WRITABLE_PROPERTY(int, sipPort, setSipPort, SIP_PORT)
+    QML_WRITABLE_PROPERTY_POD(int, sipPort, setSipPort, SIP_PORT)
     QML_WRITABLE_PROPERTY(QString, userName, setUserName, "")
     QML_WRITABLE_PROPERTY(QString, password, setPassword, "")
     QML_WRITABLE_PROPERTY(QString, displayName, setDisplayName, "")
     QML_WRITABLE_PROPERTY(QString, authUserName, setAuthUserName, "")
-    QML_WRITABLE_PROPERTY(int, sipTransport, setSipTransport, SipTransport::Udp)
-    QML_WRITABLE_PROPERTY(int, mediaTransport, setMediaTransport, MediaTransport::Rtp)
+    QML_WRITABLE_PROPERTY_POD(int, sipTransport, setSipTransport, SipTransport::Udp)
+    QML_WRITABLE_PROPERTY_POD(int, mediaTransport, setMediaTransport, MediaTransport::Rtp)
 
-    QML_WRITABLE_PROPERTY(int, inputAudioModelIndex, setInputAudioModelIndex, INVALID_INDEX)
-    QML_WRITABLE_PROPERTY(int, outputAudioModelIndex, setOutputAudioModelIndex, INVALID_INDEX)
-    QML_WRITABLE_PROPERTY(int, videoModelIndex, setVideoModelIndex, INVALID_INDEX)
+    QML_WRITABLE_PROPERTY_POD(int, inputAudioModelIndex, setInputAudioModelIndex, INVALID_INDEX)
+    QML_WRITABLE_PROPERTY_POD(int, outputAudioModelIndex, setOutputAudioModelIndex, INVALID_INDEX)
+    QML_WRITABLE_PROPERTY_POD(int, videoModelIndex, setVideoModelIndex, INVALID_INDEX)
 
-    QML_WRITABLE_PROPERTY(int, inboundRingTonesModelIndex, setInboundRingTonesModelIndex, INBOUND_RING_TONE_INDEX)
-    QML_WRITABLE_PROPERTY(int, outboundRingTonesModelIndex, setOutboundRingTonesModelIndex, OUTBOUND_RING_TONE_INDEX)
+    QML_WRITABLE_PROPERTY_POD(int, inboundRingTonesModelIndex, setInboundRingTonesModelIndex, INBOUND_RING_TONE_INDEX)
+    QML_WRITABLE_PROPERTY_POD(int, outboundRingTonesModelIndex, setOutboundRingTonesModelIndex, OUTBOUND_RING_TONE_INDEX)
 
     QML_WRITABLE_PROPERTY_FLOAT(qreal, microphoneVolume, setMicrophoneVolume, MICROPHONE_VOLUME)
     QML_WRITABLE_PROPERTY_FLOAT(qreal, speakersVolume, setSpeakersVolume, SPEAKERS_VOLUME)
@@ -62,18 +62,18 @@ private:
     //QML_WRITABLE_PROPERTY(QString, stunServer, setStunServer, "stun.zoiper.com")
     //QML_WRITABLE_PROPERTY(int, stunPort, setStunPort, 3478)
 
-    QML_WRITABLE_PROPERTY(bool, proxyEnabled, setProxyEnabled, PROXY_ENABLED)
+    QML_WRITABLE_PROPERTY_POD(bool, proxyEnabled, setProxyEnabled, PROXY_ENABLED)
     QML_WRITABLE_PROPERTY(QString, proxyServer, setProxyServer, "")
-    QML_WRITABLE_PROPERTY(int, proxyPort, setProxyPort, PROXY_PORT)
+    QML_WRITABLE_PROPERTY_POD(int, proxyPort, setProxyPort, PROXY_PORT)
 
-    QML_WRITABLE_PROPERTY(bool, enableSipLog, setEnableSipLog, ENABLE_SIP_LOG)
-    QML_WRITABLE_PROPERTY(bool, enableVad, setEnableVad, ENABLE_VAD)
-    QML_WRITABLE_PROPERTY(uint32_t, transportSourcePort, setTransportSourcePort, TRANSPORT_DEFAULT_PORT)
-    QML_WRITABLE_PROPERTY(bool, disableTcpSwitch, setDisableTcpSwitch, DISABLE_TCP_SWITCH)
+    QML_WRITABLE_PROPERTY_POD(bool, enableSipLog, setEnableSipLog, ENABLE_SIP_LOG)
+    QML_WRITABLE_PROPERTY_POD(bool, enableVad, setEnableVad, ENABLE_VAD)
+    QML_WRITABLE_PROPERTY_POD(uint32_t, transportSourcePort, setTransportSourcePort, TRANSPORT_DEFAULT_PORT)
+    QML_WRITABLE_PROPERTY_POD(bool, disableTcpSwitch, setDisableTcpSwitch, DISABLE_TCP_SWITCH)
 
-    QML_WRITABLE_PROPERTY(bool, allowSdpNatRewrite, setAllowSdpNatRewrite, true)
-    QML_WRITABLE_PROPERTY(bool, allowContactAndViaRewrite, setAllowContactAndViaRewrite, true)
-    QML_WRITABLE_PROPERTY(bool, publishEnabled, setPublishEnabled, true)
+    QML_WRITABLE_PROPERTY_POD(bool, allowSdpNatRewrite, setAllowSdpNatRewrite, true)
+    QML_WRITABLE_PROPERTY_POD(bool, allowContactAndViaRewrite, setAllowContactAndViaRewrite, true)
+    QML_WRITABLE_PROPERTY_POD(bool, publishEnabled, setPublishEnabled, true)
 
 public:
 
