@@ -1,0 +1,9 @@
+- update the code to C++20 and latest Qt release
+- improve the UI design
+- split the design depending on the selected platform: desktop or mobile
+- add chat support
+- add video support
+- add support for peer to peer communication with automatic user discovery using the Bonjour protocol
+- add additional audio codecs, e.g. Lyra
+- add support for major Linux distributions (Ubuntu, Fedora, Debian, openSUSE)
+- add support for mobile platforms (iOS, Android)
